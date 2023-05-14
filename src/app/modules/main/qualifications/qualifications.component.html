@@ -1,0 +1,67 @@
+<div id="container">
+	<div id="filters">
+		<mat-card>
+			<mat-card-header>Filtros</mat-card-header>
+			<mat-card-content>
+				<div id="content-container">
+					<mat-form-field>
+						<mat-label>Alumno</mat-label>
+						<input matInput placeholder="Nombre y apellido" />
+					</mat-form-field>
+					<mat-form-field appearance="fill">
+						<mat-label>Proyecto</mat-label>
+						<mat-select>
+							<mat-option
+								*ngFor="let project of projects"
+								[value]="project.id">
+								{{ project.name }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+				</div>
+			</mat-card-content>
+		</mat-card>
+	</div>
+
+	<!-- Table -->
+	<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+		<ng-container matColumnDef="student">
+			<th mat-header-cell *matHeaderCellDef>Alumno</th>
+			<td mat-cell *matCellDef="let element">{{ element.student }}</td>
+		</ng-container>
+
+		<ng-container
+			*ngFor="let project of projects"
+			[matColumnDef]="project.name">
+			<th mat-header-cell *matHeaderCellDef class="project-header">
+				<p>{{ project.name }}</p>
+				<p>{{ project.date | shortDate }}</p>
+			</th>
+			<td mat-cell *matCellDef="let element" class="project-td">
+				<div class="project-td-content">
+					<p>
+						Nota:
+						<span class="note">{{
+							{
+								studentProjects: element.projects,
+								projectToMatch: project.id
+							} | studentData : 'qualification'
+						}}</span>
+					</p>
+					<p>
+						Observación:
+						<span class="observation">{{
+							{
+								studentProjects: element.projects,
+								projectToMatch: project.id
+							} | studentData : 'observation'
+						}}</span>
+					</p>
+				</div>
+			</td>
+		</ng-container>
+
+		<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+		<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+	</table>
+</div>
