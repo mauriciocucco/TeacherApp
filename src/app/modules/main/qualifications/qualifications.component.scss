@@ -13,6 +13,23 @@
 	}
 }
 
+.special-header-row {
+	height: 9rem !important;
+}
+
+.student-info-wrapper {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.student-picture {
+	border-radius: 50%;
+	height: 14rem;
+	width: 14rem;
+}
+
 #content-container {
 	display: flex;
 	gap: 3rem;
@@ -28,6 +45,6 @@
 	}
 }
 
-.note {
-	font-weight: bold;
+.observation-textarea {
+	width: 100%;
 }
