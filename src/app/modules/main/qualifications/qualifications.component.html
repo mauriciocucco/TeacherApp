@@ -6,7 +6,22 @@
 				<div id="content-container">
 					<mat-form-field>
 						<mat-label>Alumno</mat-label>
-						<input matInput placeholder="Nombre y apellido" />
+						<input
+							type="text"
+							matInput
+							placeholder="Nombre y apellido"
+							[matAutocomplete]="auto"
+							aria-label="Number"
+							[formControl]="studentFilterControl" />
+						<mat-autocomplete
+							autoActiveFirstOption
+							#auto="matAutocomplete">
+							<mat-option
+								*ngFor="let student of filteredOptions | async"
+								[value]="student.name + ' ' + student.lastName">
+								{{ student.name }} {{ student.lastName }}
+							</mat-option>
+						</mat-autocomplete>
 					</mat-form-field>
 					<mat-form-field appearance="fill">
 						<mat-label>Tarea</mat-label>
@@ -34,7 +49,7 @@
 	</div>
 
 	<div id="students-cards-container">
-		<mat-card *ngFor="let student of students">
+		<mat-card *ngFor="let student of studentsProjects">
 			<mat-card-header
 				>{{ student.name }} {{ student.lastName }}</mat-card-header
 			>
@@ -44,11 +59,11 @@
 						<div class="cards-wrapper">
 							<mat-card
 								class="qualification-card"
-								*ngFor="let project of projects">
+								*ngFor="let task of tasks">
 								<mat-card-header
 									class="qualification-card-header">
-									<h3>{{ project.name }}</h3>
-									<p>{{ project.date | shortDate }}</p>
+									<h3>{{ task.name }}</h3>
+									<p>{{ task.date | shortDate }}</p>
 								</mat-card-header>
 								<mat-card-content>
 									<div class="qualification-card-content">
@@ -59,8 +74,7 @@
 													{
 														studentProjects:
 															student.projects,
-														projectToMatch:
-															project.id
+														projectToMatch: task.id
 													}
 														| studentData
 															: 'qualification'
@@ -82,8 +96,7 @@
 													{
 														studentProjects:
 															student.projects,
-														projectToMatch:
-															project.id
+														projectToMatch: task.id
 													}
 														| studentData
 															: 'observation'

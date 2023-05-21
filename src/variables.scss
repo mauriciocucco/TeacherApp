@@ -1,0 +1,46 @@
+// $mobile-top: '500px';
+// $bg-primary: #e5e5e5;
+// $bg-secondary: white;
+// $color-primary: #00c4ff;
+// $color-secondary: rgba(0, 0, 0, 0.85);
+// $color-tertiary: #57606f; //inputs-selects
+// $color-primary-pink: #e94479;
+// $color-primary-pink-rgba: rgba(233, 68, 121, 0.08);
+// $color-primary-pink-pressed: #d22d62;
+// $color-text-gray: #57606f;
+// $color-text-dark-gray: #747d8c;
+// $color-login: #57606f;
+// $color-error: #eb5757;
+// $color-paused: #b1bac2;
+// $font-size-small: 12px;
+// $font-size-normal: 14px;
+// $font-size-large: 16px;
+// $font-size-xl: 18px;
+// $border-radius: 4px;
+// $normal-input-height: 40px;
+
+@mixin mq-mobile {
+	@media screen and (max-width: 1024px) {
+		@content;
+	}
+}
+
+// @mixin mq-tablet {
+//   @media screen and (min-width: 1024px) and (max-width: 1291px) {
+//     @content;
+//   }
+// }
+
+@mixin flex-center {
+	align-items: center;
+	display: flex;
+	justify-content: center;
+}
+
+//BREAKPOINTS//
+// $mobileDeviceUp: 375px;
+// $tabletDeviceUp: 768px;
+// $desktopDeviceUp: 992px;
+// $mobileDeviceDown: 374.9px;
+// $tabletDeviceDown: 767.9px;
+// $desktopDeviceDown: 991.9px;

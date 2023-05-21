@@ -6,6 +6,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @NgModule({
 	declarations: [],
@@ -17,6 +18,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 		MatDatepickerModule,
 		MatNativeDateModule,
 		MatTabsModule,
+		MatAutocompleteModule,
 	],
 })
 export class AngularMaterialModule {}

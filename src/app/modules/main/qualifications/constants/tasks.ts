@@ -1,4 +1,4 @@
-export const PROJECTS = [
+export const TASKS = [
 	{
 		id: 1,
 		name: 'Tarea de la Triple Alianza',
