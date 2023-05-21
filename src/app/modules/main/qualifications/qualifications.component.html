@@ -9,14 +9,12 @@
 						<input matInput placeholder="Nombre y apellido" />
 					</mat-form-field>
 					<mat-form-field appearance="fill">
-						<mat-label>Proyecto</mat-label>
-						<mat-select>
-							<mat-option
-								*ngFor="let project of projects"
-								[value]="project.id">
-								{{ project.name }}
-							</mat-option>
-						</mat-select>
+						<mat-label>Tarea</mat-label>
+						<input matInput placeholder="Nombre de la tarea" />
+					</mat-form-field>
+					<mat-form-field appearance="fill">
+						<mat-label>Exámen</mat-label>
+						<input matInput placeholder="Nombre del exámen" />
 					</mat-form-field>
 					<mat-form-field appearance="fill">
 						<mat-label>Ingrese un período</mat-label>
@@ -35,75 +33,117 @@
 		</mat-card>
 	</div>
 
-	<!-- Table -->
-	<table
-		mat-table
-		[dataSource]="dataSource"
-		class="mat-elevation-z8"
-		id="qualifications-table">
-		<ng-container matColumnDef="student">
-			<th mat-header-cell *matHeaderCellDef class="sticky-head">
-				Alumno
-			</th>
-			<td mat-cell *matCellDef="let element">
-				<div class="student-info-wrapper">
-					<h4>{{ element.name }} {{ element.lastName }}</h4>
-					<img
-						class="student-picture"
-						[src]="element.image"
-						alt="foto del estudiante" />
-				</div>
-			</td>
-		</ng-container>
-
-		<ng-container
-			*ngFor="let project of projects"
-			[matColumnDef]="project.name">
-			<th mat-header-cell *matHeaderCellDef class="project-header">
-				<p>{{ project.name }}</p>
-				<p>{{ project.date | shortDate }}</p>
-			</th>
-			<td mat-cell *matCellDef="let element" class="project-td">
-				<div class="project-td-content">
-					<mat-form-field appearance="fill">
-						<mat-label>Nota</mat-label>
-						<mat-select
-							[value]="
-								{
-									studentProjects: element.projects,
-									projectToMatch: project.id
-								} | studentData : 'qualification'
-							">
-							<mat-option
-								*ngFor="let qualification of qualifications"
-								[value]="qualification.id">
-								{{ qualification.name }}
-							</mat-option>
-						</mat-select>
-					</mat-form-field>
-					<mat-form-field class="observation-textarea">
-						<mat-label>Observación</mat-label>
-						<textarea matInput
-							>{{
-								{
-									studentProjects: element.projects,
-									projectToMatch: project.id
-								} | studentData : 'observation'
-							}}
-							</textarea
-						>
-					</mat-form-field>
-				</div>
-			</td>
-		</ng-container>
-
-		<tr
-			mat-header-row
-			*matHeaderRowDef="displayedColumns"
-			class="special-header-row"></tr>
-		<tr
-			mat-row
-			*matRowDef="let row; columns: displayedColumns"
-			class="special-mat-row"></tr>
-	</table>
+	<div id="students-cards-container">
+		<mat-card *ngFor="let student of students">
+			<mat-card-header
+				>{{ student.name }} {{ student.lastName }}</mat-card-header
+			>
+			<mat-card-content>
+				<mat-tab-group #tabChildren id="qualifications-tab-group">
+					<mat-tab label="Tareas">
+						<div class="cards-wrapper">
+							<mat-card
+								class="qualification-card"
+								*ngFor="let project of projects">
+								<mat-card-header
+									class="qualification-card-header">
+									<h3>{{ project.name }}</h3>
+									<p>{{ project.date | shortDate }}</p>
+								</mat-card-header>
+								<mat-card-content>
+									<div class="qualification-card-content">
+										<mat-form-field appearance="fill">
+											<mat-label>Nota</mat-label>
+											<mat-select
+												[value]="
+													{
+														studentProjects:
+															student.projects,
+														projectToMatch:
+															project.id
+													}
+														| studentData
+															: 'qualification'
+												">
+												<mat-option
+													*ngFor="
+														let qualification of qualifications
+													"
+													[value]="qualification.id">
+													{{ qualification.name }}
+												</mat-option>
+											</mat-select>
+										</mat-form-field>
+										<mat-form-field
+											class="observation-textarea">
+											<mat-label>Observación</mat-label>
+											<textarea matInput
+												>{{
+													{
+														studentProjects:
+															student.projects,
+														projectToMatch:
+															project.id
+													}
+														| studentData
+															: 'observation'
+												}}
+												</textarea
+											>
+										</mat-form-field>
+									</div>
+								</mat-card-content>
+							</mat-card>
+						</div>
+					</mat-tab>
+					<mat-tab label="Exámenes">
+						<div class="cards-wrapper">
+							<mat-card
+								class="qualification-card"
+								*ngFor="let exam of exams">
+								<mat-card-header
+									class="qualification-card-header">
+									<h3>{{ exam.name }}</h3>
+									<p>{{ exam.date | shortDate }}</p>
+								</mat-card-header>
+								<mat-card-content>
+									<div class="qualification-card-content">
+										<mat-form-field appearance="fill">
+											<mat-label>Nota</mat-label>
+											<input
+												matInput
+												placeholder="Nota del exámen"
+												[value]="
+													{
+														studentProjects:
+															student.exams,
+														projectToMatch: exam.id
+													} | studentData : 'exams'
+												" />
+										</mat-form-field>
+										<mat-form-field
+											class="observation-textarea">
+											<mat-label>Observación</mat-label>
+											<textarea matInput
+												>{{
+													{
+														studentProjects:
+															student.exams,
+														projectToMatch: exam.id
+													}
+														| studentData
+															: 'observation'
+												}}
+												</textarea
+											>
+										</mat-form-field>
+									</div>
+								</mat-card-content>
+							</mat-card>
+						</div>
+					</mat-tab>
+				</mat-tab-group>
+			</mat-card-content>
+		</mat-card>
+	</div>
 </div>

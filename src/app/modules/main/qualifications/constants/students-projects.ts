@@ -8,6 +8,7 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 1,
 				name: 'Tarea de la Triple Alianza',
+				date: '2023-04-20T04:30:03.442Z',
 				qualification: {
 					id: 2,
 					name: 'MB',
@@ -17,11 +18,20 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 2,
 				name: 'Completar carpeta',
+				date: new Date().toISOString(),
 				qualification: {
 					id: 1,
 					name: 'B',
 				},
 				observation: 'Ayuda de los padres',
+			},
+		],
+		exams: [
+			{
+				id: 1,
+				name: 'Exámen de Sociales',
+				qualification: 8,
+				observation: '',
 			},
 		],
 	},
@@ -34,11 +44,20 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 2,
 				name: 'Completar carpeta',
+				date: new Date().toISOString(),
 				qualification: {
 					id: 1,
 					name: 'B',
 				},
 				observation: 'Muy atento a las clases',
+			},
+		],
+		exams: [
+			{
+				id: 1,
+				name: 'Exámen de Sociales',
+				qualification: 7,
+				observation: 'Zafando',
 			},
 		],
 	},
@@ -51,11 +70,20 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 1,
 				name: 'Tarea de la Triple Alianza',
+				date: '2023-04-20T04:30:03.442Z',
 				qualification: {
 					id: 4,
 					name: 'S/H',
 				},
 				observation: 'Se la pasa hablando',
+			},
+		],
+		exams: [
+			{
+				id: 1,
+				name: 'Exámen de Sociales',
+				qualification: 9,
+				observation: 'Sobresaliente',
 			},
 		],
 	},
@@ -68,6 +96,7 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 1,
 				name: 'Tarea de la Triple Alianza',
+				date: '2023-04-20T04:30:03.442Z',
 				qualification: {
 					id: 4,
 					name: 'S/H',
@@ -77,11 +106,20 @@ export const STUDENTS_PROJECTS = [
 			{
 				id: 2,
 				name: 'Completar carpeta',
+				date: new Date().toISOString(),
 				qualification: {
 					id: 3,
 					name: 'E',
 				},
 				observation: '',
+			},
+		],
+		exams: [
+			{
+				id: 1,
+				name: 'Exámen de Sociales',
+				qualification: 5,
+				observation: 'Muy mal',
 			},
 		],
 	},

@@ -2,9 +2,10 @@ import { NgModule } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
+// import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTabsModule } from '@angular/material/tabs';
 
 @NgModule({
 	declarations: [],
@@ -12,9 +13,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 		MatCardModule,
 		MatInputModule,
 		MatSelectModule,
-		MatTableModule,
+		// MatTableModule,
 		MatDatepickerModule,
 		MatNativeDateModule,
+		MatTabsModule,
 	],
 })
 export class AngularMaterialModule {}

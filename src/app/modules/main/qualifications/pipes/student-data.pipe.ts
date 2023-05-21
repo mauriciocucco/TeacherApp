@@ -9,9 +9,11 @@ export class StudentDataPipe implements PipeTransform {
 			if (project.id === projectInfo.projectToMatch)
 				return argument === 'qualification'
 					? project[argument].id
+					: argument === 'exams'
+					? project.qualification
 					: project[argument];
 		}
 
-		return '-';
+		return '';
 	}
 }

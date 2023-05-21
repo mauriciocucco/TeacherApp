@@ -1,9 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 @import './bases.scss';
 
-// TABLES
-#qualifications-table thead {
-	position: sticky;
-	top: 0;
-	z-index: 2;
+//TABS
+#qualifications-tab-group {
+	.mat-mdc-tab-body-wrapper {
+		padding: 2rem;
+	}
 }

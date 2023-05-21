@@ -4,54 +4,47 @@
 	gap: 3rem;
 }
 
-.project-header {
-	p {
-		margin-bottom: unset;
-		&:nth-of-type(2) {
-			font-weight: normal;
+#content-container {
+	display: flex;
+	gap: 3rem;
+	justify-content: space-around;
+	padding-top: 1rem;
+	width: 100%;
+	& > mat-form-field {
+		width: 100%;
+	}
+}
+
+.qualification-card {
+	.qualification-card-header {
+		align-items: center;
+		display: flex;
+		flex-direction: column;
+		h3 {
+			font-weight: bold;
+			margin-bottom: unset;
+		}
+	}
+	.mat-mdc-card-content {
+		&:last-child {
+			padding-bottom: unset;
+		}
+		.qualification-card-content {
+			display: flex;
+			flex-direction: column;
+			padding-top: 1.2rem;
 		}
 	}
 }
 
-.special-header-row {
-	height: 9rem !important;
-
-	.mdc-data-table__header-cell {
-		text-align: center;
-	}
-}
-
-.special-mat-row {
-	height: 24rem;
-}
-
-.student-info-wrapper {
-	align-items: center;
+#students-cards-container {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	gap: 3rem;
 }
 
-.student-picture {
-	border-radius: 50%;
-	height: 14rem;
-	width: 14rem;
-}
-
-#content-container {
+.cards-wrapper {
 	display: flex;
 	gap: 3rem;
-	padding-top: 1rem;
-}
-
-.project-td {
-	.project-td-content {
-		display: flex;
-		flex-direction: column;
-		padding-top: 1.2rem;
-	}
-}
-
-.observation-textarea {
-	width: 100%;
+	padding: 0.5rem;
 }
