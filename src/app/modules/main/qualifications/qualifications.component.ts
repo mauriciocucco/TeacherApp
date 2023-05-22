@@ -13,6 +13,7 @@ import { MatTabGroup } from '@angular/material/tabs';
 import { FormControl } from '@angular/forms';
 import { Observable, map, of, startWith, tap } from 'rxjs';
 import { STUDENTS } from './constants/students';
+import { SUBJECTS } from './constants/subjects';
 
 @Component({
 	selector: 'app-qualifications',
@@ -23,16 +24,19 @@ export class QualificationsComponent implements OnInit, AfterViewInit {
 	public tasks: any = [];
 	public qualifications: any = [];
 	public exams: any = [];
+	public subjects: any = [];
 	public students: any = [];
 	public studentsProjects: any = [];
 	public studentFilterControl = new FormControl('');
 	public filteredOptions!: Observable<any[]>;
+	public defaultSubject = 1;
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 
 	constructor() {
 		this.tasks = TASKS;
 		this.qualifications = QUALIFICATIONS;
 		this.exams = EXAMS;
+		this.subjects = SUBJECTS;
 		this.students = STUDENTS;
 		this.studentsProjects = STUDENTS_PROJECTS;
 	}
@@ -56,7 +60,7 @@ export class QualificationsComponent implements OnInit, AfterViewInit {
 
 			if (scrollOwnerElement)
 				scrollOwnerElement.scrollTo({
-					left: containerElement.scrollWidth, // Establece la posición a la derecha (al final)
+					left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
 				});
 		}
 	}

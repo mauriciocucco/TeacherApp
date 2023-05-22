@@ -4,45 +4,63 @@
 			<mat-card-header>Filtros</mat-card-header>
 			<mat-card-content>
 				<div id="content-container">
-					<mat-form-field>
-						<mat-label>Alumno</mat-label>
-						<input
-							type="text"
-							matInput
-							placeholder="Nombre y apellido"
-							[matAutocomplete]="auto"
-							aria-label="Number"
-							[formControl]="studentFilterControl" />
-						<mat-autocomplete
-							autoActiveFirstOption
-							#auto="matAutocomplete">
-							<mat-option
-								*ngFor="let student of filteredOptions | async"
-								[value]="student.name + ' ' + student.lastName">
-								{{ student.name }} {{ student.lastName }}
-							</mat-option>
-						</mat-autocomplete>
-					</mat-form-field>
-					<mat-form-field appearance="fill">
-						<mat-label>Tarea</mat-label>
-						<input matInput placeholder="Nombre de la tarea" />
-					</mat-form-field>
-					<mat-form-field appearance="fill">
-						<mat-label>Exámen</mat-label>
-						<input matInput placeholder="Nombre del exámen" />
-					</mat-form-field>
-					<mat-form-field appearance="fill">
-						<mat-label>Ingrese un período</mat-label>
-						<mat-date-range-input [rangePicker]="picker">
-							<input matStartDate placeholder="Desde" />
-							<input matEndDate placeholder="Hasta" />
-						</mat-date-range-input>
-						<mat-hint>DD/MM/AAAA – DD/MM/AAAA</mat-hint>
-						<mat-datepicker-toggle
-							matIconSuffix
-							[for]="picker"></mat-datepicker-toggle>
-						<mat-date-range-picker #picker></mat-date-range-picker>
-					</mat-form-field>
+					<div class="first-row">
+						<mat-radio-group
+							aria-label="Elegí una materia"
+							[(ngModel)]="defaultSubject">
+							<mat-radio-button
+								*ngFor="let subject of subjects"
+								[value]="subject.id"
+								>{{ subject.name }}</mat-radio-button
+							>
+						</mat-radio-group>
+					</div>
+					<div class="second-row">
+						<mat-form-field>
+							<mat-label>Alumno</mat-label>
+							<input
+								type="text"
+								matInput
+								placeholder="Nombre y apellido"
+								[matAutocomplete]="auto"
+								aria-label="Number"
+								[formControl]="studentFilterControl" />
+							<mat-autocomplete
+								autoActiveFirstOption
+								#auto="matAutocomplete">
+								<mat-option
+									*ngFor="
+										let student of filteredOptions | async
+									"
+									[value]="
+										student.name + ' ' + student.lastName
+									">
+									{{ student.name }} {{ student.lastName }}
+								</mat-option>
+							</mat-autocomplete>
+						</mat-form-field>
+						<mat-form-field appearance="fill">
+							<mat-label>Tarea</mat-label>
+							<input matInput placeholder="Nombre de la tarea" />
+						</mat-form-field>
+						<mat-form-field appearance="fill">
+							<mat-label>Exámen</mat-label>
+							<input matInput placeholder="Nombre del exámen" />
+						</mat-form-field>
+						<mat-form-field appearance="fill">
+							<mat-label>Ingrese un período</mat-label>
+							<mat-date-range-input [rangePicker]="picker">
+								<input matStartDate placeholder="Desde" />
+								<input matEndDate placeholder="Hasta" />
+							</mat-date-range-input>
+							<mat-hint>DD/MM/AAAA – DD/MM/AAAA</mat-hint>
+							<mat-datepicker-toggle
+								matIconSuffix
+								[for]="picker"></mat-datepicker-toggle>
+							<mat-date-range-picker
+								#picker></mat-date-range-picker>
+						</mat-form-field>
+					</div>
 				</div>
 			</mat-card-content>
 		</mat-card>

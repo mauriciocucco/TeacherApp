@@ -7,18 +7,20 @@
 }
 
 #content-container {
-	display: flex;
-	gap: 3rem;
-	justify-content: space-around;
-	padding-top: 1rem;
-	width: 100%;
-	& > mat-form-field {
-		width: 100%;
-	}
-	@include mq-mobile {
+	.second-row {
 		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
+		gap: 3rem;
+		justify-content: space-around;
+		padding-top: 1rem;
+		width: 100%;
+		& > mat-form-field {
+			width: 100%;
+		}
+		@include mq-mobile {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
 	}
 }
 
