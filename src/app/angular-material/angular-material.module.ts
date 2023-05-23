@@ -8,6 +8,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
 	declarations: [],
@@ -21,6 +22,7 @@ import { MatRadioModule } from '@angular/material/radio';
 		MatTabsModule,
 		MatAutocompleteModule,
 		MatRadioModule,
+		MatButtonModule,
 	],
 })
 export class AngularMaterialModule {}

@@ -1,0 +1,28 @@
+@import '../../../../variables.scss';
+
+.login-container {
+	height: -webkit-fill-available;
+	width: 100%;
+	@include flex-center;
+}
+
+#login-card {
+	gap: 3rem;
+	width: 30%;
+	@include flex-center;
+	@include mq-mobile {
+		width: 90%;
+	}
+	.mat-mdc-card-content {
+		flex-direction: column;
+		width: 100%;
+		@include flex-center;
+		.mat-mdc-form-field,
+		button {
+			width: 100%;
+		}
+		button {
+			margin: 2rem 0;
+		}
+	}
+}

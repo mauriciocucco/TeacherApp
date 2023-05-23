@@ -50,6 +50,13 @@
 	display: flex;
 	flex-direction: column;
 	gap: 3rem;
+	.mat-mdc-card {
+		&-content {
+			@include mq-mobile {
+				padding-bottom: 0.5rem;
+			}
+		}
+	}
 }
 
 .cards-wrapper {
