@@ -1,78 +1,105 @@
 import {
-	AfterViewInit,
 	Component,
+	OnDestroy,
 	OnInit,
 	QueryList,
 	ViewChildren,
 } from '@angular/core';
 import { STUDENTS_PROJECTS } from './constants/students-projects';
-import { TASKS } from './constants/tasks';
-import { QUALIFICATIONS } from './constants/qualifications';
-import { EXAMS } from './constants/exams';
-import { MatTabGroup } from '@angular/material/tabs';
 import { FormControl } from '@angular/forms';
-import { Observable, map, of, startWith, tap } from 'rxjs';
-import { STUDENTS } from './constants/students';
-import { SUBJECTS } from './constants/subjects';
+import {
+	Observable,
+	Subject,
+	combineLatest,
+	map,
+	startWith,
+	takeUntil,
+	tap,
+} from 'rxjs';
+import { Task } from '../../../core/interfaces/task.interface';
+import { Marking } from '../../../core/interfaces/marking.interface';
+import { Subject as schoolSubject } from '../../../core/interfaces/subject.interface';
+import { Exam } from '../../../core/interfaces/exam.interface';
+import { Student } from '../../../core/interfaces/student.interface';
+import { ApiService } from '../../../core/services/api/api.service';
+import { MatTabGroup } from '@angular/material/tabs';
 
 @Component({
 	selector: 'app-qualifications',
 	templateUrl: './qualifications.component.html',
 	styleUrls: ['./qualifications.component.scss'],
 })
-export class QualificationsComponent implements OnInit, AfterViewInit {
-	public tasks: any = [];
-	public qualifications: any = [];
-	public exams: any = [];
-	public subjects: any = [];
-	public students: any = [];
+export class QualificationsComponent implements OnInit, OnDestroy {
+	public tasks$: Observable<Task[]> = this.apiService.get('tasks');
+	public markings$: Observable<Marking[]> = this.apiService.get('markings');
+	public exams$: Observable<Exam[]> = this.apiService.get('exams');
+	public subjects$: Observable<schoolSubject[]> =
+		this.apiService.get('subjects');
+	public students$: Observable<Student[]> = this.apiService.get('students');
 	public studentsProjects: any = [];
+	public vm$ = combineLatest([
+		this.tasks$,
+		this.markings$,
+		this.exams$,
+		this.subjects$,
+		this.students$,
+	]).pipe(
+		map(([tasks, markings, exams, subjects, students]) => ({
+			tasks,
+			markings,
+			exams,
+			subjects,
+			students,
+		})),
+		tap(() => this.scrollToTheLeft())
+	);
 	public studentFilterControl = new FormControl('');
 	public filteredOptions!: Observable<any[]>;
 	public defaultSubject = 1;
+	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 
-	constructor() {
-		this.tasks = TASKS;
-		this.qualifications = QUALIFICATIONS;
-		this.exams = EXAMS;
-		this.subjects = SUBJECTS;
-		this.students = STUDENTS;
+	constructor(private apiService: ApiService) {
 		this.studentsProjects = STUDENTS_PROJECTS;
 	}
 
 	ngOnInit() {
-		this.filteredOptions = this.studentFilterControl.valueChanges.pipe(
-			startWith(''),
-			map(value => this._filter(value || ''))
-		);
+		this.listenStudentFilterChanges();
 	}
 
-	ngAfterViewInit() {
-		this.scrollToTheLeft();
+	ngOnDestroy(): void {
+		this.destroy.next(true);
+		this.destroy.unsubscribe();
 	}
 
 	private scrollToTheLeft() {
-		for (const tab of this.tabChildren) {
-			const containerElement = tab._elementRef.nativeElement;
-			const scrollOwnerElement: Element =
-				containerElement.lastChild?.firstChild?.firstChild; //.mat-mdc-tab-body-content
+		this.tabChildren.changes
+			.pipe(takeUntil(this.destroy))
+			.subscribe((queryList: QueryList<MatTabGroup>) => {
+				for (const tab of queryList.toArray()) {
+					const containerElement = tab._elementRef.nativeElement;
+					const scrollOwnerElement: Element =
+						containerElement.lastChild?.firstChild?.firstChild; //.mat-mdc-tab-body-content
 
-			if (scrollOwnerElement)
-				scrollOwnerElement.scrollTo({
-					left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
-				});
-		}
+					if (scrollOwnerElement)
+						scrollOwnerElement.scrollTo({
+							left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
+						});
+				}
+			});
 	}
 
-	private _filter(value: any): string[] {
+	private listenStudentFilterChanges() {
+		this.studentFilterControl.valueChanges.pipe(
+			startWith(''),
+			map(value => this.filterValues(value || '')),
+			takeUntil(this.destroy)
+		);
+	}
+
+	private filterValues(value: string): any {
 		const filterValue = value.toLowerCase();
 
-		return this.students.filter((student: any) => {
-			const fullName = `${student.name}${student.lastName}`.toLowerCase();
-			if (fullName.includes(filterValue)) {
-				return student;
-			}
-		});
+		return '';
 	}
 }

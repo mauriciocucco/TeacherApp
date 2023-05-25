@@ -1,4 +1,4 @@
-<div id="container">
+<div id="container" *ngIf="vm$ | async as vm">
 	<div id="filters">
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
@@ -9,7 +9,7 @@
 							aria-label="Elegí una materia"
 							[(ngModel)]="defaultSubject">
 							<mat-radio-button
-								*ngFor="let subject of subjects"
+								*ngFor="let subject of vm.subjects"
 								[value]="subject.id"
 								>{{ subject.name }}</mat-radio-button
 							>
@@ -77,11 +77,13 @@
 						<div class="cards-wrapper">
 							<mat-card
 								class="qualification-card"
-								*ngFor="let task of tasks">
+								*ngFor="let task of vm.tasks">
 								<mat-card-header
 									class="qualification-card-header">
 									<h3>{{ task.name }}</h3>
-									<p>{{ task.date | shortDate }}</p>
+									<p>
+										{{ task.date | shortDate }}
+									</p>
 								</mat-card-header>
 								<mat-card-content>
 									<div class="qualification-card-content">
@@ -99,10 +101,10 @@
 												">
 												<mat-option
 													*ngFor="
-														let qualification of qualifications
+														let marking of vm.markings
 													"
-													[value]="qualification.id">
-													{{ qualification.name }}
+													[value]="marking.id">
+													{{ marking.name }}
 												</mat-option>
 											</mat-select>
 										</mat-form-field>
@@ -131,11 +133,13 @@
 						<div class="cards-wrapper">
 							<mat-card
 								class="qualification-card"
-								*ngFor="let exam of exams">
+								*ngFor="let exam of vm.exams">
 								<mat-card-header
 									class="qualification-card-header">
 									<h3>{{ exam.name }}</h3>
-									<p>{{ exam.date | shortDate }}</p>
+									<p>
+										{{ exam.date | shortDate }}
+									</p>
 								</mat-card-header>
 								<mat-card-content>
 									<div class="qualification-card-content">

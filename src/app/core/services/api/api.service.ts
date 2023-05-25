@@ -9,10 +9,8 @@ import { environment } from 'src/environments/environment';
 export class ApiService {
 	constructor(private httpClient: HttpClient) {}
 
-	public get<T>(endpoint: string, params = {}): Observable<T> {
-		return this.httpClient.get<T>(environment.apiUrl + endpoint, {
-			params,
-		});
+	public get<T>(endpoint: string, options = {}): Observable<T> {
+		return this.httpClient.get<T>(environment.apiUrl + endpoint, options);
 	}
 
 	public post<T>(endpoint: string, data: unknown): Observable<T> {
