@@ -13,9 +13,24 @@
 								[value]="subject.id"
 								>{{ subject.name }}</mat-radio-button
 							>
+							<mat-radio-button value="*">{{
+								'Todas las materias'
+							}}</mat-radio-button>
 						</mat-radio-group>
 					</div>
 					<div class="second-row">
+						<mat-form-field appearance="fill">
+							<mat-label>Curso</mat-label>
+							<mat-select value="*">
+								<mat-option
+									*ngFor="let course of vm.courses"
+									[value]="course.id">
+									{{ course.year }}° -
+									{{ course.shift | shift }}
+								</mat-option>
+								<mat-option value="*">{{ 'Todos' }}</mat-option>
+							</mat-select>
+						</mat-form-field>
 						<mat-form-field>
 							<mat-label>Alumno</mat-label>
 							<input
@@ -67,9 +82,9 @@
 	</div>
 
 	<div id="students-cards-container">
-		<mat-card *ngFor="let student of studentsProjects">
+		<mat-card *ngFor="let student of vm.students">
 			<mat-card-header
-				>{{ student.name }} {{ student.lastName }}</mat-card-header
+				>{{ student.name }} {{ student.lastname }}</mat-card-header
 			>
 			<mat-card-content>
 				<mat-tab-group #tabChildren id="qualifications-tab-group">
@@ -93,11 +108,11 @@
 												[value]="
 													{
 														studentProjects:
-															student.projects,
-														projectToMatch: task.id
+															student.studentToTask,
+														idToMatch: task.id
 													}
-														| studentData
-															: 'qualification'
+														| studentTask
+															: 'markingId'
 												">
 												<mat-option
 													*ngFor="
@@ -115,10 +130,10 @@
 												>{{
 													{
 														studentProjects:
-															student.projects,
-														projectToMatch: task.id
+															student.studentToTask,
+														idToMatch: task.id
 													}
-														| studentData
+														| studentTask
 															: 'observation'
 												}}
 												</textarea
@@ -151,9 +166,9 @@
 												[value]="
 													{
 														studentProjects:
-															student.exams,
-														projectToMatch: exam.id
-													} | studentData : 'exams'
+															student.studentToExam,
+														idToMatch: exam.id
+													} | studentExam : 'marking'
 												" />
 										</mat-form-field>
 										<mat-form-field
@@ -163,10 +178,10 @@
 												>{{
 													{
 														studentProjects:
-															student.exams,
-														projectToMatch: exam.id
+															student.studentToExam,
+														idToMatch: exam.id
 													}
-														| studentData
+														| studentExam
 															: 'observation'
 												}}
 												</textarea

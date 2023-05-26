@@ -5,7 +5,6 @@ import {
 	QueryList,
 	ViewChildren,
 } from '@angular/core';
-import { STUDENTS_PROJECTS } from './constants/students-projects';
 import { FormControl } from '@angular/forms';
 import {
 	Observable,
@@ -23,6 +22,7 @@ import { Exam } from '../../../core/interfaces/exam.interface';
 import { Student } from '../../../core/interfaces/student.interface';
 import { ApiService } from '../../../core/services/api/api.service';
 import { MatTabGroup } from '@angular/material/tabs';
+import { Course } from '../../../core/interfaces/course.interface';
 
 @Component({
 	selector: 'app-qualifications',
@@ -30,38 +30,38 @@ import { MatTabGroup } from '@angular/material/tabs';
 	styleUrls: ['./qualifications.component.scss'],
 })
 export class QualificationsComponent implements OnInit, OnDestroy {
-	public tasks$: Observable<Task[]> = this.apiService.get('tasks');
-	public markings$: Observable<Marking[]> = this.apiService.get('markings');
-	public exams$: Observable<Exam[]> = this.apiService.get('exams');
-	public subjects$: Observable<schoolSubject[]> =
+	private tasks$: Observable<Task[]> = this.apiService.get('tasks');
+	private markings$: Observable<Marking[]> = this.apiService.get('markings');
+	private exams$: Observable<Exam[]> = this.apiService.get('exams');
+	private subjects$: Observable<schoolSubject[]> =
 		this.apiService.get('subjects');
-	public students$: Observable<Student[]> = this.apiService.get('students');
-	public studentsProjects: any = [];
+	private courses$: Observable<Course[]> = this.apiService.get('courses');
+	private students$: Observable<Student[]> = this.apiService.get('students');
 	public vm$ = combineLatest([
 		this.tasks$,
 		this.markings$,
 		this.exams$,
 		this.subjects$,
+		this.courses$,
 		this.students$,
 	]).pipe(
-		map(([tasks, markings, exams, subjects, students]) => ({
+		map(([tasks, markings, exams, subjects, courses, students]) => ({
 			tasks,
 			markings,
 			exams,
 			subjects,
+			courses,
 			students,
 		})),
 		tap(() => this.scrollToTheLeft())
 	);
 	public studentFilterControl = new FormControl('');
 	public filteredOptions!: Observable<any[]>;
-	public defaultSubject = 1;
+	public defaultSubject = '*';
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 
-	constructor(private apiService: ApiService) {
-		this.studentsProjects = STUDENTS_PROJECTS;
-	}
+	constructor(private apiService: ApiService) {}
 
 	ngOnInit() {
 		this.listenStudentFilterChanges();
