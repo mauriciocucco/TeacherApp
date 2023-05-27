@@ -1,4 +1,4 @@
-<div id="container" *ngIf="vm$ | async as vm">
+<div id="container">
 	<div id="filters">
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
@@ -7,13 +7,13 @@
 					<div class="first-row">
 						<mat-radio-group
 							aria-label="Elegí una materia"
-							[(ngModel)]="defaultSubject">
+							[formControl]="subjectFormControl">
 							<mat-radio-button
-								*ngFor="let subject of vm.subjects"
+								*ngFor="let subject of subjects$ | async"
 								[value]="subject.id"
 								>{{ subject.name }}</mat-radio-button
 							>
-							<mat-radio-button value="*">{{
+							<mat-radio-button [value]="0">{{
 								'Todas las materias'
 							}}</mat-radio-button>
 						</mat-radio-group>
@@ -21,14 +21,15 @@
 					<div class="second-row">
 						<mat-form-field appearance="fill">
 							<mat-label>Curso</mat-label>
-							<mat-select value="*">
+							<mat-select
+								[formControl]="courseFormControl"
+								placeholder="Seleccionar un curso">
 								<mat-option
-									*ngFor="let course of vm.courses"
+									*ngFor="let course of courses$ | async"
 									[value]="course.id">
 									{{ course.year }}° -
 									{{ course.shift | shift }}
 								</mat-option>
-								<mat-option value="*">{{ 'Todos' }}</mat-option>
 							</mat-select>
 						</mat-form-field>
 						<mat-form-field>
@@ -41,16 +42,20 @@
 								aria-label="Number"
 								[formControl]="studentFilterControl" />
 							<mat-autocomplete
+								(optionSelected)="showSelectedStudent($event)"
 								autoActiveFirstOption
 								#auto="matAutocomplete">
+								<mat-option value="Todos">{{
+									'Todos'
+								}}</mat-option>
 								<mat-option
 									*ngFor="
-										let student of filteredOptions | async
+										let student of filteredStudents | async
 									"
 									[value]="
-										student.name + ' ' + student.lastName
+										student.name + ' ' + student.lastname
 									">
-									{{ student.name }} {{ student.lastName }}
+									{{ student.name }} {{ student?.lastname }}
 								</mat-option>
 							</mat-autocomplete>
 						</mat-form-field>
@@ -81,10 +86,14 @@
 		</mat-card>
 	</div>
 
-	<div id="students-cards-container">
+	<div
+		id="students-cards-container"
+		*ngIf="vm$ | async as vm; else selectCourseWarning">
 		<mat-card *ngFor="let student of vm.students">
 			<mat-card-header
-				>{{ student.name }} {{ student.lastname }}</mat-card-header
+				><h2 class="student-header">
+					{{ student.name }} {{ student.lastname }}
+				</h2></mat-card-header
 			>
 			<mat-card-content>
 				<mat-tab-group #tabChildren id="qualifications-tab-group">
@@ -116,10 +125,11 @@
 												">
 												<mat-option
 													*ngFor="
-														let marking of vm.markings
+														let marking of markings
 													"
 													[value]="marking.id">
-													{{ marking.name }}
+													{{ marking.name }} -
+													{{ marking.description }}
 												</mat-option>
 											</mat-select>
 										</mat-form-field>
@@ -196,4 +206,14 @@
 			</mat-card-content>
 		</mat-card>
 	</div>
+
+	<ng-template #selectCourseWarning>
+		<div class="warning-container">
+			<mat-card id="warning-card">
+				<mat-card-content>
+					<h2>Por favor, seleccione un curso</h2>
+				</mat-card-content>
+			</mat-card>
+		</div>
+	</ng-template>
 </div>
