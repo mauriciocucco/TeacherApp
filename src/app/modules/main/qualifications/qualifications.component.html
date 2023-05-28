@@ -37,7 +37,7 @@
 							<input
 								type="text"
 								matInput
-								placeholder="Nombre y apellido"
+								placeholder="Seleccione un alumnx"
 								[matAutocomplete]="auto"
 								aria-label="Number"
 								[formControl]="studentFilterControl" />
@@ -45,13 +45,11 @@
 								(optionSelected)="showSelectedStudent($event)"
 								autoActiveFirstOption
 								#auto="matAutocomplete">
-								<mat-option value="Todos">{{
-									'Todos'
+								<mat-option [value]="allWord.INCLUSIVE">{{
+									allWord.INCLUSIVE
 								}}</mat-option>
 								<mat-option
-									*ngFor="
-										let student of filteredStudents | async
-									"
+									*ngFor="let student of filteredStudents"
 									[value]="
 										student.name + ' ' + student.lastname
 									">
@@ -61,11 +59,58 @@
 						</mat-form-field>
 						<mat-form-field appearance="fill">
 							<mat-label>Tarea</mat-label>
-							<input matInput placeholder="Nombre de la tarea" />
+							<input
+								type="text"
+								matInput
+								placeholder="Seleccione una tarea"
+								[matAutocomplete]="autoTask"
+								aria-label="Number"
+								[formControl]="taskFilterControl" />
+							<mat-autocomplete
+								(optionSelected)="
+									showSelectedTaskOrExam($event)
+								"
+								autoActiveFirstOption
+								#autoTask="matAutocomplete">
+								<mat-option [value]="allWord.FEMALE">{{
+									allWord.FEMALE
+								}}</mat-option>
+								<mat-option
+									*ngFor="let task of filteredTasks"
+									[value]="task.name">
+									{{ task.name }} -
+									{{ task.date | shortDate }}
+								</mat-option>
+							</mat-autocomplete>
 						</mat-form-field>
 						<mat-form-field appearance="fill">
 							<mat-label>Exámen</mat-label>
-							<input matInput placeholder="Nombre del exámen" />
+							<input
+								type="text"
+								matInput
+								placeholder="Seleccione un exámen"
+								[matAutocomplete]="autoExam"
+								aria-label="Number"
+								[formControl]="examFilterControl" />
+							<mat-autocomplete
+								(optionSelected)="
+									showSelectedTaskOrExam(
+										$event,
+										WorkEnum.EXAM
+									)
+								"
+								autoActiveFirstOption
+								#autoExam="matAutocomplete">
+								<mat-option [value]="allWord.MALE">{{
+									allWord.MALE
+								}}</mat-option>
+								<mat-option
+									*ngFor="let exam of filteredExams"
+									[value]="exam.name">
+									{{ exam.name }} -
+									{{ exam.date | shortDate }}
+								</mat-option>
+							</mat-autocomplete>
 						</mat-form-field>
 						<mat-form-field appearance="fill">
 							<mat-label>Ingrese un período</mat-label>

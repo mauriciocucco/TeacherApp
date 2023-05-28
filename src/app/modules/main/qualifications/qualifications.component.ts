@@ -7,12 +7,12 @@ import {
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {
+	BehaviorSubject,
 	Observable,
 	Subject,
 	combineLatest,
 	forkJoin,
 	map,
-	of,
 	startWith,
 	takeUntil,
 	tap,
@@ -28,6 +28,15 @@ import { Course } from '../../../core/interfaces/course.interface';
 import { taskAndExamsParams } from './interfaces/task-and-exams-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { Work } from './enums/work.enum';
+import { Endpoints } from './enums/endpoints.enum';
+
+type ControlType = 'Students' | 'Tasks' | 'Exams';
+enum AllWord {
+	MALE = 'Todos',
+	FEMALE = 'Todas',
+	INCLUSIVE = 'Todxs',
+}
 
 @Component({
 	selector: 'app-qualifications',
@@ -35,8 +44,8 @@ import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 	styleUrls: ['./qualifications.component.scss'],
 })
 export class QualificationsComponent implements OnInit, OnDestroy {
-	private tasks$: Subject<Task[]> = new Subject(); //son Subjects para poder emitir valores luego de ser filtrados
-	private exams$: Subject<Exam[]> = new Subject(); //son Subjects para poder emitir valores luego de ser filtrados
+	private tasks$: BehaviorSubject<Task[]> = new BehaviorSubject([] as Task[]); //es un Subject para poder emitir valores luego de ser filtrado por materia
+	private exams$: BehaviorSubject<Exam[]> = new BehaviorSubject([] as Exam[]); //es un Subject para poder emitir valores luego de ser filtrado por materia
 	private taskAndExamsParams: taskAndExamsParams = {
 		subjectId: 0,
 		courseId: 0,
@@ -44,27 +53,35 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private studentsParams: StudentsParams = {
 		courseId: 0,
 	};
+	private formControlsEnabled = false;
 	private destroy: Subject<boolean> = new Subject<boolean>();
-	private controlsEnabled = false;
-	public students$: Subject<Student[]> = new Subject(); //son Subjects para poder emitir valores luego de ser filtrados;
+	public WorkEnum = Work;
+	public students$: Subject<Student[]> = new Subject(); //es un Subject para poder emitir valores luego de ser filtrado por curso
 	public studentsInACourse: Student[] = []; //para el filtro por nombre del estudiante
-	public subjects$: Observable<schoolSubject[]> =
-		this.apiService.get('subjects');
-	public courses$: Observable<Course[]> = this.apiService.get('courses');
-	public markings: Marking[] = [];
-	public vm$ = combineLatest([this.tasks$, this.exams$, this.students$]).pipe(
-		map(([tasks, exams, students]) => ({
-			tasks,
-			exams,
-			students,
-		})),
-		tap(() => this.scrollToLatest())
+	public subjects$: Observable<schoolSubject[]> = this.apiService.get(
+		Endpoints.SUBJECTS
 	);
+	public courses$: Observable<Course[]> = this.apiService.get(
+		Endpoints.COURSES
+	);
+	public markings: Marking[] = [];
+	public filteredTasksBySubject: Task[] = []; //para el filtro por nombre de la tarea
+	public filteredExamsBySubject: Exam[] = []; //para el filtro por nombre del exámen
 	public studentFilterControl = new FormControl({
 		value: '',
 		disabled: true,
 	});
-	public filteredStudents: Observable<Student[]> = of([]);
+	public taskFilterControl = new FormControl({
+		value: '',
+		disabled: true,
+	});
+	public examFilterControl = new FormControl({
+		value: '',
+		disabled: true,
+	});
+	public filteredStudents: Student[] = [];
+	public filteredTasks: Task[] = [];
+	public filteredExams: Exam[] = [];
 	public subjectFormControl = new FormControl<number>(
 		{ value: 0, disabled: true },
 		{
@@ -74,14 +91,21 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public courseFormControl = new FormControl<number>(0, {
 		nonNullable: true,
 	});
+	public vm$ = combineLatest([this.tasks$, this.exams$, this.students$]).pipe(
+		map(([tasks, exams, students]) => ({
+			tasks,
+			exams,
+			students,
+		})),
+		tap(() => this.scrollToLatest())
+	);
+	public allWord = AllWord;
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 
 	constructor(private apiService: ApiService) {}
 
 	ngOnInit() {
 		this.getMarkings();
-		this.getTasksAndExams(true);
-		this.getStudents(true);
 		this.listenCourseChanges();
 	}
 
@@ -91,42 +115,44 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private getMarkings() {
-		this.apiService.get('markings').subscribe(result => {
+		this.apiService.get(Endpoints.MARKINGS).subscribe(result => {
+			/** no se deja como observable (marking$) porque sino con el pipe async
+			 *  se va a subscribir por cada tarea en cada card */
 			this.markings = result as Marking[];
 		});
 	}
 
-	private getTasksAndExams(returnEmpty = false) {
-		if (returnEmpty) {
-			this.tasks$.next([]);
-			this.exams$.next([]);
-			return;
-		}
-
-		const tasksObs$ = this.apiService.get('tasks', {
+	private getTasksAndExams() {
+		const tasksObs$ = this.apiService.get<Task[]>(Endpoints.TASKS, {
 			params: this.taskAndExamsParams,
 		});
-		const examsObs$ = this.apiService.get('exams', {
+		const examsObs$ = this.apiService.get<Exam[]>(Endpoints.EXAMS, {
 			params: this.taskAndExamsParams,
 		});
 
 		forkJoin([tasksObs$, examsObs$]).subscribe(result => {
-			this.tasks$.next(result[0] as Task[]); // esto es para que emita el combineLatest de vm$
-			this.exams$.next(result[1] as Exam[]); // esto es para que emita el combineLatest de vm$
+			const tasks = result[0];
+			const exams = result[1];
+
+			this.tasks$.next(tasks); // esto es para que emita el combineLatest de vm$
+			this.exams$.next(exams); // esto es para que emita el combineLatest de vm$
+			this.filteredTasksBySubject = tasks; //guarda el total de los elementos filtrados por materia
+			this.filteredExamsBySubject = exams; //guarda el total de los elementos filtrados por materia
+			this.filteredTasks = tasks;
+			this.filteredExams = exams;
 		});
 	}
 
-	private getStudents(returnEmpty = false) {
-		if (returnEmpty) return this.students$.next([]);
-
+	private getStudents() {
 		this.apiService
-			.get('students', {
+			.get<Student[]>(Endpoints.STUDENTS, {
 				params: this.studentsParams,
 			})
-			.subscribe(response => {
-				this.students$.next(response as Student[]);
-				this.studentsInACourse = response as Student[];
-				if (!this.controlsEnabled) this.enableControls();
+			.subscribe(students => {
+				this.students$.next(students);
+				this.studentsInACourse = students;
+				this.filteredStudents = students;
+				if (!this.formControlsEnabled) this.enableControls();
 			});
 	}
 
@@ -147,28 +173,78 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			});
 	}
 
-	private listenStudentFilterChanges() {
-		this.filteredStudents = this.studentFilterControl.valueChanges.pipe(
+	private listenFiltersChanges() {
+		this.processValueChangesObservable(
+			this.studentFilterControl.valueChanges
+		).subscribe(result => {
+			this.filteredStudents = result as Student[];
+		});
+
+		this.processValueChangesObservable(
+			this.taskFilterControl.valueChanges,
+			'Tasks'
+		).subscribe(result => {
+			this.filteredTasks = result as Task[];
+		});
+
+		this.processValueChangesObservable(
+			this.examFilterControl.valueChanges,
+			'Exams'
+		).subscribe(result => {
+			this.filteredExams = result as Exam[];
+		});
+	}
+
+	private processValueChangesObservable(
+		valueChanges$: Observable<string | null>,
+		controlType: ControlType = 'Students'
+	) {
+		return valueChanges$.pipe(
 			startWith(''),
-			map(value => this.filterValues(value)),
+			map(value => this.filterValues(value, controlType)),
 			takeUntil(this.destroy)
 		);
 	}
 
-	private filterValues(value: string | null): Student[] {
-		if (!value) return this.studentsInACourse;
+	private filterValues(
+		value: string | null,
+		controlType: ControlType = 'Students'
+	): Student[] | Task[] | Exam[] {
+		let selectedArray: Student[] | Task[] | Exam[] = this.studentsInACourse;
 
-		const filterValue = value.toLowerCase();
+		if (controlType === 'Tasks')
+			selectedArray = this.filteredTasksBySubject;
+		if (controlType === 'Exams')
+			selectedArray = this.filteredExamsBySubject;
 
-		return this.processStudentAutocomplete(filterValue);
+		if (!value) return selectedArray;
+
+		return this.processAutocompleteOutput(
+			value!.toLowerCase(),
+			selectedArray
+		);
 	}
 
-	private processStudentAutocomplete(filterValue: string) {
-		return this.studentsInACourse.filter(student => {
-			const fullname = `${student.name} ${student.lastname}`;
+	private processAutocompleteOutput(
+		filterValue: string,
+		arrayToFilter: any[]
+	) {
+		return arrayToFilter.filter((element: Student | Task | Exam) => {
+			if (this.isStudentElement(element)) {
+				return `${element.name} ${element.lastname}`
+					.toLowerCase()
+					.includes(filterValue);
+			}
 
-			return fullname.toLowerCase().includes(filterValue);
+			return element.name.toLowerCase().includes(filterValue);
 		});
+	}
+
+	//es una función Type Guard de Tyepscript
+	private isStudentElement(
+		element: Student | Task | Exam
+	): element is Student {
+		return 'lastname' in element;
 	}
 
 	private listenSubjectChanges() {
@@ -206,16 +282,17 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private enableControls() {
 		this.subjectFormControl.enable({ emitEvent: false });
 		this.studentFilterControl.enable({ emitEvent: false });
-		this.filteredStudents = of(this.studentsInACourse);
-		this.listenStudentFilterChanges();
+		this.taskFilterControl.enable({ emitEvent: false });
+		this.examFilterControl.enable({ emitEvent: false });
+		this.listenFiltersChanges();
 		this.listenSubjectChanges();
-		this.controlsEnabled = true;
+		this.formControlsEnabled = true;
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
 		const value = option.option.value;
 
-		if (value === 'Todos')
+		if (value === AllWord.INCLUSIVE)
 			return this.students$.next(this.studentsInACourse);
 
 		const student = this.studentsInACourse.find(
@@ -223,5 +300,30 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		);
 
 		this.students$.next([student as Student]);
+	}
+
+	public showSelectedTaskOrExam(
+		option: MatAutocompleteSelectedEvent,
+		type = this.WorkEnum.TASK
+	) {
+		const valueSelected = option.option.value;
+		let arraySelected: Task[] | Exam[] = this.filteredTasksBySubject;
+		let behaviorSubjectSelected:
+			| BehaviorSubject<Task[]>
+			| BehaviorSubject<Exam[]> = this.tasks$;
+
+		if (type === this.WorkEnum.EXAM) {
+			arraySelected = this.filteredExamsBySubject;
+			behaviorSubjectSelected = this.exams$;
+		}
+
+		if (valueSelected === AllWord.FEMALE || valueSelected === AllWord.MALE)
+			return behaviorSubjectSelected.next(arraySelected);
+
+		const objectToEmit = arraySelected.find(
+			element => element.name === valueSelected
+		);
+
+		return behaviorSubjectSelected.next([objectToEmit as Task | Exam]);
 	}
 }
