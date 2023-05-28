@@ -3,14 +3,16 @@ import {
 	OnDestroy,
 	OnInit,
 	QueryList,
+	ViewChild,
 	ViewChildren,
 } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import {
 	BehaviorSubject,
 	Observable,
 	Subject,
 	combineLatest,
+	filter,
 	forkJoin,
 	map,
 	startWith,
@@ -30,6 +32,7 @@ import { StudentsParams } from './interfaces/students-params.interface';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { Work } from './enums/work.enum';
 import { Endpoints } from './enums/endpoints.enum';
+import { MatMiniFabButton } from '@angular/material/button';
 
 type ControlType = 'Students' | 'Tasks' | 'Exams';
 enum AllWord {
@@ -46,13 +49,8 @@ enum AllWord {
 export class QualificationsComponent implements OnInit, OnDestroy {
 	private tasks$: BehaviorSubject<Task[]> = new BehaviorSubject([] as Task[]); //es un Subject para poder emitir valores luego de ser filtrado por materia
 	private exams$: BehaviorSubject<Exam[]> = new BehaviorSubject([] as Exam[]); //es un Subject para poder emitir valores luego de ser filtrado por materia
-	private taskAndExamsParams: taskAndExamsParams = {
-		subjectId: 0,
-		courseId: 0,
-	};
-	private studentsParams: StudentsParams = {
-		courseId: 0,
-	};
+	private taskAndExamsParams: taskAndExamsParams | null = null;
+	private studentsParams: StudentsParams | null = null;
 	private formControlsEnabled = false;
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	public WorkEnum = Work;
@@ -91,6 +89,16 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public courseFormControl = new FormControl<number>(0, {
 		nonNullable: true,
 	});
+	public dateRangeFormControl = new FormGroup({
+		start: new FormControl<Date | number | null>({
+			value: null,
+			disabled: true,
+		}),
+		end: new FormControl<Date | number | null>({
+			value: null,
+			disabled: true,
+		}),
+	});
 	public vm$ = combineLatest([this.tasks$, this.exams$, this.students$]).pipe(
 		map(([tasks, exams, students]) => ({
 			tasks,
@@ -101,6 +109,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	);
 	public allWord = AllWord;
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
+	@ViewChild('clearRangeButton', { static: false })
+	clearRangeButton!: MatMiniFabButton;
 
 	constructor(private apiService: ApiService) {}
 
@@ -157,20 +167,18 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private scrollToLatest() {
-		this.tabChildren.changes
-			.pipe(takeUntil(this.destroy))
-			.subscribe((queryList: QueryList<MatTabGroup>) => {
-				for (const tab of queryList.toArray()) {
-					const containerElement = tab._elementRef.nativeElement;
-					const scrollOwnerElement: Element =
-						containerElement.lastChild?.firstChild?.firstChild; //.mat-mdc-tab-body-content
+		setTimeout(() => {
+			for (const tab of this.tabChildren) {
+				const containerElement = tab._elementRef.nativeElement;
+				const scrollOwnerElement: Element =
+					containerElement.lastChild?.firstChild?.firstChild; //.mat-mdc-tab-body-content
 
-					if (scrollOwnerElement)
-						scrollOwnerElement.scrollTo({
-							left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
-						});
-				}
-			});
+				if (scrollOwnerElement)
+					scrollOwnerElement.scrollTo({
+						left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
+					});
+			}
+		}, 0);
 	}
 
 	private listenFiltersChanges() {
@@ -279,13 +287,33 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			});
 	}
 
+	private listenRangeDates() {
+		this.dateRangeFormControl.valueChanges
+			.pipe(
+				filter((value: any) => value.start && value.end),
+				takeUntil(this.destroy)
+			)
+			.subscribe((value: { start: Date; end: Date }) => {
+				this.taskAndExamsParams = {
+					...this.taskAndExamsParams,
+					startDate: value.start.getTime(),
+					endDate: value.end.getTime(),
+				};
+
+				this.disableRangeClearButton(false);
+				this.getTasksAndExams();
+			});
+	}
+
 	private enableControls() {
 		this.subjectFormControl.enable({ emitEvent: false });
 		this.studentFilterControl.enable({ emitEvent: false });
 		this.taskFilterControl.enable({ emitEvent: false });
 		this.examFilterControl.enable({ emitEvent: false });
+		this.dateRangeFormControl.enable({ emitEvent: false });
 		this.listenFiltersChanges();
 		this.listenSubjectChanges();
+		this.listenRangeDates();
 		this.formControlsEnabled = true;
 	}
 
@@ -325,5 +353,17 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		);
 
 		return behaviorSubjectSelected.next([objectToEmit as Task | Exam]);
+	}
+
+	private disableRangeClearButton(disable = true) {
+		this.clearRangeButton.disabled = disable;
+	}
+
+	public resetDatePeriod() {
+		this.dateRangeFormControl.reset();
+		delete this.taskAndExamsParams?.startDate;
+		delete this.taskAndExamsParams?.endDate;
+		this.getTasksAndExams();
+		this.disableRangeClearButton();
 	}
 }

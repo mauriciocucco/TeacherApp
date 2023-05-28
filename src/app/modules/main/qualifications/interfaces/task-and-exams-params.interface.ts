@@ -1,4 +1,6 @@
 export interface taskAndExamsParams {
-	subjectId: string | number;
-	courseId: number | null;
+	subjectId?: number;
+	courseId?: number | null;
+	startDate?: number | null;
+	endDate?: number | null;
 }

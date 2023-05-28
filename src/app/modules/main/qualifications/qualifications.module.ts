@@ -8,7 +8,12 @@ import { StudentExamPipe } from './pipes/student-exam.pipe';
 import { ShiftPipe } from './pipes/shift.pipe';
 
 @NgModule({
-	declarations: [QualificationsComponent, StudentTaskPipe, StudentExamPipe, ShiftPipe],
+	declarations: [
+		QualificationsComponent,
+		StudentTaskPipe,
+		StudentExamPipe,
+		ShiftPipe,
+	],
 	imports: [QualificationsRoutingModule, SharedModule],
 })
 export class QualificationsModule {}

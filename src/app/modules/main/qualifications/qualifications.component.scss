@@ -81,3 +81,23 @@
 #warning-card {
 	text-align: center;
 }
+
+.range-date-wrapper {
+	@include flex-center;
+	button {
+		bottom: 1rem;
+		height: 3rem;
+		margin-left: 0.5rem;
+		position: relative;
+		width: 3rem;
+		mat-icon {
+			font-size: 2rem;
+			height: 2rem;
+			width: 2rem;
+		}
+	}
+}
+
+.displayCenter {
+	@include flex-center;
+}
