@@ -49,7 +49,7 @@
 									allWord.INCLUSIVE
 								}}</mat-option>
 								<mat-option
-									*ngFor="let student of filteredStudents"
+									*ngFor="let student of filteredStudents()"
 									[value]="
 										student.name + ' ' + student.lastname
 									">
@@ -76,7 +76,7 @@
 									allWord.FEMALE
 								}}</mat-option>
 								<mat-option
-									*ngFor="let task of filteredTasks"
+									*ngFor="let task of filteredTasks()"
 									[value]="task.name">
 									{{ task.name }} -
 									{{ task.date | shortDate }}
@@ -105,7 +105,7 @@
 									allWord.MALE
 								}}</mat-option>
 								<mat-option
-									*ngFor="let exam of filteredExams"
+									*ngFor="let exam of filteredExams()"
 									[value]="exam.name">
 									{{ exam.name }} -
 									{{ exam.date | shortDate }}
@@ -153,8 +153,8 @@
 
 	<div
 		id="students-cards-container"
-		*ngIf="vm$ | async as vm; else selectCourseWarning">
-		<mat-card *ngFor="let student of vm.students">
+		*ngIf="tasks() && exams(); else selectCourseWarning">
+		<mat-card *ngFor="let student of filteredStudents()">
 			<mat-card-header
 				><h2 class="student-header">
 					{{ student.name }} {{ student.lastname }}
@@ -166,16 +166,13 @@
 						<div
 							class="cards-wrapper"
 							[ngClass]="{
-								displayCenter: vm.tasks.length === 0
+								displayCenter: tasks().length === 0
 							}">
 							<ng-container
-								*ngIf="
-									vm.tasks.length > 0;
-									else noMatchedTasks
-								">
+								*ngIf="tasks().length > 0; else noMatchedTasks">
 								<mat-card
 									class="qualification-card"
-									*ngFor="let task of vm.tasks">
+									*ngFor="let task of filteredTasks()">
 									<mat-card-header
 										class="qualification-card-header">
 										<h3>{{ task.name }}</h3>
@@ -199,7 +196,7 @@
 													">
 													<mat-option
 														*ngFor="
-															let marking of markings
+															let marking of markings()
 														"
 														[value]="marking.id">
 														{{ marking.name }} -
@@ -247,16 +244,13 @@
 						<div
 							class="cards-wrapper"
 							[ngClass]="{
-								displayCenter: vm.exams.length === 0
+								displayCenter: exams().length === 0
 							}">
 							<ng-container
-								*ngIf="
-									vm.exams.length > 0;
-									else noMatchedExams
-								">
+								*ngIf="exams().length > 0; else noMatchedExams">
 								<mat-card
 									class="qualification-card"
-									*ngFor="let exam of vm.exams">
+									*ngFor="let exam of filteredExams()">
 									<mat-card-header
 										class="qualification-card-header">
 										<h3>{{ exam.name }}</h3>
