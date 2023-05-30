@@ -3,157 +3,166 @@
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
 			<mat-card-content>
-				<div id="content-container">
-					<div class="first-row">
-						<mat-radio-group
-							aria-label="Elegí una materia"
-							[formControl]="subjectFormControl">
-							<mat-radio-button
-								*ngFor="let subject of subjects$ | async"
-								[value]="subject.id"
-								>{{ subject.name }}</mat-radio-button
-							>
-							<mat-radio-button [value]="0">{{
-								'Todas las materias'
-							}}</mat-radio-button>
-						</mat-radio-group>
-					</div>
-					<div class="second-row">
-						<mat-form-field appearance="fill">
-							<mat-label>Curso</mat-label>
-							<mat-select
-								[formControl]="courseFormControl"
-								placeholder="Seleccionar un curso">
-								<mat-option
-									*ngFor="let course of courses$ | async"
-									[value]="course.id">
-									{{ course.year }}° -
-									{{ course.shift | shift }}
-								</mat-option>
-							</mat-select>
-						</mat-form-field>
-						<mat-form-field>
-							<mat-label>Alumno</mat-label>
-							<input
-								type="text"
-								matInput
-								placeholder="Seleccione un alumnx"
-								[matAutocomplete]="auto"
-								aria-label="Number"
-								[formControl]="studentFilterControl" />
-							<mat-autocomplete
-								(optionSelected)="showSelectedStudent($event)"
-								autoActiveFirstOption
-								#auto="matAutocomplete">
-								<mat-option [value]="allWord.INCLUSIVE">{{
-									allWord.INCLUSIVE
-								}}</mat-option>
-								<mat-option
-									*ngFor="let student of filteredStudents()"
-									[value]="
-										student.name + ' ' + student.lastname
-									">
-									{{ student.name }} {{ student?.lastname }}
-								</mat-option>
-							</mat-autocomplete>
-						</mat-form-field>
-						<mat-form-field appearance="fill">
-							<mat-label>Tarea</mat-label>
-							<input
-								type="text"
-								matInput
-								placeholder="Seleccione una tarea"
-								[matAutocomplete]="autoTask"
-								aria-label="Number"
-								[formControl]="taskFilterControl" />
-							<mat-autocomplete
-								(optionSelected)="
-									showSelectedTaskOrExam($event)
-								"
-								autoActiveFirstOption
-								#autoTask="matAutocomplete">
-								<mat-option [value]="allWord.FEMALE">{{
-									allWord.FEMALE
-								}}</mat-option>
-								<mat-option
-									*ngFor="let task of filteredTasks()"
-									[value]="task.name">
-									{{ task.name }} -
-									{{ task.date | shortDate }}
-								</mat-option>
-							</mat-autocomplete>
-						</mat-form-field>
-						<mat-form-field appearance="fill">
-							<mat-label>Exámen</mat-label>
-							<input
-								type="text"
-								matInput
-								placeholder="Seleccione un exámen"
-								[matAutocomplete]="autoExam"
-								aria-label="Number"
-								[formControl]="examFilterControl" />
-							<mat-autocomplete
-								(optionSelected)="
-									showSelectedTaskOrExam(
-										$event,
-										WorkEnum.EXAM
-									)
-								"
-								autoActiveFirstOption
-								#autoExam="matAutocomplete">
-								<mat-option [value]="allWord.MALE">{{
-									allWord.MALE
-								}}</mat-option>
-								<mat-option
-									*ngFor="let exam of filteredExams()"
-									[value]="exam.name">
-									{{ exam.name }} -
-									{{ exam.date | shortDate }}
-								</mat-option>
-							</mat-autocomplete>
-						</mat-form-field>
-						<div class="range-date-wrapper">
+				<form [formGroup]="filtersForm">
+					<div id="content-container">
+						<div class="first-row">
+							<mat-radio-group
+								aria-label="Elegí una materia"
+								formControlName="subject">
+								<mat-radio-button
+									*ngFor="let subject of subjects$ | async"
+									[value]="subject.id"
+									>{{ subject.name }}</mat-radio-button
+								>
+								<mat-radio-button [value]="0">{{
+									'Todas las materias'
+								}}</mat-radio-button>
+							</mat-radio-group>
+						</div>
+						<div class="second-row">
 							<mat-form-field appearance="fill">
-								<mat-label>Ingrese un período</mat-label>
-								<mat-date-range-input
-									[rangePicker]="picker"
-									[formGroup]="dateRangeFormControl">
-									<input
-										matStartDate
-										placeholder="Desde"
-										formControlName="start" />
-									<input
-										matEndDate
-										placeholder="Hasta"
-										formControlName="end" />
-								</mat-date-range-input>
-								<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
-								<mat-datepicker-toggle
-									matIconSuffix
-									[for]="picker"></mat-datepicker-toggle>
-								<mat-date-range-picker
-									#picker></mat-date-range-picker>
+								<mat-label>Curso</mat-label>
+								<mat-select
+									formControlName="course"
+									placeholder="Seleccionar un curso">
+									<mat-option
+										*ngFor="let course of courses$ | async"
+										[value]="course.id">
+										{{ course.year }}° -
+										{{ course.shift | shift }}
+									</mat-option>
+								</mat-select>
 							</mat-form-field>
-							<button
-								#clearRangeButton
-								disabled
-								mat-mini-fab
-								color="primary"
-								title="Limpiar período"
-								aria-label="Botón para limpiar rango de fecha"
-								(click)="resetDatePeriod()">
-								<mat-icon>clear</mat-icon>
-							</button>
+							<mat-form-field>
+								<mat-label>Alumno</mat-label>
+								<input
+									type="text"
+									matInput
+									placeholder="Seleccione un alumnx"
+									[matAutocomplete]="auto"
+									aria-label="Number"
+									formControlName="student" />
+								<mat-autocomplete
+									(optionSelected)="
+										showSelectedStudent($event)
+									"
+									autoActiveFirstOption
+									#auto="matAutocomplete">
+									<mat-option [value]="allWord.INCLUSIVE">{{
+										allWord.INCLUSIVE
+									}}</mat-option>
+									<mat-option
+										*ngFor="
+											let student of filteredStudents()
+										"
+										[value]="
+											student.name +
+											' ' +
+											student.lastname
+										">
+										{{ student.name }}
+										{{ student?.lastname }}
+									</mat-option>
+								</mat-autocomplete>
+							</mat-form-field>
+							<mat-form-field appearance="fill">
+								<mat-label>Tarea</mat-label>
+								<input
+									type="text"
+									matInput
+									placeholder="Seleccione una tarea"
+									[matAutocomplete]="autoTask"
+									aria-label="Number"
+									formControlName="task" />
+								<mat-autocomplete
+									(optionSelected)="
+										showSelectedTaskOrExam($event)
+									"
+									autoActiveFirstOption
+									#autoTask="matAutocomplete">
+									<mat-option [value]="allWord.FEMALE">{{
+										allWord.FEMALE
+									}}</mat-option>
+									<mat-option
+										*ngFor="let task of filteredTasks()"
+										[value]="task.name">
+										{{ task.name }} -
+										{{ task.date | shortDate }}
+									</mat-option>
+								</mat-autocomplete>
+							</mat-form-field>
+							<mat-form-field appearance="fill">
+								<mat-label>Exámen</mat-label>
+								<input
+									type="text"
+									matInput
+									placeholder="Seleccione un exámen"
+									[matAutocomplete]="autoExam"
+									aria-label="Number"
+									formControlName="exam" />
+								<mat-autocomplete
+									(optionSelected)="
+										showSelectedTaskOrExam(
+											$event,
+											WorkEnum.EXAM
+										)
+									"
+									autoActiveFirstOption
+									#autoExam="matAutocomplete">
+									<mat-option [value]="allWord.MALE">{{
+										allWord.MALE
+									}}</mat-option>
+									<mat-option
+										*ngFor="let exam of filteredExams()"
+										[value]="exam.name">
+										{{ exam.name }} -
+										{{ exam.date | shortDate }}
+									</mat-option>
+								</mat-autocomplete>
+							</mat-form-field>
+							<div class="range-date-wrapper">
+								<mat-form-field appearance="fill">
+									<mat-label>Ingrese un período</mat-label>
+									<mat-date-range-input
+										[rangePicker]="picker"
+										formGroupName="dateRange">
+										<input
+											matStartDate
+											placeholder="Desde"
+											formControlName="start" />
+										<input
+											matEndDate
+											placeholder="Hasta"
+											formControlName="end" />
+									</mat-date-range-input>
+									<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
+									<mat-datepicker-toggle
+										matIconSuffix
+										[for]="picker"></mat-datepicker-toggle>
+									<mat-date-range-picker
+										#picker></mat-date-range-picker>
+								</mat-form-field>
+								<button
+									#clearRangeButton
+									disabled
+									mat-mini-fab
+									color="primary"
+									title="Limpiar período"
+									aria-label="Botón para limpiar rango de fecha"
+									(click)="resetDatePeriod()">
+									<mat-icon>clear</mat-icon>
+								</button>
+							</div>
 						</div>
 					</div>
-				</div>
+				</form>
 			</mat-card-content>
 		</mat-card>
 	</div>
 
 	<div
 		id="students-cards-container"
-		*ngIf="tasks() && exams(); else selectCourseWarning">
+		*ngIf="tasks() || exams(); else selectCourseWarning">
 		<mat-card *ngFor="let student of filteredStudents()">
 			<mat-card-header
 				><h2 class="student-header">

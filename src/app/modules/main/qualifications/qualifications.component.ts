@@ -9,7 +9,7 @@ import {
 	effect,
 	signal,
 } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import {
 	Observable,
 	Subject,
@@ -56,48 +56,27 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public filteredStudents: WritableSignal<Student[]> = signal([]);
 	public filteredTasks: WritableSignal<Task[]> = signal([]);
 	public filteredExams: WritableSignal<Exam[]> = signal([]);
-	public studentFilterControl = new FormControl({
-		value: '',
-		disabled: true,
-	});
-	public taskFilterControl = new FormControl({
-		value: '',
-		disabled: true,
-	});
-	public examFilterControl = new FormControl({
-		value: '',
-		disabled: true,
-	});
-	public subjectFormControl = new FormControl<number>(
-		{ value: 0, disabled: true },
-		{
-			nonNullable: true,
-		}
-	);
-	public courseFormControl = new FormControl<number>(0, {
-		nonNullable: true,
-	});
-	public dateRangeFormControl = new FormGroup({
-		start: new FormControl<Date | number | null>({
-			value: null,
-			disabled: true,
-		}),
-		end: new FormControl<Date | number | null>({
-			value: null,
-			disabled: true,
+	public filtersForm = this.fb.nonNullable.group({
+		student: [{ value: '', disabled: true }],
+		task: [{ value: '', disabled: true }],
+		exam: [{ value: '', disabled: true }],
+		subject: [{ value: 0, disabled: true }],
+		course: 0,
+		dateRange: this.fb.group({
+			start: { value: null, disabled: true },
+			end: { value: null, disabled: true },
 		}),
 	});
 	public allWord = AllWord;
 	public WorkEnum = Work;
 	private taskAndExamsParams: taskAndExamsParams | null = null;
 	private studentsParams: StudentsParams | null = null;
-	private formControlsEnabled = false;
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearRangeButton!: MatMiniFabButton;
 
-	constructor(private apiService: ApiService) {
+	constructor(private apiService: ApiService, private fb: FormBuilder) {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestEffect();
 	}
@@ -145,7 +124,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.subscribe(students => {
 				this.students.set(students);
 				this.filteredStudents.set(students);
-				if (!this.formControlsEnabled) this.enableControls();
+
+				if (this.filtersForm.get('subject')?.disabled)
+					this.enableControls();
 			});
 	}
 
@@ -174,32 +155,35 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private listenFiltersChanges() {
+		this.listenSubjectChanges();
+		this.listenRangeDates();
+
 		this.processValueChangesObservable(
-			this.studentFilterControl.valueChanges
-		).subscribe(result => {
+			this.filtersForm.get('student')?.valueChanges
+		)?.subscribe(result => {
 			this.filteredStudents.set(result as Student[]);
 		});
 
 		this.processValueChangesObservable(
-			this.taskFilterControl.valueChanges,
+			this.filtersForm.get('task')?.valueChanges,
 			'Tasks'
-		).subscribe(result => {
+		)?.subscribe(result => {
 			this.filteredTasks.set(result as Task[]);
 		});
 
 		this.processValueChangesObservable(
-			this.examFilterControl.valueChanges,
+			this.filtersForm.get('exam')?.valueChanges,
 			'Exams'
-		).subscribe(result => {
+		)?.subscribe(result => {
 			this.filteredExams.set(result as Exam[]);
 		});
 	}
 
 	private processValueChangesObservable(
-		valueChanges$: Observable<string | null>,
+		valueChanges$: Observable<string | null> | undefined,
 		controlType: ControlType = 'Students'
 	) {
-		return valueChanges$.pipe(
+		return valueChanges$?.pipe(
 			startWith(''),
 			map(value => this.filterValues(value, controlType)),
 			takeUntil(this.destroy)
@@ -246,12 +230,13 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private listenSubjectChanges() {
-		this.subjectFormControl.valueChanges
-			.pipe(takeUntil(this.destroy))
-			.subscribe(selectedSubjectId => {
+		this.filtersForm
+			.get('subject')
+			?.valueChanges.pipe(takeUntil(this.destroy))
+			.subscribe(subjectId => {
 				this.taskAndExamsParams = {
 					...this.taskAndExamsParams,
-					subjectId: selectedSubjectId,
+					subjectId,
 				};
 
 				this.getTasksAndExams();
@@ -259,17 +244,18 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private listenCourseChanges() {
-		this.courseFormControl.valueChanges
-			.pipe(takeUntil(this.destroy))
-			.subscribe(selectedCourseId => {
+		this.filtersForm
+			.get('course')
+			?.valueChanges.pipe(takeUntil(this.destroy))
+			.subscribe(courseId => {
 				this.studentsParams = {
 					...this.studentsParams,
-					courseId: selectedCourseId,
+					courseId,
 				};
 
 				this.taskAndExamsParams = {
 					...this.taskAndExamsParams,
-					courseId: selectedCourseId,
+					courseId,
 				};
 
 				this.getStudents();
@@ -278,8 +264,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private listenRangeDates() {
-		this.dateRangeFormControl.valueChanges
-			.pipe(
+		this.filtersForm
+			.get('dateRange')
+			?.valueChanges.pipe(
 				filter((value: any) => value.start && value.end),
 				takeUntil(this.destroy)
 			)
@@ -296,15 +283,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private enableControls() {
-		this.subjectFormControl.enable({ emitEvent: false });
-		this.studentFilterControl.enable({ emitEvent: false });
-		this.taskFilterControl.enable({ emitEvent: false });
-		this.examFilterControl.enable({ emitEvent: false });
-		this.dateRangeFormControl.enable({ emitEvent: false });
+		this.filtersForm.enable({ emitEvent: false });
 		this.listenFiltersChanges();
-		this.listenSubjectChanges();
-		this.listenRangeDates();
-		this.formControlsEnabled = true;
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
@@ -350,7 +330,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public resetDatePeriod() {
-		this.dateRangeFormControl.reset();
+		this.filtersForm.get('dateRange')?.reset();
 		delete this.taskAndExamsParams?.startDate;
 		delete this.taskAndExamsParams?.endDate;
 		this.getTasksAndExams();
