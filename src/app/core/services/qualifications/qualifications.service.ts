@@ -1,6 +1,6 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import { Observable, forkJoin, map, startWith } from 'rxjs';
+import { Observable, forkJoin, map, of, startWith } from 'rxjs';
 import { Endpoints } from '../../../modules/main/qualifications/enums/endpoints.enum';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,13 +21,13 @@ type ControlType = 'Students' | 'Tasks' | 'Exams';
 	providedIn: 'root',
 })
 export class QualificationsService {
-	private subjects$: Observable<SchoolSubject[]> = this.apiService.get(
+	public subjects$: Observable<SchoolSubject[]> = this.apiService.get(
 		Endpoints.SUBJECTS
 	);
-	private courses$: Observable<Course[]> = this.apiService.get(
+	public courses$: Observable<Course[]> = this.apiService.get(
 		Endpoints.COURSES
 	);
-	private markings$: Observable<Marking[]> = this.apiService.get(
+	public markings$: Observable<Marking[]> = this.apiService.get(
 		Endpoints.MARKINGS
 	);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
@@ -43,41 +43,45 @@ export class QualificationsService {
 
 	constructor(private apiService: ApiService) {}
 
-	public getTasksAndExams(taskAndExamsParams: TasksAndExamsParams) {
+	public getTasksExamsAndStudents(
+		tasksAndExamsParams: TasksAndExamsParams | null,
+		studentsParams: StudentsParams | null
+	) {
 		this.progressOn.set(true);
 
-		const obs1 = this.apiService.get<Task[]>(Endpoints.TASKS, {
-			params: taskAndExamsParams,
-		});
-		const obs2 = this.apiService.get<Exam[]>(Endpoints.EXAMS, {
-			params: taskAndExamsParams,
-		});
+		const obs1 = tasksAndExamsParams
+			? this.apiService.get<Task[]>(Endpoints.TASKS, {
+					params: tasksAndExamsParams,
+			  })
+			: of([]);
+		const obs2 = tasksAndExamsParams
+			? this.apiService.get<Exam[]>(Endpoints.EXAMS, {
+					params: tasksAndExamsParams,
+			  })
+			: of([]);
+		const obs3 = studentsParams
+			? this.apiService.get<Student[]>(Endpoints.STUDENTS, {
+					params: studentsParams,
+			  })
+			: of([]);
 
-		forkJoin([obs1, obs2]).subscribe(result => {
+		forkJoin([obs1, obs2, obs3]).subscribe(result => {
 			const tasks = result[0];
 			const exams = result[1];
+			const students = result[2];
 
 			this.tasks.set(tasks);
-			this.cleanShow(this.tasks);
-			this.filteredTasks.set(tasks);
 			this.exams.set(exams);
+			this.students.set(students);
+			this.cleanShow(this.tasks);
 			this.cleanShow(this.exams);
+			this.cleanShow(this.students);
+			this.filteredTasks.set(tasks);
 			this.filteredExams.set(exams);
+			this.filteredStudents.set(students);
 
 			this.progressOn.set(false);
 		});
-	}
-
-	public getStudents(studentsParams: StudentsParams) {
-		this.apiService
-			.get<Student[]>(Endpoints.STUDENTS, {
-				params: studentsParams,
-			})
-			.subscribe(students => {
-				this.students.set(students);
-				this.cleanShow(this.students);
-				this.filteredStudents.set(students);
-			});
 	}
 
 	public processValueChanges(

@@ -12,7 +12,7 @@ import {
 	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Subject, combineLatest, filter, takeUntil, tap } from 'rxjs';
+import { Subject, filter, takeUntil } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -136,8 +136,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 				this.courseSelected.set(true);
 				this.resetForm();
-				this.qs.getStudents(this.studentsParams);
-				this.qs.getTasksAndExams(this.taskAndExamsParams);
+				this.qs.getTasksExamsAndStudents(
+					this.taskAndExamsParams,
+					this.studentsParams
+				);
 			});
 	}
 
@@ -156,7 +158,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				};
 
 				this.disableRangeClearButton(false);
-				this.qs.getTasksAndExams(this.taskAndExamsParams);
+				this.qs.getTasksExamsAndStudents(this.taskAndExamsParams, null);
 			});
 	}
 
@@ -173,9 +175,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.filtersForm.get('dateRange')?.reset();
 		delete this.taskAndExamsParams?.startDate;
 		delete this.taskAndExamsParams?.endDate;
-		this.qs.getTasksAndExams(
-			this.taskAndExamsParams as TasksAndExamsParams
-		);
+		this.qs.getTasksExamsAndStudents(this.taskAndExamsParams, null);
 		this.disableRangeClearButton();
 	}
 
