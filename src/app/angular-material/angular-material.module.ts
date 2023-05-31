@@ -9,6 +9,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @NgModule({
 	declarations: [],
@@ -23,6 +24,7 @@ import { MatIconModule } from '@angular/material/icon';
 		MatRadioModule,
 		MatButtonModule,
 		MatIconModule,
+		MatProgressSpinnerModule,
 	],
 	providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
 })

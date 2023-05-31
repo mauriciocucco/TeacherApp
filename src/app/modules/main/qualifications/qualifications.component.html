@@ -43,9 +43,7 @@
 									aria-label="Number"
 									formControlName="student" />
 								<mat-autocomplete
-									(optionSelected)="
-										this.qs.showSelectedStudent($event)
-									"
+									(optionSelected)="studentSelected($event)"
 									autoActiveFirstOption
 									#auto="matAutocomplete">
 									<mat-option [value]="allWord.INCLUSIVE">{{
@@ -76,7 +74,7 @@
 									formControlName="task" />
 								<mat-autocomplete
 									(optionSelected)="
-										this.qs.showSelectedTaskOrExam($event)
+										taskOrExamSelected($event)
 									"
 									autoActiveFirstOption
 									#autoTask="matAutocomplete">
@@ -102,7 +100,7 @@
 									formControlName="exam" />
 								<mat-autocomplete
 									(optionSelected)="
-										this.qs.showSelectedTaskOrExam(
+										taskOrExamSelected(
 											$event,
 											WorkEnum.EXAM
 										)
@@ -160,177 +158,210 @@
 		</mat-card>
 	</div>
 
-	<div
-		id="students-cards-container"
-		*ngIf="tasks() || exams(); else selectCourseWarning">
-		<mat-card *ngFor="let student of filteredStudents()">
-			<mat-card-header
-				><h2 class="student-header">
-					{{ student.name }} {{ student.lastname }}
-				</h2></mat-card-header
-			>
-			<mat-card-content>
-				<mat-tab-group #tabChildren id="qualifications-tab-group">
-					<mat-tab label="Tareas">
-						<div
-							class="cards-wrapper"
-							[ngClass]="{
-								displayCenter: tasks().length === 0
-							}">
-							<ng-container
-								*ngIf="tasks().length > 0; else noMatchedTasks">
-								<mat-card
-									class="qualification-card"
-									*ngFor="let task of filteredTasks()">
-									<mat-card-header
-										class="qualification-card-header">
-										<h3>{{ task.name }}</h3>
-										<p>
-											{{ task.date | shortDate }}
-										</p>
-									</mat-card-header>
-									<mat-card-content>
-										<div class="qualification-card-content">
-											<mat-form-field appearance="fill">
-												<mat-label>Nota</mat-label>
-												<mat-select
-													[value]="
-														{
-															studentProjects:
-																student.studentToTask,
-															idToMatch: task.id
-														}
-															| studentTask
-																: 'markingId'
-													">
-													<mat-option
-														*ngFor="
-															let marking of markings()
-														"
-														[value]="marking.id">
-														{{ marking.name }} -
-														{{
-															marking.description
-														}}
-													</mat-option>
-												</mat-select>
-											</mat-form-field>
-											<mat-form-field
-												class="observation-textarea">
-												<mat-label
-													>Observación</mat-label
-												>
-												<textarea matInput
-													>{{
-														{
-															studentProjects:
-																student.studentToTask,
-															idToMatch: task.id
-														}
-															| studentTask
-																: 'observation'
-													}}
-												</textarea
-												>
-											</mat-form-field>
-										</div>
-									</mat-card-content>
-								</mat-card>
-							</ng-container>
-							<ng-template #noMatchedTasks>
-								<mat-card id="warning-card">
-									<mat-card-content>
-										<h2>
-											No se encontraron tareas que cumplan
-											con los criterios de búsqueda
-										</h2>
-									</mat-card-content>
-								</mat-card>
-							</ng-template>
-						</div>
-					</mat-tab>
-					<mat-tab label="Exámenes">
-						<div
-							class="cards-wrapper"
-							[ngClass]="{
-								displayCenter: exams().length === 0
-							}">
-							<ng-container
-								*ngIf="exams().length > 0; else noMatchedExams">
-								<mat-card
-									class="qualification-card"
-									*ngFor="let exam of filteredExams()">
-									<mat-card-header
-										class="qualification-card-header">
-										<h3>{{ exam.name }}</h3>
-										<p>
-											{{ exam.date | shortDate }}
-										</p>
-									</mat-card-header>
-									<mat-card-content>
-										<div class="qualification-card-content">
-											<mat-form-field appearance="fill">
-												<mat-label>Nota</mat-label>
-												<input
-													matInput
-													placeholder="Nota del exámen"
-													[value]="
-														{
-															studentProjects:
-																student.studentToExam,
-															idToMatch: exam.id
-														}
-															| studentExam
-																: 'marking'
-													" />
-											</mat-form-field>
-											<mat-form-field
-												class="observation-textarea">
-												<mat-label
-													>Observación</mat-label
-												>
-												<textarea matInput
-													>{{
-														{
-															studentProjects:
-																student.studentToExam,
-															idToMatch: exam.id
-														}
-															| studentExam
-																: 'observation'
-													}}
-												</textarea
-												>
-											</mat-form-field>
-										</div>
-									</mat-card-content>
-								</mat-card>
-							</ng-container>
-							<ng-template #noMatchedExams>
-								<mat-card id="warning-card">
-									<mat-card-content>
-										<h2>
-											No se encontraron exámenes que
-											cumplan con los criterios de
-											búsqueda
-										</h2>
-									</mat-card-content>
-								</mat-card>
-							</ng-template>
-						</div>
-					</mat-tab>
-				</mat-tab-group>
-			</mat-card-content>
-		</mat-card>
-	</div>
+	<ng-container [ngTemplateOutlet]="progressOn() ? loadingOn : loadingOff">
+	</ng-container>
 
-	<ng-template #selectCourseWarning>
-		<div class="warning-container">
-			<mat-card id="warning-card">
-				<mat-card-content>
-					<h2>Por favor, seleccione un curso</h2>
-				</mat-card-content>
-			</mat-card>
+	<ng-template #loadingOn>
+		<div class="spinner-wrapper">
+			<mat-spinner></mat-spinner>
 		</div>
+	</ng-template>
+
+	<ng-template #loadingOff>
+		<div
+			id="students-cards-container"
+			*ngIf="courseSelected(); else selectCourseWarning">
+			<ng-container *ngFor="let student of students()">
+				<mat-card *ngIf="student.show">
+					<mat-card-header
+						><h2 class="student-header">
+							{{ student.name }} {{ student.lastname }}
+						</h2></mat-card-header
+					>
+					<mat-card-content>
+						<mat-tab-group
+							#tabChildren
+							id="qualifications-tab-group">
+							<mat-tab label="Tareas">
+								<div
+									class="cards-wrapper"
+									*ngIf="
+										matchSomeTask();
+										else noMatchedTasks
+									">
+									<ng-container *ngFor="let task of tasks()">
+										<mat-card
+											class="qualification-card"
+											*ngIf="task.show">
+											<mat-card-header
+												class="qualification-card-header">
+												<h3>{{ task.name }}</h3>
+												<p>
+													{{ task.date | shortDate }}
+												</p>
+											</mat-card-header>
+											<mat-card-content>
+												<div
+													class="qualification-card-content">
+													<mat-form-field
+														appearance="fill">
+														<mat-label
+															>Nota</mat-label
+														>
+														<mat-select
+															[value]="
+																{
+																	studentProjects:
+																		student.studentToTask,
+																	idToMatch:
+																		task.id
+																}
+																	| studentTask
+																		: 'markingId'
+															">
+															<mat-option
+																*ngFor="
+																	let marking of markings()
+																"
+																[value]="
+																	marking.id
+																">
+																{{
+																	marking.name
+																}}
+																-
+																{{
+																	marking.description
+																}}
+															</mat-option>
+														</mat-select>
+													</mat-form-field>
+													<mat-form-field
+														class="observation-textarea">
+														<mat-label
+															>Observación</mat-label
+														>
+														<textarea matInput
+															>{{
+																{
+																	studentProjects:
+																		student.studentToTask,
+																	idToMatch:
+																		task.id
+																}
+																	| studentTask
+																		: 'observation'
+															}}
+												</textarea
+														>
+													</mat-form-field>
+												</div>
+											</mat-card-content>
+										</mat-card>
+									</ng-container>
+								</div>
+								<ng-template #noMatchedTasks>
+									<mat-card id="warning-card">
+										<mat-card-content>
+											<h2>
+												No se encontraron tareas que
+												cumplan con los criterios de
+												búsqueda
+											</h2>
+										</mat-card-content>
+									</mat-card>
+								</ng-template>
+							</mat-tab>
+							<mat-tab label="Exámenes">
+								<div
+									class="cards-wrapper"
+									*ngIf="
+										matchSomeExam();
+										else noMatchedExams
+									">
+									<ng-container *ngFor="let exam of exams()">
+										<mat-card
+											*ngIf="exam.show"
+											class="qualification-card">
+											<mat-card-header
+												class="qualification-card-header">
+												<h3>{{ exam.name }}</h3>
+												<p>
+													{{ exam.date | shortDate }}
+												</p>
+											</mat-card-header>
+											<mat-card-content>
+												<div
+													class="qualification-card-content">
+													<mat-form-field
+														appearance="fill">
+														<mat-label
+															>Nota</mat-label
+														>
+														<input
+															matInput
+															placeholder="Nota del exámen"
+															[value]="
+																{
+																	studentProjects:
+																		student.studentToExam,
+																	idToMatch:
+																		exam.id
+																}
+																	| studentExam
+																		: 'marking'
+															" />
+													</mat-form-field>
+													<mat-form-field
+														class="observation-textarea">
+														<mat-label
+															>Observación</mat-label
+														>
+														<textarea matInput
+															>{{
+																{
+																	studentProjects:
+																		student.studentToExam,
+																	idToMatch:
+																		exam.id
+																}
+																	| studentExam
+																		: 'observation'
+															}}
+												</textarea
+														>
+													</mat-form-field>
+												</div>
+											</mat-card-content>
+										</mat-card>
+									</ng-container>
+								</div>
+								<ng-template #noMatchedExams>
+									<mat-card id="warning-card">
+										<mat-card-content>
+											<h2>
+												No se encontraron exámenes que
+												cumplan con los criterios de
+												búsqueda
+											</h2>
+										</mat-card-content>
+									</mat-card>
+								</ng-template>
+							</mat-tab>
+						</mat-tab-group>
+					</mat-card-content>
+				</mat-card>
+			</ng-container>
+		</div>
+
+		<ng-template #selectCourseWarning>
+			<div class="warning-container">
+				<mat-card id="warning-card">
+					<mat-card-content>
+						<h2>Por favor, seleccione un curso</h2>
+					</mat-card-content>
+				</mat-card>
+			</div>
+		</ng-template>
 	</ng-template>
 </div>

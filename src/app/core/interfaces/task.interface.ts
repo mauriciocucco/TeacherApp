@@ -4,4 +4,5 @@ export interface Task {
 	description: string;
 	date: string;
 	subjectId: number;
+	show: boolean;
 }

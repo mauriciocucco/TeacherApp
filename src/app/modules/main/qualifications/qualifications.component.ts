@@ -7,7 +7,9 @@ import {
 	ViewChild,
 	ViewChildren,
 	WritableSignal,
+	computed,
 	effect,
+	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Subject, combineLatest, filter, takeUntil, tap } from 'rxjs';
@@ -25,6 +27,7 @@ import { AllWord } from './enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
 @Component({
 	selector: 'app-qualifications',
@@ -55,6 +58,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	});
 	public allWord = AllWord;
 	public WorkEnum = Work;
+	public courseSelected = signal(false);
+	public progressOn = this.qs.progressOn;
+	public matchSomeTask = computed(() => this.tasks().some(task => task.show));
+	public matchSomeExam = computed(() => this.exams().some(exam => exam.show));
 	private taskAndExamsParams: TasksAndExamsParams | null = null;
 	private studentsParams: StudentsParams | null = null;
 	private destroy: Subject<boolean> = new Subject<boolean>();
@@ -66,7 +73,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestEffect();
 		this.enableFormWhenChooseCourse();
-		this.subscribeToFilteredObservablesChanges();
 	}
 
 	ngOnInit() {
@@ -121,15 +127,14 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(courseId => {
 				this.studentsParams = {
-					...this.studentsParams,
 					courseId,
 				};
 
 				this.taskAndExamsParams = {
-					...this.taskAndExamsParams,
 					courseId,
 				};
 
+				this.courseSelected.set(true);
 				this.resetForm();
 				this.qs.getStudents(this.studentsParams);
 				this.qs.getTasksAndExams(this.taskAndExamsParams);
@@ -165,6 +170,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public resetDatePeriod() {
+		this.filtersForm.get('dateRange')?.reset();
 		delete this.taskAndExamsParams?.startDate;
 		delete this.taskAndExamsParams?.endDate;
 		this.qs.getTasksAndExams(
@@ -190,10 +196,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 					if (scrollOwnerElement)
 						scrollOwnerElement.scrollTo({
-							left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final)
+							left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final),
+							behavior: 'smooth',
 						});
 				}
-			}, 0);
+			}, 100);
 		});
 	}
 
@@ -210,17 +217,22 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.subscribe(() => this.enableControls());
 	}
 
-	private subscribeToFilteredObservablesChanges() {
-		combineLatest([this.qs.tasks$, this.qs.exams$, this.qs.students$])
-			.pipe(takeUntil(this.destroy))
-			.subscribe();
-	}
-
 	private resetForm() {
 		this.filtersForm.get('subject')?.patchValue(0);
 		this.filtersForm.get('student')?.reset();
 		this.filtersForm.get('task')?.reset();
 		this.filtersForm.get('exam')?.reset();
 		this.filtersForm.get('dateRange')?.reset();
+	}
+
+	public studentSelected(option: MatAutocompleteSelectedEvent) {
+		this.qs.showSelectedStudent(option);
+	}
+
+	public taskOrExamSelected(
+		option: MatAutocompleteSelectedEvent,
+		type = Work.TASK
+	) {
+		this.qs.showSelectedTaskOrExam(option, type);
 	}
 }

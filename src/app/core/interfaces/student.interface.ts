@@ -6,4 +6,5 @@ export interface Student {
 	lastname: string;
 	studentToExam: StudentToExam[];
 	studentToTask: StudentToTask[];
+	show: boolean;
 }

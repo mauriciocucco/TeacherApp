@@ -1,16 +1,9 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import {
-	BehaviorSubject,
-	Observable,
-	forkJoin,
-	map,
-	startWith,
-	tap,
-} from 'rxjs';
+import { Observable, forkJoin, map, startWith } from 'rxjs';
 import { Endpoints } from '../../../modules/main/qualifications/enums/endpoints.enum';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
 import { Task } from '../../interfaces/task.interface';
@@ -37,37 +30,22 @@ export class QualificationsService {
 	private markings$: Observable<Marking[]> = this.apiService.get(
 		Endpoints.MARKINGS
 	);
-	private tasksSub: BehaviorSubject<Task[]> = new BehaviorSubject(
-		[] as Task[]
-	);
-	private examsSub: BehaviorSubject<Exam[]> = new BehaviorSubject(
-		[] as Exam[]
-	);
-	private studentsSub: BehaviorSubject<Student[]> = new BehaviorSubject(
-		[] as Student[]
-	);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
-	public tasks = toSignal(this.tasksSub, { initialValue: [] });
-	public tasks$ = toObservable(this.tasks).pipe(
-		tap(value => this.filteredTasks.set(value))
-	);
-	public exams = toSignal(this.examsSub, { initialValue: [] });
-	public exams$ = toObservable(this.exams).pipe(
-		tap(value => this.filteredExams.set(value))
-	);
-	public students = toSignal(this.studentsSub, { initialValue: [] });
-	public students$ = toObservable(this.students).pipe(
-		tap(value => this.filteredStudents.set(value))
-	);
+	public tasks: WritableSignal<Task[]> = signal([]);
+	public exams: WritableSignal<Exam[]> = signal([]);
+	public students: WritableSignal<Student[]> = signal([]);
 	public filteredTasks: WritableSignal<Task[]> = signal([]);
 	public filteredExams: WritableSignal<Exam[]> = signal([]);
 	public filteredStudents: WritableSignal<Student[]> = signal([]);
+	public progressOn = signal(false);
 
 	constructor(private apiService: ApiService) {}
 
 	public getTasksAndExams(taskAndExamsParams: TasksAndExamsParams) {
+		this.progressOn.set(true);
+
 		const obs1 = this.apiService.get<Task[]>(Endpoints.TASKS, {
 			params: taskAndExamsParams,
 		});
@@ -76,8 +54,17 @@ export class QualificationsService {
 		});
 
 		forkJoin([obs1, obs2]).subscribe(result => {
-			this.tasksSub.next(result[0]); // Va a generar que tasks cambie porque está unido a tasks$ por toSignal
-			this.examsSub.next(result[1]); // Va a generar que exams cambie porque está unido a exams$ por to Signal
+			const tasks = result[0];
+			const exams = result[1];
+
+			this.tasks.set(tasks);
+			this.cleanShow(this.tasks);
+			this.filteredTasks.set(tasks);
+			this.exams.set(exams);
+			this.cleanShow(this.exams);
+			this.filteredExams.set(exams);
+
+			this.progressOn.set(false);
 		});
 	}
 
@@ -86,8 +73,10 @@ export class QualificationsService {
 			.get<Student[]>(Endpoints.STUDENTS, {
 				params: studentsParams,
 			})
-			.subscribe(result => {
-				this.studentsSub.next(result);
+			.subscribe(students => {
+				this.students.set(students);
+				this.cleanShow(this.students);
+				this.filteredStudents.set(students);
 			});
 	}
 
@@ -143,14 +132,19 @@ export class QualificationsService {
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
 		const value = option.option.value;
 
-		if (value === AllWord.INCLUSIVE)
-			return this.filteredStudents.set(this.students());
+		this.cleanShow(this.students);
 
-		const student = this.students().find(
+		if (value === AllWord.INCLUSIVE) return;
+
+		const studentSelected = this.students().find(
 			student => `${student.name} ${student.lastname}` === value
 		);
 
-		this.filteredStudents.set([student as Student]);
+		this.students.mutate(students => {
+			students.forEach(student => {
+				if (student.id !== studentSelected?.id) student.show = false;
+			});
+		});
 	}
 
 	public showSelectedTaskOrExam(
@@ -158,35 +152,49 @@ export class QualificationsService {
 		type = Work.TASK
 	) {
 		const valueSelected = option.option.value;
-		let completeArray: Task[] | Exam[] = this.tasks();
-		let signalSelectedToFilter:
-			| WritableSignal<Task[]>
-			| WritableSignal<Exam[]> = this.filteredTasks;
+		let selectedSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
+			this.tasks;
 
-		if (type === Work.EXAM) {
-			completeArray = this.exams();
-			signalSelectedToFilter = this.filteredExams;
-		}
+		if (type === Work.EXAM) selectedSignal = this.exams;
+
+		this.cleanShow(selectedSignal);
 
 		if (valueSelected === AllWord.FEMALE || valueSelected === AllWord.MALE)
-			return signalSelectedToFilter.set(completeArray);
+			return;
 
-		const objectToEmit = completeArray.find(
+		const selectedElement = selectedSignal().find(
 			element => element.name === valueSelected
 		);
 
-		return signalSelectedToFilter.set([objectToEmit as Task | Exam]);
+		selectedSignal.mutate(elements => {
+			elements.forEach(element => {
+				if (element.id !== selectedElement?.id) element.show = false;
+			});
+		});
 	}
 
 	public filterTasksAndExamsBySubject(subjectId: number) {
-		const filteredTaks = this.tasks().filter(task => {
-			return subjectId !== 0 ? task.subjectId === subjectId : true;
-		});
-		const filteredExams = this.exams().filter(exam => {
-			return subjectId !== 0 ? exam.subjectId === subjectId : true;
+		this.cleanShow(this.tasks);
+		this.cleanShow(this.exams);
+
+		if (!subjectId) return;
+
+		this.tasks.mutate(tasks => {
+			tasks.forEach(task => {
+				if (task.subjectId !== subjectId) task.show = false;
+			});
 		});
 
-		this.filteredTasks.set(filteredTaks);
-		this.filteredExams.set(filteredExams);
+		this.exams.mutate(exams => {
+			exams.forEach(exam => {
+				if (exam.subjectId !== subjectId) exam.show = false;
+			});
+		});
+	}
+
+	private cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
+		signal.mutate(elements => {
+			elements.forEach(element => (element.show = true));
+		});
 	}
 }

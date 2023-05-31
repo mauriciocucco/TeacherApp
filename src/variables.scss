@@ -18,6 +18,7 @@
 // $font-size-xl: 18px;
 // $border-radius: 4px;
 // $normal-input-height: 40px;
+$viewport-padding: 3rem;
 
 @mixin mq-mobile {
 	@media screen and (max-width: 1024px) {

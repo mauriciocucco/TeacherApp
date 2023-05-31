@@ -4,4 +4,5 @@ export interface Exam {
 	description: string;
 	date: string;
 	subjectId: number;
+	show: boolean;
 }

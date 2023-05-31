@@ -1,3 +1,5 @@
-#container {
-	padding: 3rem;
+@import '../../../variables.scss';
+
+#viewport-container {
+	padding: $viewport-padding;
 }
