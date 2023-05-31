@@ -177,4 +177,16 @@ export class QualificationsService {
 
 		return signalSelectedToFilter.set([objectToEmit as Task | Exam]);
 	}
+
+	public filterTasksAndExamsBySubject(subjectId: number) {
+		const filteredTaks = this.tasks().filter(task => {
+			return subjectId !== 0 ? task.subjectId === subjectId : true;
+		});
+		const filteredExams = this.exams().filter(exam => {
+			return subjectId !== 0 ? exam.subjectId === subjectId : true;
+		});
+
+		this.filteredTasks.set(filteredTaks);
+		this.filteredExams.set(filteredExams);
+	}
 }

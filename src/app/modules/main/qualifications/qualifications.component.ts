@@ -10,7 +10,7 @@ import {
 	effect,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Subject, combineLatest, filter, takeUntil, tap } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -66,6 +66,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestEffect();
 		this.enableFormWhenChooseCourse();
+		this.subscribeToFilteredObservablesChanges();
 	}
 
 	ngOnInit() {
@@ -84,9 +85,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.qs
 			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
 			?.pipe(takeUntil(this.destroy))
-			.subscribe(result => {
-				this.filteredStudents.set(result as Student[]);
-			});
+			.subscribe(result =>
+				this.filteredStudents.set(result as Student[])
+			);
 
 		this.qs
 			.processValueChanges(
@@ -94,9 +95,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				'Tasks'
 			)
 			?.pipe(takeUntil(this.destroy))
-			.subscribe(result => {
-				this.filteredTasks.set(result as Task[]);
-			});
+			.subscribe(result => this.filteredTasks.set(result as Task[]));
 
 		this.qs
 			.processValueChanges(
@@ -104,9 +103,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				'Exams'
 			)
 			?.pipe(takeUntil(this.destroy))
-			.subscribe(result => {
-				this.filteredExams.set(result as Exam[]);
-			});
+			.subscribe(result => this.filteredExams.set(result as Exam[]));
 	}
 
 	private listenSubjectChanges() {
@@ -114,12 +111,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.get('subject')
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(subjectId => {
-				this.taskAndExamsParams = {
-					...this.taskAndExamsParams,
-					subjectId,
-				};
-
-				this.qs.getTasksAndExams(this.taskAndExamsParams);
+				this.qs.filterTasksAndExamsBySubject(subjectId);
 			});
 	}
 
@@ -138,6 +130,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					courseId,
 				};
 
+				this.resetForm();
 				this.qs.getStudents(this.studentsParams);
 				this.qs.getTasksAndExams(this.taskAndExamsParams);
 			});
@@ -172,7 +165,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public resetDatePeriod() {
-		this.filtersForm.get('dateRange')?.reset();
 		delete this.taskAndExamsParams?.startDate;
 		delete this.taskAndExamsParams?.endDate;
 		this.qs.getTasksAndExams(
@@ -216,5 +208,19 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				takeUntil(this.destroy)
 			)
 			.subscribe(() => this.enableControls());
+	}
+
+	private subscribeToFilteredObservablesChanges() {
+		combineLatest([this.qs.tasks$, this.qs.exams$, this.qs.students$])
+			.pipe(takeUntil(this.destroy))
+			.subscribe();
+	}
+
+	private resetForm() {
+		this.filtersForm.get('subject')?.patchValue(0);
+		this.filtersForm.get('student')?.reset();
+		this.filtersForm.get('task')?.reset();
+		this.filtersForm.get('exam')?.reset();
+		this.filtersForm.get('dateRange')?.reset();
 	}
 }
