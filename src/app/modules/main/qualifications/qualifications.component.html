@@ -10,7 +10,7 @@
 								aria-label="Elegí una materia"
 								formControlName="subject">
 								<mat-radio-button
-									*ngFor="let subject of subjects$ | async"
+									*ngFor="let subject of subjects()"
 									[value]="subject.id"
 									>{{ subject.name }}</mat-radio-button
 								>
@@ -26,7 +26,7 @@
 									formControlName="course"
 									placeholder="Seleccionar un curso">
 									<mat-option
-										*ngFor="let course of courses$ | async"
+										*ngFor="let course of courses()"
 										[value]="course.id">
 										{{ course.year }}° -
 										{{ course.shift | shift }}
@@ -44,7 +44,7 @@
 									formControlName="student" />
 								<mat-autocomplete
 									(optionSelected)="
-										showSelectedStudent($event)
+										this.qs.showSelectedStudent($event)
 									"
 									autoActiveFirstOption
 									#auto="matAutocomplete">
@@ -76,7 +76,7 @@
 									formControlName="task" />
 								<mat-autocomplete
 									(optionSelected)="
-										showSelectedTaskOrExam($event)
+										this.qs.showSelectedTaskOrExam($event)
 									"
 									autoActiveFirstOption
 									#autoTask="matAutocomplete">
@@ -102,7 +102,7 @@
 									formControlName="exam" />
 								<mat-autocomplete
 									(optionSelected)="
-										showSelectedTaskOrExam(
+										this.qs.showSelectedTaskOrExam(
 											$event,
 											WorkEnum.EXAM
 										)
