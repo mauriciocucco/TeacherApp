@@ -171,7 +171,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.clearRangeButton.disabled = disable;
 	}
 
-	public resetDatePeriod() {
+	public resetDateRange() {
 		this.filtersForm.get('dateRange')?.reset();
 		delete this.taskAndExamsParams?.startDate;
 		delete this.taskAndExamsParams?.endDate;
@@ -182,8 +182,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private scrollToLatestEffect() {
 		effect(() => {
 			// cuando emita cualquiera de los siguientes signals se va a disparar
-			this.exams();
-			this.tasks();
+			this.tasks(); //puede ser students, exams o tasks ya que se setean al mismo tiempo
 			this.filteredExams();
 			this.filteredTasks();
 			this.filteredStudents();
@@ -200,12 +199,12 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 							behavior: 'smooth',
 						});
 				}
-			}, 100);
+			}, 0);
 		});
 	}
 
 	private enableFormWhenChooseCourse() {
-		toObservable(this.students)
+		toObservable(this.students) //puede ser students, exams o tasks ya que se setean al mismo tiempo
 			.pipe(
 				filter(
 					value =>

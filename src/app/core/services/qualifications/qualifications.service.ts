@@ -49,23 +49,23 @@ export class QualificationsService {
 	) {
 		this.progressOn.set(true);
 
-		const obs1 = tasksAndExamsParams
+		const tasks$ = tasksAndExamsParams
 			? this.apiService.get<Task[]>(Endpoints.TASKS, {
 					params: tasksAndExamsParams,
 			  })
 			: of([]);
-		const obs2 = tasksAndExamsParams
+		const exams$ = tasksAndExamsParams
 			? this.apiService.get<Exam[]>(Endpoints.EXAMS, {
 					params: tasksAndExamsParams,
 			  })
 			: of([]);
-		const obs3 = studentsParams
+		const students$ = studentsParams
 			? this.apiService.get<Student[]>(Endpoints.STUDENTS, {
 					params: studentsParams,
 			  })
 			: of([]);
 
-		forkJoin([obs1, obs2, obs3]).subscribe(result => {
+		forkJoin([tasks$, exams$, students$]).subscribe(result => {
 			const tasks = result[0];
 			const exams = result[1];
 			const students = result[2];
