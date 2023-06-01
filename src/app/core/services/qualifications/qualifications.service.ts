@@ -21,13 +21,13 @@ type ControlType = 'Students' | 'Tasks' | 'Exams';
 	providedIn: 'root',
 })
 export class QualificationsService {
-	public subjects$: Observable<SchoolSubject[]> = this.apiService.get(
+	private subjects$: Observable<SchoolSubject[]> = this.apiService.get(
 		Endpoints.SUBJECTS
 	);
-	public courses$: Observable<Course[]> = this.apiService.get(
+	private courses$: Observable<Course[]> = this.apiService.get(
 		Endpoints.COURSES
 	);
-	public markings$: Observable<Marking[]> = this.apiService.get(
+	private markings$: Observable<Marking[]> = this.apiService.get(
 		Endpoints.MARKINGS
 	);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });

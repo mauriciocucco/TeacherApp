@@ -1,0 +1,27 @@
+@import '../../../../../variables.scss';
+
+#form-container {
+	text-align: center;
+	#form-content {
+		overflow-x: hidden;
+	}
+}
+
+#create-form {
+	@include flex-center;
+	flex-direction: column;
+	width: 25vw;
+	.mat-form-field {
+		width: 100%;
+	}
+}
+
+#buttons-wrapper {
+	@include flex-center;
+	gap: 2rem;
+	padding-bottom: 2rem;
+}
+
+.description-textarea {
+	margin-top: 1rem;
+}

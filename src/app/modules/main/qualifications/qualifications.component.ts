@@ -9,6 +9,7 @@ import {
 	WritableSignal,
 	computed,
 	effect,
+	inject,
 	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
@@ -28,6 +29,8 @@ import { QualificationsService } from '../../../core/services/qualifications/qua
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatDialog } from '@angular/material/dialog';
+import { CreateDialogComponent } from './create-dialog/create-dialog.component';
 
 @Component({
 	selector: 'app-qualifications',
@@ -69,7 +72,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	@ViewChild('clearRangeButton', { static: false })
 	clearRangeButton!: MatMiniFabButton;
 
-	constructor(public qs: QualificationsService, private fb: FormBuilder) {
+	constructor(
+		private qs: QualificationsService,
+		private fb: FormBuilder,
+		public dialog: MatDialog
+	) {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestEffect();
 		this.enableFormWhenChooseCourse();
@@ -233,5 +240,15 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		type = Work.TASK
 	) {
 		this.qs.showSelectedTaskOrExam(option, type);
+	}
+
+	public openDialog(): void {
+		const dialogRef = this.dialog.open(CreateDialogComponent, {
+			//   data: {courseId: this.name, animal: this.animal},
+		});
+
+		dialogRef.afterClosed().subscribe(result => {
+			console.log('The dialog was closed');
+		});
 	}
 }

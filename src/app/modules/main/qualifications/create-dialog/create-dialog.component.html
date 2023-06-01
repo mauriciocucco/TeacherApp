@@ -1,0 +1,66 @@
+<div id="form-container">
+	<h1 mat-dialog-title>¿Qué te gustaría crear?</h1>
+	<div mat-dialog-content id="form-content">
+		<form [formGroup]="createForm" id="create-form">
+			<mat-form-field class="mat-form-field">
+				<mat-label>Tipo de trabajo</mat-label>
+				<mat-select formControlName="type">
+					<mat-option [value]="1">
+						{{ 'Tarea' }}
+					</mat-option>
+					<mat-option [value]="2">
+						{{ 'Exámen' }}
+					</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field class="mat-form-field">
+				<mat-label>Curso</mat-label>
+				<mat-select formControlName="courseId">
+					<mat-option
+						*ngFor="let course of courses()"
+						[value]="course.id">
+						{{ course.year }}° -
+						{{ course.shift | shift }}
+					</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field class="mat-form-field">
+				<mat-label>Materia</mat-label>
+				<mat-select formControlName="subjectId">
+					<mat-option
+						*ngFor="let subject of subjects()"
+						[value]="subject.id">
+						{{ subject.name }}
+					</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field class="mat-form-field">
+				<mat-label>Nombre</mat-label>
+				<input
+					matInput
+					placeholder="Escriba un nombre"
+					formControlName="name" />
+			</mat-form-field>
+			<mat-form-field class="mat-form-field">
+				<mat-label>Fecha</mat-label>
+				<input
+					matInput
+					[matDatepicker]="picker"
+					formControlName="date" />
+				<mat-hint>M/D/YYYY</mat-hint>
+				<mat-datepicker-toggle
+					matIconSuffix
+					[for]="picker"></mat-datepicker-toggle>
+				<mat-datepicker #picker></mat-datepicker>
+			</mat-form-field>
+			<mat-form-field class="mat-form-field description-textarea">
+				<mat-label>Descripción</mat-label>
+				<textarea matInput formControlName="description"></textarea>
+			</mat-form-field>
+		</form>
+	</div>
+	<div mat-dialog-actions id="buttons-wrapper">
+		<button mat-button (click)="onNoClick()">Cancelar</button>
+		<button mat-button [mat-dialog-close]="" cdkFocusInitial>Crear</button>
+	</div>
+</div>

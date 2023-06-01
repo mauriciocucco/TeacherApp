@@ -364,4 +364,15 @@
 			</div>
 		</ng-template>
 	</ng-template>
+
+	<button
+		id="createButton"
+		title="Crear una nueva tarea o exámen"
+		mat-fab
+		color="accent"
+		aria-label="Crear una nueva tarea o exámen"
+		*ngIf="courseSelected()"
+		(click)="openDialog()">
+		<mat-icon>add</mat-icon>
+	</button>
 </div>
