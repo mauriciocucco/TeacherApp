@@ -1,7 +1,18 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import { Observable, forkJoin, map, of, startWith } from 'rxjs';
-import { Endpoints } from '../../../modules/main/qualifications/enums/endpoints.enum';
+import {
+	BehaviorSubject,
+	EMPTY,
+	Observable,
+	catchError,
+	filter,
+	forkJoin,
+	map,
+	startWith,
+	switchMap,
+	tap,
+} from 'rxjs';
+import { Endpoints } from '../../enums/endpoints.enum';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
@@ -9,11 +20,14 @@ import { Marking } from '../../interfaces/marking.interface';
 import { Task } from '../../interfaces/task.interface';
 import { Exam } from '../../interfaces/exam.interface';
 import { Student } from '../../interfaces/student.interface';
-import { TasksAndExamsParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-params.interface';
+import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from '../../../modules/main/qualifications/interfaces/students-params.interface';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Work } from '../../../modules/main/qualifications/enums/work.enum';
-import { AllWord } from '../../../modules/main/qualifications/enums/all-word.enum';
+import { Work } from '../../enums/work.enum';
+import { AllWord } from '../../enums/all-word.enum';
+import { TasksService } from '../tasks/tasks.service';
+import { ExamsService } from '../exams/exams.service';
+import { StudentsService } from '../students/students.service';
 
 type ControlType = 'Students' | 'Tasks' | 'Exams';
 
@@ -21,67 +35,93 @@ type ControlType = 'Students' | 'Tasks' | 'Exams';
 	providedIn: 'root',
 })
 export class QualificationsService {
-	private subjects$: Observable<SchoolSubject[]> = this.apiService.get(
+	private subjects$ = this.apiService.get<SchoolSubject[]>(
 		Endpoints.SUBJECTS
 	);
-	private courses$: Observable<Course[]> = this.apiService.get(
-		Endpoints.COURSES
-	);
-	private markings$: Observable<Marking[]> = this.apiService.get(
-		Endpoints.MARKINGS
-	);
+	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
+	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
+	private tasksExamsAndStudentsSubject = new BehaviorSubject<
+		[TasksAndExamsQueryParams | null, StudentsParams | null]
+	>([null, null]);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[]> = signal([]);
-	public filteredTasks: WritableSignal<Task[]> = signal([]);
-	public filteredExams: WritableSignal<Exam[]> = signal([]);
-	public filteredStudents: WritableSignal<Student[]> = signal([]);
-	public progressOn = signal(false);
+	public filteredTasksForAutocomplete: WritableSignal<Task[]> = signal([]);
+	public filteredExamsForAutocomplete: WritableSignal<Exam[]> = signal([]);
+	public filteredStudentsForAutocomplete: WritableSignal<Student[]> = signal(
+		[]
+	);
+	public spinnerProgressOn = signal(false);
+	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
+		.asObservable()
+		.pipe(
+			filter(
+				([tasksAnExamsQueryParams, studentsQueryParams]) =>
+					tasksAnExamsQueryParams !== null
+			),
+			tap(() => {
+				this.spinnerProgressOn.set(true);
+			}),
+			map(([tasksAndExamsQueryParams, studentsQueryParams]) => [
+				this.ts.getTasks(tasksAndExamsQueryParams),
+				this.es.getExams(tasksAndExamsQueryParams),
+				this.ss.getStudents(studentsQueryParams),
+			]),
+			switchMap(observablesArray => forkJoin(observablesArray)),
+			tap(result => {
+				this.setSignalsValues(
+					result[0] as Task[],
+					result[1] as Exam[],
+					result[2] as Student[]
+				);
+				this.cleanAllShow();
+				this.spinnerProgressOn.set(false);
+			}),
+			catchError(error => {
+				console.log(
+					'Hubo un error en el stream de tasksExamsAndStudents$: ',
+					error
+				);
+				this.spinnerProgressOn.set(false);
 
-	constructor(private apiService: ApiService) {}
+				return EMPTY;
+			})
+		);
+
+	constructor(
+		private apiService: ApiService,
+		private ts: TasksService,
+		private es: ExamsService,
+		private ss: StudentsService
+	) {}
 
 	public getTasksExamsAndStudents(
-		tasksAndExamsParams: TasksAndExamsParams | null,
-		studentsParams: StudentsParams | null
+		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
+		studentsQueryParams: StudentsParams | null
 	) {
-		this.progressOn.set(true);
+		this.tasksExamsAndStudentsSubject.next([
+			tasksAndExamsQueryParams,
+			studentsQueryParams,
+		]);
+	}
 
-		const tasks$ = tasksAndExamsParams
-			? this.apiService.get<Task[]>(Endpoints.TASKS, {
-					params: tasksAndExamsParams,
-			  })
-			: of([]);
-		const exams$ = tasksAndExamsParams
-			? this.apiService.get<Exam[]>(Endpoints.EXAMS, {
-					params: tasksAndExamsParams,
-			  })
-			: of([]);
-		const students$ = studentsParams
-			? this.apiService.get<Student[]>(Endpoints.STUDENTS, {
-					params: studentsParams,
-			  })
-			: of([]);
-
-		forkJoin([tasks$, exams$, students$]).subscribe(result => {
-			const tasks = result[0];
-			const exams = result[1];
-			const students = result[2];
-
-			this.tasks.set(tasks);
-			this.exams.set(exams);
+	private setSignalsValues(
+		tasks: Task[],
+		exams: Exam[],
+		students: Student[]
+	) {
+		this.tasks.set(tasks);
+		this.filteredTasksForAutocomplete.set(tasks);
+		this.exams.set(exams);
+		this.filteredExamsForAutocomplete.set(exams);
+		if (students.length) {
+			//Porque sin ellos no se muestran las tareas y exámenes en el template
 			this.students.set(students);
-			this.cleanShow(this.tasks);
-			this.cleanShow(this.exams);
-			this.cleanShow(this.students);
-			this.filteredTasks.set(tasks);
-			this.filteredExams.set(exams);
-			this.filteredStudents.set(students);
-
-			this.progressOn.set(false);
-		});
+			this.filteredStudentsForAutocomplete.set(students);
+		}
 	}
 
 	public processValueChanges(
@@ -200,5 +240,11 @@ export class QualificationsService {
 		signal.mutate(elements => {
 			elements.forEach(element => (element.show = true));
 		});
+	}
+
+	private cleanAllShow() {
+		this.cleanShow(this.tasks);
+		this.cleanShow(this.exams);
+		this.cleanShow(this.students);
 	}
 }

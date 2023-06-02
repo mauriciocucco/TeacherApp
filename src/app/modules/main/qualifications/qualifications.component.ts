@@ -9,8 +9,6 @@ import {
 	WritableSignal,
 	computed,
 	effect,
-	inject,
-	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Subject, filter, takeUntil } from 'rxjs';
@@ -20,11 +18,11 @@ import { Exam } from '../../../core/interfaces/exam.interface';
 import { Student } from '../../../core/interfaces/student.interface';
 import { MatTabGroup } from '@angular/material/tabs';
 import { Course } from '../../../core/interfaces/course.interface';
-import { TasksAndExamsParams } from './interfaces/tasks-and-exams-params.interface';
+import { TasksAndExamsQueryParams } from './interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
-import { Work } from './enums/work.enum';
+import { Work } from '../../../core/enums/work.enum';
 import { MatMiniFabButton } from '@angular/material/button';
-import { AllWord } from './enums/all-word.enum';
+import { AllWord } from '../../../core/enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -44,10 +42,13 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public filteredTasks: WritableSignal<Task[]> = this.qs.filteredTasks;
-	public filteredExams: WritableSignal<Exam[]> = this.qs.filteredExams;
-	public filteredStudents: WritableSignal<Student[]> =
-		this.qs.filteredStudents;
+	public filteredTasksForAutocomplete: WritableSignal<Task[]> =
+		this.qs.filteredTasksForAutocomplete;
+	public filteredExamsForAutocomplete: WritableSignal<Exam[]> =
+		this.qs.filteredExamsForAutocomplete;
+	public filteredStudentsForAutocomplete: WritableSignal<Student[]> =
+		this.qs.filteredStudentsForAutocomplete;
+	public tasksExamsAndStudents$ = this.qs.tasksExamsAndStudents$;
 	public filtersForm = this.fb.nonNullable.group({
 		student: [{ value: '', disabled: true }],
 		task: [{ value: '', disabled: true }],
@@ -59,18 +60,21 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			end: { value: null, disabled: true },
 		}),
 	});
-	public allWord = AllWord;
+	public allWordEnum = AllWord;
 	public WorkEnum = Work;
-	public courseSelected = signal(false);
-	public progressOn = this.qs.progressOn;
-	public matchSomeTask = computed(() => this.tasks().some(task => task.show));
-	public matchSomeExam = computed(() => this.exams().some(exam => exam.show));
-	private taskAndExamsParams: TasksAndExamsParams | null = null;
-	private studentsParams: StudentsParams | null = null;
+	public spinnerProgressOn = this.qs.spinnerProgressOn;
+	public taskMatchSomeFilter = computed(() =>
+		this.tasks().some(task => task.show)
+	);
+	public examMatchSomeFilter = computed(() =>
+		this.exams().some(exam => exam.show)
+	);
+	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
+	private studentsQueryParams: StudentsParams | null = null;
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
-	clearRangeButton!: MatMiniFabButton;
+	clearDateRangeButton!: MatMiniFabButton;
 
 	constructor(
 		private qs: QualificationsService,
@@ -78,12 +82,12 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		public dialog: MatDialog
 	) {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
-		this.scrollToLatestEffect();
-		this.enableFormWhenChooseCourse();
+		this.scrollToLatestTaskOrExam();
+		this.enableFormWhenCourseIsSelected();
 	}
 
 	ngOnInit() {
-		this.listenCourseChanges();
+		this.listenCourseFilterChanges();
 	}
 
 	ngOnDestroy(): void {
@@ -91,35 +95,15 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.destroy.unsubscribe();
 	}
 
-	private listenFiltersChanges() {
-		this.listenSubjectChanges();
-		this.listenRangeDates();
-
-		this.qs
-			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
-			?.pipe(takeUntil(this.destroy))
-			.subscribe(result =>
-				this.filteredStudents.set(result as Student[])
-			);
-
-		this.qs
-			.processValueChanges(
-				this.filtersForm.get('task')?.valueChanges,
-				'Tasks'
-			)
-			?.pipe(takeUntil(this.destroy))
-			.subscribe(result => this.filteredTasks.set(result as Task[]));
-
-		this.qs
-			.processValueChanges(
-				this.filtersForm.get('exam')?.valueChanges,
-				'Exams'
-			)
-			?.pipe(takeUntil(this.destroy))
-			.subscribe(result => this.filteredExams.set(result as Exam[]));
+	private startToListenFiltersChanges() {
+		this.listenSubjectFilterChanges();
+		this.listenDatesRange();
+		this.listenTasksFilterChanges();
+		this.listenExamsFilterChanges();
+		this.listenStudentsFilterChanges();
 	}
 
-	private listenSubjectChanges() {
+	private listenSubjectFilterChanges() {
 		this.filtersForm
 			.get('subject')
 			?.valueChanges.pipe(takeUntil(this.destroy))
@@ -128,29 +112,25 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			});
 	}
 
-	private listenCourseChanges() {
+	private listenCourseFilterChanges() {
 		this.filtersForm
 			.get('course')
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(courseId => {
-				this.studentsParams = {
-					courseId,
-				};
+				const queryParam = { courseId };
 
-				this.taskAndExamsParams = {
-					courseId,
-				};
+				this.studentsQueryParams = queryParam;
+				this.taskAndExamsQueryParams = queryParam;
 
-				this.courseSelected.set(true);
 				this.resetForm();
 				this.qs.getTasksExamsAndStudents(
-					this.taskAndExamsParams,
-					this.studentsParams
+					this.taskAndExamsQueryParams,
+					this.studentsQueryParams
 				);
 			});
 	}
 
-	private listenRangeDates() {
+	private listenDatesRange() {
 		this.filtersForm
 			.get('dateRange')
 			?.valueChanges.pipe(
@@ -158,41 +138,82 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				takeUntil(this.destroy)
 			)
 			.subscribe((value: { start: Date; end: Date }) => {
-				this.taskAndExamsParams = {
-					...this.taskAndExamsParams,
+				this.taskAndExamsQueryParams = {
+					...this.taskAndExamsQueryParams,
 					startDate: value.start.getTime(),
 					endDate: value.end.getTime(),
 				};
 
 				this.disableRangeClearButton(false);
-				this.qs.getTasksExamsAndStudents(this.taskAndExamsParams, null);
+				this.qs.getTasksExamsAndStudents(
+					this.taskAndExamsQueryParams,
+					null
+				);
 			});
+	}
+
+	private listenTasksFilterChanges() {
+		this.qs
+			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
+			?.pipe(takeUntil(this.destroy))
+			.subscribe(studentSelected =>
+				this.filteredStudentsForAutocomplete.set(
+					studentSelected as Student[]
+				)
+			);
+	}
+
+	private listenExamsFilterChanges() {
+		this.qs
+			.processValueChanges(
+				this.filtersForm.get('task')?.valueChanges,
+				'Tasks'
+			)
+			?.pipe(takeUntil(this.destroy))
+			.subscribe(taskSelected =>
+				this.filteredTasksForAutocomplete.set(taskSelected as Task[])
+			);
+	}
+
+	private listenStudentsFilterChanges() {
+		this.qs
+			.processValueChanges(
+				this.filtersForm.get('exam')?.valueChanges,
+				'Exams'
+			)
+			?.pipe(takeUntil(this.destroy))
+			.subscribe(examSelected =>
+				this.filteredExamsForAutocomplete.set(examSelected as Exam[])
+			);
 	}
 
 	private enableControls() {
 		this.filtersForm.enable({ emitEvent: false });
-		this.listenFiltersChanges();
 	}
 
 	private disableRangeClearButton(disable = true) {
-		this.clearRangeButton.disabled = disable;
+		this.clearDateRangeButton.disabled = disable;
 	}
 
 	public resetDateRange() {
 		this.filtersForm.get('dateRange')?.reset();
-		delete this.taskAndExamsParams?.startDate;
-		delete this.taskAndExamsParams?.endDate;
-		this.qs.getTasksExamsAndStudents(this.taskAndExamsParams, null);
+		this.cleanDateQueryParams();
+		this.qs.getTasksExamsAndStudents(this.taskAndExamsQueryParams, null);
 		this.disableRangeClearButton();
 	}
 
-	private scrollToLatestEffect() {
+	private cleanDateQueryParams() {
+		delete this.taskAndExamsQueryParams?.startDate;
+		delete this.taskAndExamsQueryParams?.endDate;
+	}
+
+	private scrollToLatestTaskOrExam() {
 		effect(() => {
 			// cuando emita cualquiera de los siguientes signals se va a disparar
 			this.tasks(); //puede ser students, exams o tasks ya que se setean al mismo tiempo
-			this.filteredExams();
-			this.filteredTasks();
-			this.filteredStudents();
+			this.filteredExamsForAutocomplete();
+			this.filteredTasksForAutocomplete();
+			this.filteredStudentsForAutocomplete();
 
 			setTimeout(() => {
 				for (const tab of this.tabChildren) {
@@ -210,17 +231,20 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	private enableFormWhenChooseCourse() {
+	private enableFormWhenCourseIsSelected() {
 		toObservable(this.students) //puede ser students, exams o tasks ya que se setean al mismo tiempo
 			.pipe(
 				filter(
-					value =>
-						value.length > 0 &&
-						(this.filtersForm.get('subject')?.disabled as boolean)
+					students =>
+						students.length > 0 &&
+						(this.filtersForm.get('subject')?.disabled as boolean) //puede ser cualquier control de un filtro que esté disabled
 				),
 				takeUntil(this.destroy)
 			)
-			.subscribe(() => this.enableControls());
+			.subscribe(() => {
+				this.enableControls();
+				this.startToListenFiltersChanges();
+			});
 	}
 
 	private resetForm() {
@@ -242,13 +266,13 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.qs.showSelectedTaskOrExam(option, type);
 	}
 
-	public openDialog(): void {
+	public openCreateDialog(): void {
 		const dialogRef = this.dialog.open(CreateDialogComponent, {
-			//   data: {courseId: this.name, animal: this.animal},
+			data: { courseId: this.filtersForm.get('course')?.value },
 		});
 
 		dialogRef.afterClosed().subscribe(result => {
-			console.log('The dialog was closed');
+			this.resetForm();
 		});
 	}
 }

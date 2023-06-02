@@ -46,12 +46,13 @@
 									(optionSelected)="studentSelected($event)"
 									autoActiveFirstOption
 									#auto="matAutocomplete">
-									<mat-option [value]="allWord.INCLUSIVE">{{
-										allWord.INCLUSIVE
-									}}</mat-option>
+									<mat-option
+										[value]="allWordEnum.INCLUSIVE"
+										>{{ allWordEnum.INCLUSIVE }}</mat-option
+									>
 									<mat-option
 										*ngFor="
-											let student of filteredStudents()
+											let student of filteredStudentsForAutocomplete()
 										"
 										[value]="
 											student.name +
@@ -78,11 +79,13 @@
 									"
 									autoActiveFirstOption
 									#autoTask="matAutocomplete">
-									<mat-option [value]="allWord.FEMALE">{{
-										allWord.FEMALE
+									<mat-option [value]="allWordEnum.FEMALE">{{
+										allWordEnum.FEMALE
 									}}</mat-option>
 									<mat-option
-										*ngFor="let task of filteredTasks()"
+										*ngFor="
+											let task of filteredTasksForAutocomplete()
+										"
 										[value]="task.name">
 										{{ task.name }} -
 										{{ task.date | shortDate }}
@@ -107,11 +110,13 @@
 									"
 									autoActiveFirstOption
 									#autoExam="matAutocomplete">
-									<mat-option [value]="allWord.MALE">{{
-										allWord.MALE
+									<mat-option [value]="allWordEnum.MALE">{{
+										allWordEnum.MALE
 									}}</mat-option>
 									<mat-option
-										*ngFor="let exam of filteredExams()"
+										*ngFor="
+											let exam of filteredExamsForAutocomplete()
+										"
 										[value]="exam.name">
 										{{ exam.name }} -
 										{{ exam.date | shortDate }}
@@ -158,19 +163,22 @@
 		</mat-card>
 	</div>
 
-	<ng-container [ngTemplateOutlet]="progressOn() ? loadingOn : loadingOff">
-	</ng-container>
+	<!-- Para que se muestreel div, el tasksExamsAndStudents$ tiene que emitir algo que exista -->
+	<div
+		id="students-cards-container"
+		*ngIf="tasksExamsAndStudents$ | async; else selectCourseWarning">
+		<!-- Mientras se espera que se cargue todo se muestra un spinner -->
+		<ng-container
+			[ngTemplateOutlet]="spinnerProgressOn() ? loadingOn : loadingOff">
+		</ng-container>
 
-	<ng-template #loadingOn>
-		<div class="spinner-wrapper">
-			<mat-spinner></mat-spinner>
-		</div>
-	</ng-template>
+		<ng-template #loadingOn>
+			<div class="spinner-wrapper">
+				<mat-spinner></mat-spinner>
+			</div>
+		</ng-template>
 
-	<ng-template #loadingOff>
-		<div
-			id="students-cards-container"
-			*ngIf="courseSelected(); else selectCourseWarning">
+		<ng-template #loadingOff>
 			<ng-container *ngFor="let student of students()">
 				<mat-card *ngIf="student.show">
 					<mat-card-header
@@ -186,7 +194,7 @@
 								<div
 									class="cards-wrapper"
 									*ngIf="
-										matchSomeTask();
+										taskMatchSomeFilter();
 										else noMatchedTasks
 									">
 									<ng-container *ngFor="let task of tasks()">
@@ -276,7 +284,7 @@
 								<div
 									class="cards-wrapper"
 									*ngIf="
-										matchSomeExam();
+										examMatchSomeFilter();
 										else noMatchedExams
 									">
 									<ng-container *ngFor="let exam of exams()">
@@ -352,17 +360,17 @@
 					</mat-card-content>
 				</mat-card>
 			</ng-container>
-		</div>
-
-		<ng-template #selectCourseWarning>
-			<div class="warning-container">
-				<mat-card id="warning-card">
-					<mat-card-content>
-						<h2>Por favor, seleccione un curso</h2>
-					</mat-card-content>
-				</mat-card>
-			</div>
 		</ng-template>
+	</div>
+
+	<ng-template #selectCourseWarning>
+		<div class="warning-container">
+			<mat-card id="warning-card">
+				<mat-card-content>
+					<h2>Por favor, seleccione un curso</h2>
+				</mat-card-content>
+			</mat-card>
+		</div>
 	</ng-template>
 
 	<button
@@ -371,8 +379,8 @@
 		mat-fab
 		color="accent"
 		aria-label="Crear una nueva tarea o exámen"
-		*ngIf="courseSelected()"
-		(click)="openDialog()">
+		*ngIf="students().length > 0"
+		(click)="openCreateDialog()">
 		<mat-icon>add</mat-icon>
 	</button>
 </div>

@@ -5,22 +5,11 @@
 			<mat-form-field class="mat-form-field">
 				<mat-label>Tipo de trabajo</mat-label>
 				<mat-select formControlName="type">
-					<mat-option [value]="1">
-						{{ 'Tarea' }}
+					<mat-option [value]="workEnum.TASK">
+						{{ workEnum.TASK }}
 					</mat-option>
-					<mat-option [value]="2">
-						{{ 'Exámen' }}
-					</mat-option>
-				</mat-select>
-			</mat-form-field>
-			<mat-form-field class="mat-form-field">
-				<mat-label>Curso</mat-label>
-				<mat-select formControlName="courseId">
-					<mat-option
-						*ngFor="let course of courses()"
-						[value]="course.id">
-						{{ course.year }}° -
-						{{ course.shift | shift }}
+					<mat-option [value]="workEnum.EXAM">
+						{{ workEnum.EXAM }}
 					</mat-option>
 				</mat-select>
 			</mat-form-field>
@@ -60,7 +49,14 @@
 		</form>
 	</div>
 	<div mat-dialog-actions id="buttons-wrapper">
-		<button mat-button (click)="onNoClick()">Cancelar</button>
-		<button mat-button [mat-dialog-close]="" cdkFocusInitial>Crear</button>
+		<button
+			mat-button
+			(click)="closeDialog()"
+			[disabled]="saveButtonMessage() === buttonStateEnum.SAVING">
+			Cancelar
+		</button>
+		<button mat-button (click)="sendForm()" cdkFocusInitial>
+			{{ saveButtonMessage() }}
+		</button>
 	</div>
 </div>
