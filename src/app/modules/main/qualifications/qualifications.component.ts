@@ -3,15 +3,18 @@ import {
 	OnDestroy,
 	OnInit,
 	QueryList,
+	Renderer2,
 	Signal,
 	ViewChild,
 	ViewChildren,
 	WritableSignal,
 	computed,
 	effect,
+	inject,
+	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Subject, filter, takeUntil, tap } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -21,7 +24,7 @@ import { Course } from '../../../core/interfaces/course.interface';
 import { TasksAndExamsQueryParams } from './interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
 import { Work } from '../../../core/enums/work.enum';
-import { MatMiniFabButton } from '@angular/material/button';
+import { MatIconButton, MatMiniFabButton } from '@angular/material/button';
 import { AllWord } from '../../../core/enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
@@ -29,6 +32,10 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
 import { CreateDialogComponent } from './create-dialog/create-dialog.component';
+import { MatSelect } from '@angular/material/select';
+import { TasksService } from 'src/app/core/services/tasks/tasks.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
 	selector: 'app-qualifications',
@@ -69,8 +76,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public examMatchSomeFilter = computed(() =>
 		this.exams().some(exam => exam.show)
 	);
+	public editMode = signal(false);
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
+	private ts = inject(TasksService);
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
@@ -79,7 +88,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	constructor(
 		private qs: QualificationsService,
 		private fb: FormBuilder,
-		public dialog: MatDialog
+		public dialog: MatDialog,
+		private renderer: Renderer2,
+		private _snackBar: MatSnackBar
 	) {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestTaskOrExam();
@@ -274,5 +285,101 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef.afterClosed().subscribe(result => {
 			this.resetForm();
 		});
+	}
+
+	public allowEditOnSelectedItem(
+		select: MatSelect,
+		textarea: HTMLTextAreaElement,
+		editButton: MatIconButton,
+		confirmDiv: HTMLDivElement,
+		deleteButton: MatIconButton
+	) {
+		select.setDisabledState(false);
+		textarea.readOnly = false;
+		this.toggleDisappearClass(
+			confirmDiv,
+			editButton._elementRef.nativeElement
+		);
+		deleteButton.disabled = true;
+	}
+
+	public cancelEditOnSelectedItem(
+		select: MatSelect,
+		textarea: HTMLTextAreaElement,
+		editButton: MatIconButton,
+		confirmDiv: HTMLDivElement,
+		deleteButton: MatIconButton
+	) {
+		select.setDisabledState(true);
+		textarea.readOnly = true;
+		this.toggleDisappearClass(
+			editButton._elementRef.nativeElement,
+			confirmDiv
+		);
+		deleteButton.disabled = false;
+	}
+
+	public updateTask(
+		select: MatSelect,
+		textarea: HTMLTextAreaElement,
+		studentId: number,
+		taskId: number,
+		cardContent: HTMLElement,
+		cardLoading: HTMLDivElement,
+		cancelEditButton: MatIconButton
+	) {
+		const updateTask = {
+			studentToTask: {
+				studentId,
+				observation: textarea.value,
+				markingId: select.value,
+			},
+		};
+
+		this.toggleDisappearClass(cardLoading, cardContent);
+
+		this.ts
+			.updateTask(updateTask, taskId)
+			.pipe(takeUntil(this.destroy))
+			.subscribe(result => {
+				if (result instanceof HttpErrorResponse) {
+					this.returnToPreviousState(
+						select,
+						textarea,
+						taskId,
+						studentId
+					);
+					this.handleHttpErrorMessage(result.error?.message);
+				}
+
+				this.toggleDisappearClass(cardContent, cardLoading);
+				cancelEditButton._elementRef.nativeElement.click();
+			});
+	}
+
+	private toggleDisappearClass(removeFrom: HTMLElement, addTo: HTMLElement) {
+		this.renderer.removeClass(removeFrom, 'disappear');
+		this.renderer.addClass(addTo, 'disappear');
+	}
+
+	private handleHttpErrorMessage(
+		errorMessage = 'Ocurrió un error con su pedido'
+	) {
+		this._snackBar.open(errorMessage, '', { duration: 3000 });
+	}
+
+	private returnToPreviousState(
+		select: MatSelect,
+		textarea: HTMLTextAreaElement,
+		taskId: number,
+		studentId: number
+	) {
+		const task = this.tasks().find(task => task.id === taskId);
+		const previousState = task?.studentToTask?.find(
+			relation => (relation.studentId = studentId)
+		);
+
+		select.value = previousState?.markingId;
+		textarea.value = previousState?.observation ?? '';
 	}
 }

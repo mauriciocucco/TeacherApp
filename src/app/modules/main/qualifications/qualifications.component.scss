@@ -43,6 +43,10 @@
 			margin-bottom: unset;
 			text-overflow: ellipsis;
 		}
+		.edit-and-delete-settings {
+			display: flex;
+			gap: 1rem;
+		}
 	}
 	.mat-mdc-card-content {
 		&:last-child {
@@ -110,4 +114,27 @@
 	bottom: 5rem;
 	position: sticky;
 	z-index: 2;
+}
+
+.disappear {
+	display: none !important;
+}
+
+.mat-green {
+	// background-color: green;
+	color: green;
+}
+
+.mat-red {
+	color: rgba(255, 0, 0, 0.685);
+}
+
+.card-loading {
+	@include flex-center;
+	width: 24.4rem;
+	height: 60%;
+	mat-spinner {
+		height: 5rem !important;
+		width: 5rem !important;
+	}
 }

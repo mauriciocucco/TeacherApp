@@ -4,7 +4,8 @@ import { CreateTask } from '../../interfaces/create-task.interface';
 import { Endpoints } from 'src/app/core/enums/endpoints.enum';
 import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-query-params.interface';
 import { Task } from '../../interfaces/task.interface';
-import { of } from 'rxjs';
+import { catchError, of } from 'rxjs';
+import { UpdateTask } from '../../interfaces/update-task.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -22,5 +23,17 @@ export class TasksService {
 					params: tasksAndExamsQueryParams,
 			  })
 			: of([]);
+	}
+
+	public updateTask(task: UpdateTask, taskId: number) {
+		return this.api
+			.patch<UpdateTask>(`${Endpoints.TASKS}/${taskId}`, task)
+			.pipe(
+				catchError(error => {
+					console.error('Error en updateTask:', error);
+
+					return of(error);
+				})
+			);
 	}
 }

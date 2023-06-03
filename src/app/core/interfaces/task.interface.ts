@@ -1,3 +1,5 @@
+import { StudentToTask } from './student-to-task.interface';
+
 export interface Task {
 	id: number;
 	name: string;
@@ -5,4 +7,5 @@ export interface Task {
 	date: string;
 	subjectId: number;
 	show: boolean;
+	studentToTask: StudentToTask[];
 }

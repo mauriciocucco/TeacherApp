@@ -1,5 +1,5 @@
 export interface StudentToTask {
-	taskId: number;
+	studentId: number;
 	markingId: number;
 	observation: string;
 }

@@ -207,8 +207,86 @@
 												<p>
 													{{ task.date | shortDate }}
 												</p>
+												<div
+													class="edit-and-delete-settings">
+													<button
+														#editButton
+														mat-icon-button
+														color="primary"
+														aria-label="Icono para editar"
+														(click)="
+															allowEditOnSelectedItem(
+																matSelect,
+																textArea,
+																editButton,
+																confirmDiv,
+																deleteButton
+															)
+														">
+														<mat-icon
+															>edit</mat-icon
+														>
+													</button>
+													<div
+														#confirmDiv
+														class="confirm-icons disappear">
+														<button
+															title="Guardar edición"
+															mat-icon-button
+															color="green"
+															aria-label="Icono para confirmar edición"
+															(click)="
+																updateTask(
+																	matSelect,
+																	textArea,
+																	student.id,
+																	task.id,
+																	cardContent,
+																	cardLoading,
+																	cancelEditButton
+																)
+															">
+															<mat-icon
+																>check</mat-icon
+															>
+														</button>
+														<button
+															#cancelEditButton
+															title="Cancelar edición"
+															mat-icon-button
+															color="red"
+															aria-label="Icono para cancelar edición"
+															(click)="
+																cancelEditOnSelectedItem(
+																	matSelect,
+																	textArea,
+																	editButton,
+																	confirmDiv,
+																	deleteButton
+																)
+															">
+															<mat-icon
+																>cancel</mat-icon
+															>
+														</button>
+													</div>
+													<button
+														#deleteButton
+														mat-icon-button
+														color="warn"
+														aria-label="Icono para borrar">
+														<mat-icon
+															>delete</mat-icon
+														>
+													</button>
+												</div>
 											</mat-card-header>
-											<mat-card-content>
+											<div
+												class="card-loading disappear"
+												#cardLoading>
+												<mat-spinner></mat-spinner>
+											</div>
+											<mat-card-content #cardContent>
 												<div
 													class="qualification-card-content">
 													<mat-form-field
@@ -226,7 +304,11 @@
 																}
 																	| studentTask
 																		: 'markingId'
-															">
+															"
+															[disabled]="
+																!editMode()
+															"
+															#matSelect>
 															<mat-option
 																*ngFor="
 																	let marking of markings()
@@ -249,7 +331,13 @@
 														<mat-label
 															>Observación</mat-label
 														>
-														<textarea matInput
+														<textarea
+															matInput
+															[readonly]="
+																!editMode()
+															"
+															rows="5"
+															#textArea
 															>{{
 																{
 																	studentProjects:
