@@ -14,7 +14,7 @@ import {
 	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Subject, filter, takeUntil, tap } from 'rxjs';
+import { Observable, Subject, filter, of, takeUntil } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -36,6 +36,10 @@ import { MatSelect } from '@angular/material/select';
 import { TasksService } from 'src/app/core/services/tasks/tasks.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
+import { InfoDialogComponent } from './info-dialog/info-dialog.component';
+import { UpdateTask } from '../../../core/interfaces/update-task.interface';
+import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
+import { ExamsService } from '../../../core/services/exams/exams.service';
 
 @Component({
 	selector: 'app-qualifications',
@@ -80,6 +84,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
 	private ts = inject(TasksService);
+	private es = inject(ExamsService);
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
@@ -282,19 +287,38 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			data: { courseId: this.filtersForm.get('course')?.value },
 		});
 
-		dialogRef.afterClosed().subscribe(result => {
-			this.resetForm();
+		dialogRef
+			.afterClosed()
+			.pipe(takeUntil(this.destroy))
+			.subscribe(() => {
+				this.resetForm();
+			});
+	}
+
+	public openInfoDialog(work: Task | Exam, workType = this.WorkEnum.TASK) {
+		const dialogRef = this.dialog.open(InfoDialogComponent, {
+			data: {
+				name: work.name,
+				date: work.date,
+				description: work.description,
+				workId: work.id,
+				workType,
+			},
 		});
+
+		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
 	}
 
 	public allowEditOnSelectedItem(
-		select: MatSelect,
+		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
 		editButton: MatIconButton,
 		confirmDiv: HTMLDivElement,
 		deleteButton: MatIconButton
 	) {
-		select.setDisabledState(false);
+		controlElement instanceof MatSelect
+			? controlElement.setDisabledState(false)
+			: (controlElement.disabled = false);
 		textarea.readOnly = false;
 		this.toggleDisappearClass(
 			confirmDiv,
@@ -304,13 +328,15 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public cancelEditOnSelectedItem(
-		select: MatSelect,
+		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
 		editButton: MatIconButton,
 		confirmDiv: HTMLDivElement,
 		deleteButton: MatIconButton
 	) {
-		select.setDisabledState(true);
+		controlElement instanceof MatSelect
+			? controlElement.setDisabledState(true)
+			: (controlElement.disabled = true);
 		textarea.readOnly = true;
 		this.toggleDisappearClass(
 			editButton._elementRef.nativeElement,
@@ -319,42 +345,68 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		deleteButton.disabled = false;
 	}
 
-	public updateTask(
-		select: MatSelect,
+	public updateWork(
+		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
 		studentId: number,
-		taskId: number,
+		workId: number,
 		cardContent: HTMLElement,
 		cardLoading: HTMLDivElement,
-		cancelEditButton: MatIconButton
+		cancelEditButton: MatIconButton,
+		workType = this.WorkEnum.TASK
 	) {
-		const updateTask = {
-			studentToTask: {
-				studentId,
-				observation: textarea.value,
-				markingId: select.value,
-			},
+		const toTaskValues = {
+			studentId,
+			observation: textarea.value,
 		};
+		const updatedWork = this.setUpdatedWork(
+			workType,
+			toTaskValues,
+			controlElement.value
+		);
+		let update$: Observable<UpdateTask | UpdateExam | undefined> =
+			of(undefined);
 
 		this.toggleDisappearClass(cardLoading, cardContent);
 
-		this.ts
-			.updateTask(updateTask, taskId)
-			.pipe(takeUntil(this.destroy))
-			.subscribe(result => {
-				if (result instanceof HttpErrorResponse) {
-					this.returnToPreviousState(
-						select,
-						textarea,
-						taskId,
-						studentId
-					);
-					this.handleHttpErrorMessage(result.error?.message);
-				}
+		workType === this.WorkEnum.TASK
+			? (update$ = this.ts.updateTask(updatedWork as UpdateTask, workId))
+			: (update$ = this.es.updateExam(updatedWork as UpdateExam, workId));
 
-				this.toggleDisappearClass(cardContent, cardLoading);
-				cancelEditButton._elementRef.nativeElement.click();
-			});
+		update$.pipe(takeUntil(this.destroy)).subscribe(result => {
+			if (result instanceof HttpErrorResponse) {
+				this.returnToPreviousState(
+					controlElement,
+					textarea,
+					workId,
+					studentId
+				);
+				this.qs.handleHttpResponseMessage(result.error?.message);
+			}
+
+			this.toggleDisappearClass(cardContent, cardLoading);
+			cancelEditButton._elementRef.nativeElement.click();
+		});
+	}
+
+	private setUpdatedWork(
+		workType: string,
+		toTaskValues: { studentId: number; observation: string },
+		marking: number | string
+	) {
+		return workType === this.WorkEnum.TASK
+			? {
+					studentToTask: {
+						...toTaskValues,
+						markingId: marking,
+					},
+			  }
+			: {
+					studentToExam: {
+						...toTaskValues,
+						marking,
+					},
+			  };
 	}
 
 	private toggleDisappearClass(removeFrom: HTMLElement, addTo: HTMLElement) {
@@ -362,14 +414,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.renderer.addClass(addTo, 'disappear');
 	}
 
-	private handleHttpErrorMessage(
-		errorMessage = 'Ocurrió un error con su pedido'
-	) {
-		this._snackBar.open(errorMessage, '', { duration: 3000 });
-	}
-
 	private returnToPreviousState(
-		select: MatSelect,
+		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
 		taskId: number,
 		studentId: number
@@ -379,7 +425,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			relation => (relation.studentId = studentId)
 		);
 
-		select.value = previousState?.markingId;
+		controlElement.value = previousState?.markingId;
 		textarea.value = previousState?.observation ?? '';
 	}
 }

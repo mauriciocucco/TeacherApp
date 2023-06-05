@@ -28,6 +28,7 @@ import { AllWord } from '../../enums/all-word.enum';
 import { TasksService } from '../tasks/tasks.service';
 import { ExamsService } from '../exams/exams.service';
 import { StudentsService } from '../students/students.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 type ControlType = 'Students' | 'Tasks' | 'Exams';
 
@@ -95,7 +96,8 @@ export class QualificationsService {
 		private apiService: ApiService,
 		private ts: TasksService,
 		private es: ExamsService,
-		private ss: StudentsService
+		private ss: StudentsService,
+		private _snackBar: MatSnackBar
 	) {}
 
 	public getTasksExamsAndStudents(
@@ -117,6 +119,7 @@ export class QualificationsService {
 		this.filteredTasksForAutocomplete.set(tasks);
 		this.exams.set(exams);
 		this.filteredExamsForAutocomplete.set(exams);
+
 		if (students.length) {
 			//Porque sin ellos no se muestran las tareas y exámenes en el template
 			this.students.set(students);
@@ -246,5 +249,11 @@ export class QualificationsService {
 		this.cleanShow(this.tasks);
 		this.cleanShow(this.exams);
 		this.cleanShow(this.students);
+	}
+
+	public handleHttpResponseMessage(
+		responseMessage = 'Ocurrió un error con su pedido'
+	) {
+		this._snackBar.open(responseMessage, '', { duration: 3000 });
 	}
 }

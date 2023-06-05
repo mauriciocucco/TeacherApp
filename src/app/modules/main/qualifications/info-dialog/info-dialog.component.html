@@ -1,0 +1,48 @@
+<div id="form-container">
+	<div mat-dialog-content id="form-content">
+		<form [formGroup]="infoForm" id="info-form">
+			<mat-form-field class="mat-form-field">
+				<mat-label>Nombre</mat-label>
+				<input
+					matInput
+					placeholder="Nombre de la tarea"
+					[readonly]="!editMode()"
+					formControlName="name" />
+			</mat-form-field>
+			<mat-form-field class="mat-form-field">
+				<mat-label>Fecha</mat-label>
+				<input
+					matInput
+					[matDatepicker]="picker"
+					[readonly]="!editMode()"
+					formControlName="date" />
+				<mat-hint>M/D/YYYY</mat-hint>
+				<mat-datepicker-toggle
+					matIconSuffix
+					[for]="picker"></mat-datepicker-toggle>
+				<mat-datepicker
+					#picker
+					[disabled]="!editMode()"></mat-datepicker>
+			</mat-form-field>
+			<mat-form-field class="mat-form-field description-textarea">
+				<mat-label>Descripción</mat-label>
+				<textarea
+					[rows]="6"
+					[readonly]="!editMode()"
+					matInput
+					formControlName="description"></textarea>
+			</mat-form-field>
+		</form>
+	</div>
+	<div mat-dialog-actions id="buttons-wrapper">
+		<button
+			mat-button
+			(click)="closeDialog()"
+			[disabled]="editButtonMessage() === buttonStateEnum.SAVING">
+			Cancelar
+		</button>
+		<button mat-button (click)="sendForm()" cdkFocusInitial>
+			{{ editButtonMessage() }}
+		</button>
+	</div>
+</div>

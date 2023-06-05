@@ -4,7 +4,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 	name: 'shortDate',
 })
 export class ShortDatePipe implements PipeTransform {
-	transform(ISOString: string): string {
+	transform(incomingValue: string | Date): string {
+		let ISOString = incomingValue;
+
+		if (typeof ISOString === 'object') {
+			ISOString = ISOString.toISOString();
+		}
+
 		const shortDate = ISOString.slice(0, ISOString.indexOf('T'));
 		const splittedShortDate = shortDate.split('-').reverse();
 

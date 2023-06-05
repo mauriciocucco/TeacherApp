@@ -236,7 +236,7 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																updateTask(
+																updateWork(
 																	matSelect,
 																	textArea,
 																	student.id,
@@ -277,6 +277,18 @@
 														aria-label="Icono para borrar">
 														<mat-icon
 															>delete</mat-icon
+														>
+													</button>
+													<button
+														title="Ver más información"
+														mat-icon-button
+														color="blue"
+														aria-label="Icono para ver más detalles de la tarea"
+														(click)="
+															openInfoDialog(task)
+														">
+														<mat-icon
+															>info</mat-icon
 														>
 													</button>
 												</div>
@@ -368,6 +380,7 @@
 									</mat-card>
 								</ng-template>
 							</mat-tab>
+
 							<mat-tab label="Exámenes">
 								<div
 									class="cards-wrapper"
@@ -385,8 +398,102 @@
 												<p>
 													{{ exam.date | shortDate }}
 												</p>
+												<div
+													class="edit-and-delete-settings">
+													<button
+														#editButton
+														mat-icon-button
+														color="primary"
+														aria-label="Icono para editar"
+														(click)="
+															allowEditOnSelectedItem(
+																matInput,
+																textArea,
+																editButton,
+																confirmDiv,
+																deleteButton
+															)
+														">
+														<mat-icon
+															>edit</mat-icon
+														>
+													</button>
+													<div
+														#confirmDiv
+														class="confirm-icons disappear">
+														<button
+															title="Guardar edición"
+															mat-icon-button
+															color="green"
+															aria-label="Icono para confirmar edición"
+															(click)="
+																updateWork(
+																	matInput,
+																	textArea,
+																	student.id,
+																	exam.id,
+																	cardContent,
+																	cardLoading,
+																	cancelEditButton,
+																	WorkEnum.EXAM
+																)
+															">
+															<mat-icon
+																>check</mat-icon
+															>
+														</button>
+														<button
+															#cancelEditButton
+															title="Cancelar edición"
+															mat-icon-button
+															color="red"
+															aria-label="Icono para cancelar edición"
+															(click)="
+																cancelEditOnSelectedItem(
+																	matInput,
+																	textArea,
+																	editButton,
+																	confirmDiv,
+																	deleteButton
+																)
+															">
+															<mat-icon
+																>cancel</mat-icon
+															>
+														</button>
+													</div>
+													<button
+														#deleteButton
+														mat-icon-button
+														color="warn"
+														aria-label="Icono para borrar">
+														<mat-icon
+															>delete</mat-icon
+														>
+													</button>
+													<button
+														title="Ver más información"
+														mat-icon-button
+														color="blue"
+														aria-label="Icono para ver más detalles del exámen"
+														(click)="
+															openInfoDialog(
+																exam,
+																WorkEnum.EXAM
+															)
+														">
+														<mat-icon
+															>info</mat-icon
+														>
+													</button>
+												</div>
 											</mat-card-header>
-											<mat-card-content>
+											<div
+												class="card-loading disappear"
+												#cardLoading>
+												<mat-spinner></mat-spinner>
+											</div>
+											<mat-card-content #cardContent>
 												<div
 													class="qualification-card-content">
 													<mat-form-field
@@ -395,6 +502,8 @@
 															>Nota</mat-label
 														>
 														<input
+															#matInput
+															disabled=""
 															matInput
 															placeholder="Nota del exámen"
 															[value]="
@@ -413,7 +522,10 @@
 														<mat-label
 															>Observación</mat-label
 														>
-														<textarea matInput
+														<textarea
+															matInput
+															[readonly]="true"
+															#textArea
 															>{{
 																{
 																	studentProjects:
@@ -435,11 +547,7 @@
 								<ng-template #noMatchedExams>
 									<mat-card id="warning-card">
 										<mat-card-content>
-											<h2>
-												No se encontraron exámenes que
-												cumplan con los criterios de
-												búsqueda
-											</h2>
+											<h2>No se encontraron exámenes</h2>
 										</mat-card-content>
 									</mat-card>
 								</ng-template>

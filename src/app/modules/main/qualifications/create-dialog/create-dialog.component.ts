@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
 import { SharedModule } from '../../../../shared/shared.module';
-import { Payload } from './interfaces/payload.interface';
+import { CreatePayload } from './interfaces/create-payload.interface';
 import { Work } from '../../../../core/enums/work.enum';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../core/services/exams/exams.service';
@@ -35,11 +35,12 @@ export class CreateDialogComponent implements OnDestroy {
 	public saveButtonMessage = signal('Guardar');
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
+	private students = this.qs.students;
 	private destroy: Subject<boolean> = new Subject<boolean>();
 
 	constructor(
 		public dialogRef: MatDialogRef<CreateDialogComponent>,
-		@Inject(MAT_DIALOG_DATA) public payload: Payload,
+		@Inject(MAT_DIALOG_DATA) public payload: CreatePayload,
 		private fb: FormBuilder,
 		private qs: QualificationsService
 	) {}
@@ -56,16 +57,14 @@ export class CreateDialogComponent implements OnDestroy {
 	public sendForm() {
 		const cleanedForm = this.cleanForm();
 		const queryParams = { courseId: cleanedForm.courseId };
-		let create$:
-			| Observable<CreateTask>
-			| Observable<CreateExam>
-			| Observable<undefined> = of(undefined);
+		let create$: Observable<CreateTask | CreateExam | undefined> =
+			of(undefined);
 
 		this.saveButtonMessage.set(ButtonState.SAVING);
 
 		this.createForm.get('type')?.value === this.workEnum.TASK
-			? (create$ = this.ts.createTask(cleanedForm))
-			: (create$ = this.es.createExam(cleanedForm));
+			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
+			: (create$ = this.es.createExam(cleanedForm as CreateExam));
 
 		create$
 			.pipe(
@@ -86,10 +85,22 @@ export class CreateDialogComponent implements OnDestroy {
 	private cleanForm(): CreateTask | CreateExam {
 		const formDeepCopy = JSON.parse(JSON.stringify(this.createForm.value));
 
+		formDeepCopy.type === this.workEnum.TASK
+			? (formDeepCopy.studentToTask =
+					this.setTaskOrExamToStudentAttribute())
+			: (formDeepCopy.studentToExam =
+					this.setTaskOrExamToStudentAttribute());
+
 		delete formDeepCopy.type;
 
 		formDeepCopy.courseId = this.payload.courseId;
 
 		return formDeepCopy;
+	}
+
+	private setTaskOrExamToStudentAttribute() {
+		return this.students().map(student => ({
+			studentId: student.id,
+		}));
 	}
 }
