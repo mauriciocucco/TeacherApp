@@ -41,6 +41,8 @@ import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
 import { ExamsService } from '../../../core/services/exams/exams.service';
 import { ToggleEditElements } from './interfaces/toggle-edit.interface';
 import { UpdateWorkParameters } from './interfaces/update-work-parameters.interface';
+import { StudentToTask } from '../../../core/interfaces/student-to-task.interface';
+import { StudentToExam } from '../../../core/interfaces/student-to-exam.interface';
 
 @Component({
 	selector: 'app-qualifications',
@@ -82,6 +84,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.exams().some(exam => exam.show)
 	);
 	public editMode = signal(false);
+	public defaultRowsNumber = signal(5);
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
 	private ts = inject(TasksService);
@@ -290,9 +293,16 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
-			.subscribe(() => {
+			.subscribe((workType: Work) => {
+				if (workType === this.WorkEnum.TASK) this.clickSpecificTab();
+				if (workType === this.WorkEnum.EXAM) this.clickSpecificTab(1);
+
 				this.resetForm();
 			});
+	}
+
+	private clickSpecificTab(tabIndex = 0) {
+		this.tabChildren.forEach(tab => (tab.selectedIndex = tabIndex));
 	}
 
 	public openInfoDialog(work: Task | Exam, workType = this.WorkEnum.TASK) {
@@ -310,9 +320,29 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public toggleEditOnSelectedItem(
+		toggleEditElements: ToggleEditElements,
+		allowEdit = true,
+		workId = 0,
+		studentId = 0,
+		workType = Work.TASK
+	) {
+		this.changeEditStatus(toggleEditElements, allowEdit);
+
+		if (!allowEdit) {
+			this.returnToPreviousState(
+				toggleEditElements.controlElement,
+				toggleEditElements.textArea,
+				workId,
+				studentId,
+				workType
+			);
+		}
+	}
+
+	private changeEditStatus(
 		{
 			controlElement,
-			textarea,
+			textArea,
 			editButton,
 			confirmDiv,
 			deleteButton,
@@ -321,8 +351,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	) {
 		controlElement instanceof MatSelect
 			? controlElement.setDisabledState(!allowEdit)
-			: (controlElement.disabled = !allowEdit);
-		textarea.readOnly = !allowEdit;
+			: (controlElement.readOnly = !allowEdit);
+		textArea.readOnly = !allowEdit;
 		this.toggleDisappearClass(
 			allowEdit ? confirmDiv : editButton._elementRef.nativeElement,
 			allowEdit ? editButton._elementRef.nativeElement : confirmDiv
@@ -337,12 +367,14 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		workId,
 		cardContent,
 		cardLoading,
-		cancelEditButton,
+		editButton,
+		confirmDiv,
+		deleteButton,
 		workType = this.WorkEnum.TASK,
 	}: UpdateWorkParameters) {
 		const commonValues = {
 			studentId,
-			observation: textArea.value,
+			observation: textArea.value.trimEnd(),
 		};
 		const updatedWork = this.setUpdatedWork(
 			workType,
@@ -369,8 +401,18 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				this.qs.handleHttpResponseMessage(result.error?.message);
 			}
 
+			this.qs.updateWorkCardInfo(workType, workId, updatedWork);
 			this.toggleDisappearClass(cardContent, cardLoading);
-			cancelEditButton._elementRef.nativeElement.click(); // para llamar a la función toggleEditOnSelectedItem con allowEdit en false
+			this.changeEditStatus(
+				{
+					controlElement,
+					textArea,
+					editButton,
+					confirmDiv,
+					deleteButton,
+				},
+				false
+			);
 		});
 	}
 
@@ -402,15 +444,27 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private returnToPreviousState(
 		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
-		taskId: number,
-		studentId: number
+		workId: number,
+		studentId: number,
+		workType: Work = Work.TASK
 	) {
-		const task = this.tasks().find(task => task.id === taskId);
-		const previousState = task?.studentToTask?.find(
-			relation => (relation.studentId = studentId)
-		);
+		const work =
+			workType === Work.TASK
+				? this.tasks().find(task => task.id === workId)
+				: this.exams().find(exam => exam.id === workId);
+		const previousState =
+			workType === Work.TASK
+				? (work as Task)?.studentToTask?.find(
+						relation => relation.studentId === studentId
+				  )
+				: (work as Exam)?.studentToExam?.find(
+						relation => relation.studentId === studentId
+				  );
 
-		controlElement.value = previousState?.markingId;
+		controlElement.value =
+			workType === Work.TASK
+				? (previousState as StudentToTask)?.markingId
+				: (previousState as StudentToExam)?.marking;
 		textarea.value = previousState?.observation ?? '';
 	}
 }

@@ -9,6 +9,8 @@ export interface UpdateWorkParameters {
 	workId: number;
 	cardContent: HTMLElement;
 	cardLoading: HTMLDivElement;
-	cancelEditButton: MatIconButton;
+	editButton: MatIconButton;
+	confirmDiv: HTMLDivElement;
+	deleteButton: MatIconButton;
 	workType?: Work;
 }

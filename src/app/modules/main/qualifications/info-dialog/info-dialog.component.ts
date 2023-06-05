@@ -8,11 +8,9 @@ import { Observable, Subject, of, takeUntil } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
 import { UpdateTask } from '../../../../core/interfaces/update-task.interface';
-import { Task } from '../../../../core/interfaces/task.interface';
 import { UpdateExam } from '../../../../core/interfaces/update-exam.interface';
 import { Work } from '../../../../core/enums/work.enum';
 import { ExamsService } from '../../../../core/services/exams/exams.service';
-import { Exam } from '../../../../core/interfaces/exam.interface';
 
 @Component({
 	selector: 'app-info-dialog',
@@ -32,10 +30,6 @@ export class InfoDialogComponent implements OnDestroy {
 	private es = inject(ExamsService);
 	private qs = inject(QualificationsService);
 	private destroy: Subject<boolean> = new Subject<boolean>();
-	private tasks = this.qs.tasks;
-	private exams = this.qs.exams;
-	private filteredTasksForAutocomplete = this.qs.filteredTasksForAutocomplete;
-	private filteredExamsForAutocomplete = this.qs.filteredExamsForAutocomplete;
 	private workEnum = Work;
 
 	constructor(
@@ -78,7 +72,11 @@ export class InfoDialogComponent implements OnDestroy {
 				this.qs.handleHttpResponseMessage(result.error?.message);
 			} else {
 				this.qs.handleHttpResponseMessage('La edición fue exitosa');
-				this.updateWorkCardInfo(workId, updatedWork);
+				this.qs.updateWorkCardInfo(
+					this.payload.workType,
+					workId,
+					updatedWork
+				);
 			}
 
 			this.closeDialog();
@@ -89,42 +87,7 @@ export class InfoDialogComponent implements OnDestroy {
 		this.infoForm.patchValue({
 			name: this.payload.name,
 			date: this.payload.date,
-			description: this.payload.description,
+			description: this.payload.description?.trimEnd(),
 		});
-	}
-
-	private updateWorkCardInfo(
-		workId: number,
-		updatedWork: UpdateTask | UpdateExam
-	) {
-		if (this.payload.workType === this.workEnum.TASK) {
-			this.tasks.mutate(tasks =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			);
-
-			this.filteredTasksForAutocomplete.mutate(tasks =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			);
-		} else if (this.payload.workType === this.workEnum.EXAM) {
-			this.exams.mutate(exams =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-			);
-
-			this.filteredExamsForAutocomplete.mutate(exams =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-			);
-		}
-	}
-
-	private filterAndUpdateSelectedWork(
-		workId: number,
-		updatedWork: UpdateTask | UpdateExam,
-		works: Task[] | Exam[]
-	) {
-		const selectedWorkIndex = works.findIndex(task => task.id === workId);
-		works[selectedWorkIndex] = {
-			...works[selectedWorkIndex],
-			...updatedWork,
-		};
 	}
 }

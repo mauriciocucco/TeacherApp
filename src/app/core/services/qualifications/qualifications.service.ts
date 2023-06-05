@@ -29,6 +29,9 @@ import { TasksService } from '../tasks/tasks.service';
 import { ExamsService } from '../exams/exams.service';
 import { StudentsService } from '../students/students.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { WorkBase } from '../../interfaces/work-base.interface';
+import { UpdateTask } from '../../interfaces/update-task.interface';
+import { UpdateExam } from '../../interfaces/update-exam.interface';
 
 type ControlType = 'Students' | 'Tasks' | 'Exams';
 
@@ -209,7 +212,7 @@ export class QualificationsService {
 		if (valueSelected === AllWord.FEMALE || valueSelected === AllWord.MALE)
 			return;
 
-		const selectedElement = selectedSignal().find(
+		const selectedElement = (selectedSignal() as WorkBase[]).find(
 			element => element.name === valueSelected
 		);
 
@@ -252,8 +255,84 @@ export class QualificationsService {
 	}
 
 	public handleHttpResponseMessage(
-		responseMessage = 'Ocurrió un error con su pedido'
+		responseMessage = 'Ocurrió un error con su pedido. Comuníquese con soporte para solucionarlo.'
 	) {
-		this._snackBar.open(responseMessage, '', { duration: 3000 });
+		this._snackBar.open(responseMessage, '', { duration: 4000 });
+	}
+
+	public updateWorkCardInfo(
+		workType: Work,
+		workId: number,
+		updatedWork: UpdateTask | UpdateExam
+	) {
+		if (workType === Work.TASK) {
+			this.tasks.mutate(tasks =>
+				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
+			);
+
+			this.filteredTasksForAutocomplete.mutate(tasks =>
+				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
+			);
+		} else if (workType === Work.EXAM) {
+			this.exams.mutate(exams =>
+				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+			);
+
+			this.filteredExamsForAutocomplete.mutate(exams =>
+				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+			);
+		}
+	}
+
+	private filterAndUpdateSelectedWork(
+		workId: number,
+		updatedWork: UpdateTask | UpdateExam,
+		works: Task[] | Exam[]
+	) {
+		const selectedWorkIndex = works.findIndex(task => task.id === workId);
+
+		if (
+			!(updatedWork as UpdateTask).studentToTask &&
+			!(updatedWork as UpdateExam).studentToExam
+		) {
+			works[selectedWorkIndex] = {
+				...works[selectedWorkIndex],
+				...updatedWork,
+			} as Task | Exam;
+
+			return;
+		}
+
+		if ((updatedWork as UpdateTask).studentToTask) {
+			const relationIndex = (
+				works[selectedWorkIndex] as Task
+			).studentToTask.find(
+				relation =>
+					relation.studentId ===
+					(updatedWork as UpdateTask).studentToTask?.studentId
+			);
+			let relationToUpdate = (works[selectedWorkIndex] as Task)
+				.studentToTask[relationIndex as unknown as number];
+
+			relationToUpdate = {
+				...relationToUpdate,
+				...(updatedWork as UpdateTask).studentToTask,
+			};
+		} else {
+			const relationIndex = (
+				works[selectedWorkIndex] as Exam
+			).studentToExam.find(
+				relation =>
+					relation.studentId ===
+					(updatedWork as UpdateExam).studentToExam?.studentId
+			);
+			let relationToUpdate = (works[selectedWorkIndex] as Exam)
+				.studentToExam[relationIndex as unknown as number];
+
+			relationToUpdate = {
+				...relationToUpdate,
+				...(updatedWork as UpdateExam).studentToExam,
+			};
+		}
 	}
 }

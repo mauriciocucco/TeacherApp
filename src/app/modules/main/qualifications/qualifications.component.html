@@ -163,7 +163,7 @@
 		</mat-card>
 	</div>
 
-	<!-- Para que se muestreel div, el tasksExamsAndStudents$ tiene que emitir algo que exista -->
+	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista -->
 	<div
 		id="students-cards-container"
 		*ngIf="tasksExamsAndStudents$ | async; else selectCourseWarning">
@@ -219,8 +219,7 @@
 																{
 																	controlElement:
 																		matSelect,
-																	textarea:
-																		textArea,
+																	textArea,
 																	editButton,
 																	confirmDiv,
 																	deleteButton
@@ -249,7 +248,9 @@
 																	workId: task.id,
 																	cardContent,
 																	cardLoading,
-																	cancelEditButton
+																	editButton,
+																	confirmDiv,
+																	deleteButton,
 																})
 															">
 															<mat-icon
@@ -267,13 +268,14 @@
 																	{
 																		controlElement:
 																			matSelect,
-																		textarea:
-																			textArea,
+																		textArea,
 																		editButton,
 																		confirmDiv,
 																		deleteButton
 																	},
-																	false
+																	false,
+																	task.id,
+																	student.id
 																)
 															">
 															<mat-icon
@@ -320,12 +322,11 @@
 														<mat-select
 															[value]="
 																{
-																	studentProjects:
-																		student.studentToTask,
-																	idToMatch:
-																		task.id
+																	works: task.studentToTask,
+																	studentId:
+																		student.id
 																}
-																	| studentTask
+																	| studentRelation
 																		: 'markingId'
 															"
 															[disabled]="
@@ -359,17 +360,17 @@
 															[readonly]="
 																!editMode()
 															"
-															rows="5"
+															[rows]="
+																defaultRowsNumber()
+															"
 															#textArea
 															>{{
 																{
-																	studentProjects:
-																		student.studentToTask,
-																	idToMatch:
-																		task.id
-																}
-																	| studentTask
-																		: 'observation'
+																	works: task.studentToTask,
+																	studentId:
+																		student.id,
+																} | studentRelation : 'observation'
+
 															}}
 												</textarea
 														>
@@ -421,12 +422,15 @@
 																{
 																	controlElement:
 																		matInput,
-																	textarea:
-																		textArea,
+																	textArea,
 																	editButton,
 																	confirmDiv,
 																	deleteButton
-																}
+																},
+																true,
+																0,
+																0,
+																WorkEnum.EXAM
 															)
 														">
 														<mat-icon
@@ -451,7 +455,9 @@
 																	workId: exam.id,
 																	cardContent,
 																	cardLoading,
-																	cancelEditButton,
+																	editButton,
+																	confirmDiv,
+																	deleteButton,
 																	workType:
 																		WorkEnum.EXAM
 																})
@@ -471,13 +477,15 @@
 																	{
 																		controlElement:
 																			matInput,
-																		textarea:
-																			textArea,
+																		textArea,
 																		editButton,
 																		confirmDiv,
 																		deleteButton
 																	},
-																	false
+																	false,
+																	exam.id,
+																	student.id,
+																	WorkEnum.EXAM
 																)
 															">
 															<mat-icon
@@ -526,17 +534,16 @@
 														>
 														<input
 															#matInput
-															disabled=""
+															readonly
 															matInput
 															placeholder="Nota del exámen"
 															[value]="
 																{
-																	studentProjects:
-																		student.studentToExam,
-																	idToMatch:
-																		exam.id
+																	works: exam.studentToExam,
+																	studentId:
+																		student.id
 																}
-																	| studentExam
+																	| studentRelation
 																		: 'marking'
 															" />
 													</mat-form-field>
@@ -548,16 +555,16 @@
 														<textarea
 															matInput
 															[readonly]="true"
+															[rows]="
+																defaultRowsNumber()
+															"
 															#textArea
 															>{{
 																{
-																	studentProjects:
-																		student.studentToExam,
-																	idToMatch:
-																		exam.id
-																}
-																	| studentExam
-																		: 'observation'
+																	works: exam.studentToExam,
+																	studentId: student.id,
+																} | studentRelation:"observation"
+
 															}}
 												</textarea
 														>

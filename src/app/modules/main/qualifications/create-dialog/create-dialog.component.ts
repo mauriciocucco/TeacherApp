@@ -11,6 +11,8 @@ import { Observable, Subject, catchError, of, takeUntil } from 'rxjs';
 import { CreateTask } from '../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../core/interfaces/create-exam.interface';
 import { ButtonState } from '../enums/button-state.enum';
+import { CreateForm } from './interfaces/create-form.interface';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
 	selector: 'app-create-dialog',
@@ -32,7 +34,7 @@ export class CreateDialogComponent implements OnDestroy {
 	public subjects = this.qs.subjects;
 	public workEnum = Work;
 	public buttonStateEnum = ButtonState;
-	public saveButtonMessage = signal('Guardar');
+	public saveButtonMessage = signal(ButtonState.CREATE);
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
 	private students = this.qs.students;
@@ -51,7 +53,7 @@ export class CreateDialogComponent implements OnDestroy {
 	}
 
 	public closeDialog(): void {
-		this.dialogRef.close();
+		this.dialogRef.close(this.createForm.get('type')?.value);
 	}
 
 	public sendForm() {
@@ -66,24 +68,21 @@ export class CreateDialogComponent implements OnDestroy {
 			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
 			: (create$ = this.es.createExam(cleanedForm as CreateExam));
 
-		create$
-			.pipe(
-				takeUntil(this.destroy),
-				catchError(() => {
-					this.saveButtonMessage.set(ButtonState.SAVE);
-					return of(false);
-				})
-			)
-			.subscribe(result => {
-				if (!result) return;
-
+		create$.pipe(takeUntil(this.destroy)).subscribe(result => {
+			if (result instanceof HttpErrorResponse) {
+				this.qs.handleHttpResponseMessage();
+			} else {
 				this.qs.getTasksExamsAndStudents(queryParams, null);
-				this.closeDialog();
-			});
+			}
+
+			this.closeDialog();
+		});
 	}
 
 	private setForm(): CreateTask | CreateExam {
-		const formDeepCopy = JSON.parse(JSON.stringify(this.createForm.value));
+		const formDeepCopy: CreateForm = JSON.parse(
+			JSON.stringify(this.createForm.value)
+		);
 
 		formDeepCopy.type === this.workEnum.TASK
 			? (formDeepCopy.studentToTask =
@@ -94,8 +93,9 @@ export class CreateDialogComponent implements OnDestroy {
 		delete formDeepCopy.type;
 
 		formDeepCopy.courseId = this.payload.courseId;
+		formDeepCopy.description = formDeepCopy.description?.trimEnd();
 
-		return formDeepCopy;
+		return formDeepCopy as unknown as CreateTask | CreateExam;
 	}
 
 	private setTaskOrExamToStudentAttribute() {

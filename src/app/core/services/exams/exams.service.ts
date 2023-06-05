@@ -14,7 +14,13 @@ export class ExamsService {
 	api = inject(ApiService);
 
 	public createExam(task: CreateExam) {
-		return this.api.post<CreateExam>(Endpoints.EXAMS, task);
+		return this.api.post<CreateExam>(Endpoints.EXAMS, task).pipe(
+			catchError(error => {
+				console.error('Error en createExam:', error);
+
+				return of(error);
+			})
+		);
 	}
 
 	public getExams(tasksAndExamsQueryParams: TasksAndExamsQueryParams | null) {

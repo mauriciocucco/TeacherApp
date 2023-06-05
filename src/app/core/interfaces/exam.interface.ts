@@ -1,8 +1,6 @@
-export interface Exam {
-	id: number;
-	name: string;
-	description: string;
-	date: string;
-	subjectId: number;
-	show: boolean;
+import { StudentToExam } from './student-to-exam.interface';
+import { WorkBase } from './work-base.interface';
+
+export interface Exam extends WorkBase {
+	studentToExam: StudentToExam[];
 }

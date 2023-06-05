@@ -14,7 +14,13 @@ export class TasksService {
 	private api = inject(ApiService);
 
 	public createTask(task: CreateTask) {
-		return this.api.post<CreateTask>(Endpoints.TASKS, task);
+		return this.api.post<CreateTask>(Endpoints.TASKS, task).pipe(
+			catchError(error => {
+				console.error('Error en createTask:', error);
+
+				return of(error);
+			})
+		);
 	}
 
 	public getTasks(tasksAndExamsQueryParams: TasksAndExamsQueryParams | null) {

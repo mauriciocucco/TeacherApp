@@ -3,7 +3,7 @@ import { MatSelect } from '@angular/material/select';
 
 export interface ToggleEditElements {
 	controlElement: MatSelect | HTMLInputElement;
-	textarea: HTMLTextAreaElement;
+	textArea: HTMLTextAreaElement;
 	editButton: MatIconButton;
 	confirmDiv: HTMLDivElement;
 	deleteButton: MatIconButton;

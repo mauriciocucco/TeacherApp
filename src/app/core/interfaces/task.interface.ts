@@ -1,11 +1,6 @@
 import { StudentToTask } from './student-to-task.interface';
+import { WorkBase } from './work-base.interface';
 
-export interface Task {
-	id: number;
-	name: string;
-	description: string;
-	date: string;
-	subjectId: number;
-	show: boolean;
+export interface Task extends WorkBase {
 	studentToTask: StudentToTask[];
 }
