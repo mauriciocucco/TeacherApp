@@ -24,7 +24,7 @@ import { Course } from '../../../core/interfaces/course.interface';
 import { TasksAndExamsQueryParams } from './interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
 import { Work } from '../../../core/enums/work.enum';
-import { MatIconButton, MatMiniFabButton } from '@angular/material/button';
+import { MatMiniFabButton } from '@angular/material/button';
 import { AllWord } from '../../../core/enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
@@ -34,12 +34,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { CreateDialogComponent } from './create-dialog/create-dialog.component';
 import { MatSelect } from '@angular/material/select';
 import { TasksService } from 'src/app/core/services/tasks/tasks.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { InfoDialogComponent } from './info-dialog/info-dialog.component';
 import { UpdateTask } from '../../../core/interfaces/update-task.interface';
 import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
 import { ExamsService } from '../../../core/services/exams/exams.service';
+import { ToggleEditElements } from './interfaces/toggle-edit.interface';
+import { UpdateWorkParameters } from './interfaces/update-work-parameters.interface';
 
 @Component({
 	selector: 'app-qualifications',
@@ -94,8 +95,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		private qs: QualificationsService,
 		private fb: FormBuilder,
 		public dialog: MatDialog,
-		private renderer: Renderer2,
-		private _snackBar: MatSnackBar
+		private renderer: Renderer2
 	) {
 		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
 		this.scrollToLatestTaskOrExam();
@@ -309,59 +309,44 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
 	}
 
-	public allowEditOnSelectedItem(
-		controlElement: MatSelect | HTMLInputElement,
-		textarea: HTMLTextAreaElement,
-		editButton: MatIconButton,
-		confirmDiv: HTMLDivElement,
-		deleteButton: MatIconButton
-	) {
-		controlElement instanceof MatSelect
-			? controlElement.setDisabledState(false)
-			: (controlElement.disabled = false);
-		textarea.readOnly = false;
-		this.toggleDisappearClass(
+	public toggleEditOnSelectedItem(
+		{
+			controlElement,
+			textarea,
+			editButton,
 			confirmDiv,
-			editButton._elementRef.nativeElement
-		);
-		deleteButton.disabled = true;
-	}
-
-	public cancelEditOnSelectedItem(
-		controlElement: MatSelect | HTMLInputElement,
-		textarea: HTMLTextAreaElement,
-		editButton: MatIconButton,
-		confirmDiv: HTMLDivElement,
-		deleteButton: MatIconButton
+			deleteButton,
+		}: ToggleEditElements,
+		allowEdit = true
 	) {
 		controlElement instanceof MatSelect
-			? controlElement.setDisabledState(true)
-			: (controlElement.disabled = true);
-		textarea.readOnly = true;
+			? controlElement.setDisabledState(!allowEdit)
+			: (controlElement.disabled = !allowEdit);
+		textarea.readOnly = !allowEdit;
 		this.toggleDisappearClass(
-			editButton._elementRef.nativeElement,
-			confirmDiv
+			allowEdit ? confirmDiv : editButton._elementRef.nativeElement,
+			allowEdit ? editButton._elementRef.nativeElement : confirmDiv
 		);
-		deleteButton.disabled = false;
+		deleteButton.disabled = allowEdit;
 	}
 
-	public updateWork(
-		controlElement: MatSelect | HTMLInputElement,
-		textarea: HTMLTextAreaElement,
-		studentId: number,
-		workId: number,
-		cardContent: HTMLElement,
-		cardLoading: HTMLDivElement,
-		cancelEditButton: MatIconButton,
-		workType = this.WorkEnum.TASK
-	) {
-		const toTaskValues = {
+	public updateWork({
+		controlElement,
+		textArea,
+		studentId,
+		workId,
+		cardContent,
+		cardLoading,
+		cancelEditButton,
+		workType = this.WorkEnum.TASK,
+	}: UpdateWorkParameters) {
+		const commonValues = {
 			studentId,
-			observation: textarea.value,
+			observation: textArea.value,
 		};
 		const updatedWork = this.setUpdatedWork(
 			workType,
-			toTaskValues,
+			commonValues,
 			controlElement.value
 		);
 		let update$: Observable<UpdateTask | UpdateExam | undefined> =
@@ -377,7 +362,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			if (result instanceof HttpErrorResponse) {
 				this.returnToPreviousState(
 					controlElement,
-					textarea,
+					textArea,
 					workId,
 					studentId
 				);
@@ -385,25 +370,25 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			}
 
 			this.toggleDisappearClass(cardContent, cardLoading);
-			cancelEditButton._elementRef.nativeElement.click();
+			cancelEditButton._elementRef.nativeElement.click(); // para llamar a la función toggleEditOnSelectedItem con allowEdit en false
 		});
 	}
 
 	private setUpdatedWork(
 		workType: string,
-		toTaskValues: { studentId: number; observation: string },
+		commonValues: { studentId: number; observation: string },
 		marking: number | string
 	) {
 		return workType === this.WorkEnum.TASK
 			? {
 					studentToTask: {
-						...toTaskValues,
+						...commonValues,
 						markingId: marking,
 					},
 			  }
 			: {
 					studentToExam: {
-						...toTaskValues,
+						...commonValues,
 						marking,
 					},
 			  };

@@ -10,7 +10,7 @@ import { ExamsService } from '../../../../core/services/exams/exams.service';
 import { Observable, Subject, catchError, of, takeUntil } from 'rxjs';
 import { CreateTask } from '../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../core/interfaces/create-exam.interface';
-import { ButtonState } from './enums/button-state.enum';
+import { ButtonState } from '../enums/button-state.enum';
 
 @Component({
 	selector: 'app-create-dialog',
@@ -55,7 +55,7 @@ export class CreateDialogComponent implements OnDestroy {
 	}
 
 	public sendForm() {
-		const cleanedForm = this.cleanForm();
+		const cleanedForm = this.setForm();
 		const queryParams = { courseId: cleanedForm.courseId };
 		let create$: Observable<CreateTask | CreateExam | undefined> =
 			of(undefined);
@@ -69,7 +69,7 @@ export class CreateDialogComponent implements OnDestroy {
 		create$
 			.pipe(
 				takeUntil(this.destroy),
-				catchError(error => {
+				catchError(() => {
 					this.saveButtonMessage.set(ButtonState.SAVE);
 					return of(false);
 				})
@@ -82,7 +82,7 @@ export class CreateDialogComponent implements OnDestroy {
 			});
 	}
 
-	private cleanForm(): CreateTask | CreateExam {
+	private setForm(): CreateTask | CreateExam {
 		const formDeepCopy = JSON.parse(JSON.stringify(this.createForm.value));
 
 		formDeepCopy.type === this.workEnum.TASK

@@ -1,7 +1,7 @@
 import { Component, Inject, signal, inject, OnDestroy } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ButtonState } from '../create-dialog/enums/button-state.enum';
+import { ButtonState } from '../enums/button-state.enum';
 import { InfoPayload } from './interfaces/info-payload.interface';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
 import { Observable, Subject, of, takeUntil } from 'rxjs';
@@ -78,7 +78,7 @@ export class InfoDialogComponent implements OnDestroy {
 				this.qs.handleHttpResponseMessage(result.error?.message);
 			} else {
 				this.qs.handleHttpResponseMessage('La edición fue exitosa');
-				this.updateWorkInfo(workId, updatedWork);
+				this.updateWorkCardInfo(workId, updatedWork);
 			}
 
 			this.closeDialog();
@@ -93,7 +93,7 @@ export class InfoDialogComponent implements OnDestroy {
 		});
 	}
 
-	private updateWorkInfo(
+	private updateWorkCardInfo(
 		workId: number,
 		updatedWork: UpdateTask | UpdateExam
 	) {
@@ -118,13 +118,13 @@ export class InfoDialogComponent implements OnDestroy {
 
 	private filterAndUpdateSelectedWork(
 		workId: number,
-		updatedWork: UpdateTask,
+		updatedWork: UpdateTask | UpdateExam,
 		works: Task[] | Exam[]
 	) {
-		const taskToUpdateIndex = works.findIndex(task => task.id === workId);
-		works[taskToUpdateIndex] = {
-			...works[taskToUpdateIndex],
+		const selectedWorkIndex = works.findIndex(task => task.id === workId);
+		works[selectedWorkIndex] = {
+			...works[selectedWorkIndex],
 			...updatedWork,
-		} as any;
+		};
 	}
 }

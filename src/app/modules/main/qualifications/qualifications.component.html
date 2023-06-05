@@ -215,12 +215,16 @@
 														color="primary"
 														aria-label="Icono para editar"
 														(click)="
-															allowEditOnSelectedItem(
-																matSelect,
-																textArea,
-																editButton,
-																confirmDiv,
-																deleteButton
+															toggleEditOnSelectedItem(
+																{
+																	controlElement:
+																		matSelect,
+																	textarea:
+																		textArea,
+																	editButton,
+																	confirmDiv,
+																	deleteButton
+																}
 															)
 														">
 														<mat-icon
@@ -236,15 +240,17 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																updateWork(
-																	matSelect,
+																updateWork({
+																	controlElement:
+																		matSelect,
 																	textArea,
-																	student.id,
-																	task.id,
+																	studentId:
+																		student.id,
+																	workId: task.id,
 																	cardContent,
 																	cardLoading,
 																	cancelEditButton
-																)
+																})
 															">
 															<mat-icon
 																>check</mat-icon
@@ -257,12 +263,17 @@
 															color="red"
 															aria-label="Icono para cancelar edición"
 															(click)="
-																cancelEditOnSelectedItem(
-																	matSelect,
-																	textArea,
-																	editButton,
-																	confirmDiv,
-																	deleteButton
+																toggleEditOnSelectedItem(
+																	{
+																		controlElement:
+																			matSelect,
+																		textarea:
+																			textArea,
+																		editButton,
+																		confirmDiv,
+																		deleteButton
+																	},
+																	false
 																)
 															">
 															<mat-icon
@@ -406,12 +417,16 @@
 														color="primary"
 														aria-label="Icono para editar"
 														(click)="
-															allowEditOnSelectedItem(
-																matInput,
-																textArea,
-																editButton,
-																confirmDiv,
-																deleteButton
+															toggleEditOnSelectedItem(
+																{
+																	controlElement:
+																		matInput,
+																	textarea:
+																		textArea,
+																	editButton,
+																	confirmDiv,
+																	deleteButton
+																}
 															)
 														">
 														<mat-icon
@@ -427,16 +442,19 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																updateWork(
-																	matInput,
+																updateWork({
+																	controlElement:
+																		matInput,
 																	textArea,
-																	student.id,
-																	exam.id,
+																	studentId:
+																		student.id,
+																	workId: exam.id,
 																	cardContent,
 																	cardLoading,
 																	cancelEditButton,
-																	WorkEnum.EXAM
-																)
+																	workType:
+																		WorkEnum.EXAM
+																})
 															">
 															<mat-icon
 																>check</mat-icon
@@ -449,12 +467,17 @@
 															color="red"
 															aria-label="Icono para cancelar edición"
 															(click)="
-																cancelEditOnSelectedItem(
-																	matInput,
-																	textArea,
-																	editButton,
-																	confirmDiv,
-																	deleteButton
+																toggleEditOnSelectedItem(
+																	{
+																		controlElement:
+																			matInput,
+																		textarea:
+																			textArea,
+																		editButton,
+																		confirmDiv,
+																		deleteButton
+																	},
+																	false
 																)
 															">
 															<mat-icon
