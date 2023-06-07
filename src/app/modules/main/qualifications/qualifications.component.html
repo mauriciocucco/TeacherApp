@@ -223,8 +223,7 @@
 														(click)="
 															toggleEditOnSelectedItem(
 																{
-																	controlElement:
-																		matSelect,
+																	controlElement: matSelect,
 																	textArea,
 																	editButton,
 																	confirmDiv,
@@ -245,19 +244,22 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																	updateWork({
-																		controlElement:
-																			matSelect,
+																	updateWork(
+																		{
+																		controlElement: matSelect,
 																		textArea,
-																		student:
-																			student.id,
-																		workId: task.id,
-																		cardContent,
-																		cardLoading,
 																		editButton,
 																		confirmDiv,
 																		deleteButton,
-																	})
+																		cardContent,
+																		cardLoading,
+																		},
+																		{
+																			workId: task.id,
+																			studentId: student.id,
+																			workType: WorkEnum.TASK
+																		}
+																	)
 																">
 															<mat-icon
 																>check</mat-icon
@@ -272,16 +274,18 @@
 															(click)="
 																toggleEditOnSelectedItem(
 																	{
-																		controlElement:
-																			matSelect,
+																		controlElement: matSelect,
 																		textArea,
 																		editButton,
 																		confirmDiv,
 																		deleteButton
 																	},
-																	false,
-																	task.id,
-																	student.id
+																	{
+																		workId: task.id,
+																	    studentId: student.id,
+																		workType: WorkEnum.TASK
+																	},
+																	false
 																)
 															">
 															<mat-icon
@@ -293,7 +297,9 @@
 														#deleteButton
 														mat-icon-button
 														color="warn"
-														aria-label="Icono para borrar">
+														aria-label="Icono para borrar"
+														(click)="openDeleteDialog(task, WorkEnum.TASK)"
+														>
 														<mat-icon
 															>delete</mat-icon
 														>
@@ -421,17 +427,17 @@
 														(click)="
 															toggleEditOnSelectedItem(
 																{
-																	controlElement:
-																		matInput,
+																	controlElement: matInput,
 																	textArea,
 																	editButton,
 																	confirmDiv,
 																	deleteButton
 																},
-																true,
-																0,
-																0,
-																WorkEnum.EXAM
+																{
+																	workId: 0,
+																	studentId: 0,
+																	workType: WorkEnum.EXAM
+																}
 															)
 														">
 														<mat-icon
@@ -447,21 +453,22 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																updateWork({
-																	controlElement:
-																		matInput,
-																	textArea,
-																	student:
-																		student.id,
-																	workId: exam.id,
-																	cardContent,
-																	cardLoading,
-																	editButton,
-																	confirmDiv,
-																	deleteButton,
-																	workType:
-																		WorkEnum.EXAM
-																})
+																updateWork(
+																	{
+																		controlElement: matInput,
+																		textArea,
+																		editButton,
+																		confirmDiv,
+																		deleteButton,
+																		cardContent,
+																		cardLoading,
+																	},
+																	{
+																		workId: exam.id,
+																		studentId: student.id,
+																		workType: WorkEnum.EXAM
+																	}
+																)
 															">
 															<mat-icon
 																>check</mat-icon
@@ -476,17 +483,18 @@
 															(click)="
 																toggleEditOnSelectedItem(
 																	{
-																		controlElement:
-																			matInput,
+																		controlElement: matInput,
 																		textArea,
 																		editButton,
 																		confirmDiv,
 																		deleteButton
 																	},
-																	false,
-																	exam.id,
-																	student.id,
-																	WorkEnum.EXAM
+																	{
+																		workId: exam.id,
+																		studentId: student.id,
+																		workType: WorkEnum.EXAM
+																	},
+																	false
 																)
 															">
 															<mat-icon
@@ -498,7 +506,9 @@
 														#deleteButton
 														mat-icon-button
 														color="warn"
-														aria-label="Icono para borrar">
+														aria-label="Icono para borrar"
+														(click)="openDeleteDialog(exam, WorkEnum.EXAM)"
+														>
 														<mat-icon
 															>delete</mat-icon
 														>

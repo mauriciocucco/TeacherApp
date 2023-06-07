@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 interface StudentRelation {
-	works: any[];
+	works: any[]; //TODO: tipar esto
 	student: number;
 }
 

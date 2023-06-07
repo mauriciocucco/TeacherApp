@@ -42,4 +42,14 @@ export class TasksService {
 				})
 			);
 	}
+
+	public deleteTask(taskId: number) {
+		return this.api.delete(`${Endpoints.TASKS}/${taskId}`).pipe(
+			catchError(error => {
+				console.error('Error en deleteTask:', error);
+
+				return of(error);
+			})
+		);
+	}
 }

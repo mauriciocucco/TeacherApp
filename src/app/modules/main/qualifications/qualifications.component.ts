@@ -39,10 +39,17 @@ import { InfoDialogComponent } from './info-dialog/info-dialog.component';
 import { UpdateTask } from '../../../core/interfaces/update-task.interface';
 import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
 import { ExamsService } from '../../../core/services/exams/exams.service';
-import { ToggleEditElements } from './interfaces/toggle-edit.interface';
-import { UpdateWorkParameters } from './interfaces/update-work-parameters.interface';
+import {
+	ToggleEditElements,
+	ToggleEditInfo,
+} from './interfaces/toggle-edit.interface';
 import { StudentToTask } from '../../../core/interfaces/student-to-task.interface';
 import { StudentToExam } from '../../../core/interfaces/student-to-exam.interface';
+import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
+import {
+	UpdateWorkElements,
+	UpdateWorkInfo,
+} from './interfaces/update-work.interface';
 
 @Component({
 	selector: 'app-qualifications',
@@ -89,6 +96,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private studentsQueryParams: StudentsParams | null = null;
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
+	private defaultToggleEditInfo = {
+		workId: 0,
+		studentId: 0,
+		workType: Work.TASK,
+	};
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
@@ -295,10 +307,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
 			.subscribe((workType: Work) => {
-				if (workType === this.WorkEnum.TASK) this.clickSpecificTab();
-				if (workType === this.WorkEnum.EXAM) this.clickSpecificTab(1);
-
-				this.resetForm();
+				this.handleCreateOrDelete(workType);
 			});
 	}
 
@@ -320,12 +329,35 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
 	}
 
+	public openDeleteDialog(work: Task | Exam, workType = this.WorkEnum.TASK) {
+		const dialogRef = this.dialog.open(DeleteDialogComponent, {
+			data: {
+				courseId: this.filtersForm.get('course')?.value,
+				workId: work.id,
+				workName: work.name,
+				workType,
+			},
+		});
+
+		dialogRef
+			.afterClosed()
+			.pipe(takeUntil(this.destroy))
+			.subscribe((workType: Work) => {
+				this.handleCreateOrDelete(workType);
+			});
+	}
+
+	private handleCreateOrDelete(workType: Work) {
+		if (workType === this.WorkEnum.TASK) this.clickSpecificTab();
+		if (workType === this.WorkEnum.EXAM) this.clickSpecificTab(1);
+
+		this.resetForm();
+	}
+
 	public toggleEditOnSelectedItem(
 		toggleEditElements: ToggleEditElements,
-		allowEdit = true,
-		workId = 0,
-		studentId = 0,
-		workType = Work.TASK
+		toggleEditInfo: ToggleEditInfo = this.defaultToggleEditInfo,
+		allowEdit = true
 	) {
 		this.changeEditStatus(toggleEditElements, allowEdit);
 
@@ -333,9 +365,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			this.returnToPreviousState(
 				toggleEditElements.controlElement,
 				toggleEditElements.textArea,
-				workId,
-				studentId,
-				workType
+				toggleEditInfo
 			);
 		}
 	}
@@ -361,64 +391,58 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		deleteButton.disabled = allowEdit;
 	}
 
-	public updateWork({
-		controlElement,
-		textArea,
-		student,
-		workId,
-		cardContent,
-		cardLoading,
-		editButton,
-		confirmDiv,
-		deleteButton,
-		workType = this.WorkEnum.TASK,
-	}: UpdateWorkParameters) {
+	public updateWork(
+		updateWorkElements: UpdateWorkElements,
+		updateWorkInfo: UpdateWorkInfo
+	) {
 		const commonValues = {
-			student,
-			observation: textArea.value.trimEnd(),
+			student: updateWorkInfo.studentId,
+			observation: updateWorkElements.textArea.value.trimEnd(),
 		};
-		const updatedWork = this.setUpdatedWork(
-			workType,
+		const updatedWork = this.setUpdatedWorkBody(
+			updateWorkInfo.workType,
 			commonValues,
-			controlElement.value
+			updateWorkElements.controlElement.value
 		);
+		const { cardContent, cardLoading, ...toggleEditElements } =
+			updateWorkElements;
 		let update$: Observable<UpdateTask | UpdateExam | undefined> =
 			of(undefined);
 
-		this.toggleDisappearClass(cardLoading, cardContent);
+		this.toggleDisappearClass(cardLoading, cardContent); // Loading on
 
-		workType === this.WorkEnum.TASK
-			? (update$ = this.ts.updateTask(updatedWork as UpdateTask, workId))
-			: (update$ = this.es.updateExam(updatedWork as UpdateExam, workId));
+		updateWorkInfo.workType === this.WorkEnum.TASK
+			? (update$ = this.ts.updateTask(
+					updatedWork as UpdateTask,
+					updateWorkInfo.workId
+			  ))
+			: (update$ = this.es.updateExam(
+					updatedWork as UpdateExam,
+					updateWorkInfo.workId
+			  ));
 
 		update$.pipe(takeUntil(this.destroy)).subscribe(result => {
 			if (result instanceof HttpErrorResponse) {
 				this.returnToPreviousState(
-					controlElement,
-					textArea,
-					workId,
-					student
+					updateWorkElements.controlElement,
+					updateWorkElements.textArea,
+					updateWorkInfo
 				);
 				this.qs.handleHttpResponseMessage(result.error?.message);
 			} else {
-				this.qs.updateWorkCardInfo(workType, workId, updatedWork);
+				this.qs.updateWorkCardInfo(
+					updateWorkInfo.workType,
+					updateWorkInfo.workId,
+					updatedWork
+				);
 			}
 
-			this.toggleDisappearClass(cardContent, cardLoading);
-			this.changeEditStatus(
-				{
-					controlElement,
-					textArea,
-					editButton,
-					confirmDiv,
-					deleteButton,
-				},
-				false
-			);
+			this.toggleDisappearClass(cardContent, cardLoading); // Loading off
+			this.changeEditStatus(toggleEditElements, false);
 		});
 	}
 
-	private setUpdatedWork(
+	private setUpdatedWorkBody(
 		workType: string,
 		commonValues: { student: number; observation: string },
 		marking: number | string
@@ -446,28 +470,28 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private returnToPreviousState(
 		controlElement: MatSelect | HTMLInputElement,
 		textarea: HTMLTextAreaElement,
-		workId: number,
-		studentId: number,
-		workType: Work = Work.TASK
+		toggleEditInfo: ToggleEditInfo
 	) {
 		let previousState: StudentToTask | StudentToExam | undefined =
 			undefined;
 
-		if (workType === Work.TASK) {
-			const work = this.tasks().find(task => task.id === workId);
-			previousState = (work as Task)?.studentToTask?.find(
-				relation => relation.student === studentId
+		if (toggleEditInfo.workType === Work.TASK) {
+			const task = this.tasks().find(
+				task => task.id === toggleEditInfo.workId
 			);
-
-			controlElement.value = (previousState as StudentToTask)?.marking;
+			previousState = (task as Task)?.studentToTask?.find(
+				relation => relation.student === toggleEditInfo.studentId
+			);
 		} else {
-			const work = this.exams().find(exam => exam.id === workId);
-			previousState = (work as Exam)?.studentToExam?.find(
-				relation => relation.student === studentId
+			const exam = this.exams().find(
+				exam => exam.id === toggleEditInfo.workId
 			);
-			controlElement.value = (previousState as StudentToExam)?.marking;
+			previousState = (exam as Exam)?.studentToExam?.find(
+				relation => relation.student === toggleEditInfo.studentId
+			);
 		}
 
+		controlElement.value = previousState?.marking;
 		textarea.value = previousState?.observation ?? '';
 	}
 }

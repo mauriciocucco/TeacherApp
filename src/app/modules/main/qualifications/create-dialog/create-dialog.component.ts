@@ -24,9 +24,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class CreateDialogComponent implements OnDestroy {
 	public createForm = this.fb.nonNullable.group({
 		type: '',
-		course: [{ value: '' }],
-		subject: [{ value: '' }],
-		date: [{ value: '' }],
+		course: '',
+		subject: '',
+		date: '',
 		name: '',
 		description: '',
 	});
@@ -99,7 +99,9 @@ export class CreateDialogComponent implements OnDestroy {
 	}
 
 	private setTaskOrExamToStudentAttribute() {
-		return this.students()!.map(student => ({
+		const students = this.students() ?? [];
+
+		return students.map(student => ({
 			student: student.id,
 		}));
 	}

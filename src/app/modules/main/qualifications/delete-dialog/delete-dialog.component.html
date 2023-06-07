@@ -1,0 +1,17 @@
+<div id="delete-container">
+	<h2>
+		¿Estás segurx que deseas eliminar <b>{{ workName }}</b
+		>?
+	</h2>
+	<div mat-dialog-actions id="buttons-wrapper">
+		<button
+			mat-button
+			(click)="closeDialog()"
+			[disabled]="deleteButtonMessage() === buttonStateEnum.DELETING">
+			Cancelar
+		</button>
+		<button mat-button (click)="sendForm()" cdkFocusInitial>
+			{{ deleteButtonMessage() }}
+		</button>
+	</div>
+</div>

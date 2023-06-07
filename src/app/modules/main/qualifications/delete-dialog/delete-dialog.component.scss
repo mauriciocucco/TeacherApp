@@ -1,0 +1,13 @@
+@import '../../../../../variables.scss';
+
+#delete-container {
+	@include flex-center;
+	flex-direction: column;
+	padding: 3rem;
+}
+
+#buttons-wrapper {
+	@include flex-center;
+	gap: 2rem;
+	padding-bottom: 2rem;
+}

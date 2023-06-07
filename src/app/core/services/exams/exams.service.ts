@@ -42,4 +42,14 @@ export class ExamsService {
 				})
 			);
 	}
+
+	public deleteExam(examId: number) {
+		return this.api.delete(`${Endpoints.EXAMS}/${examId}`).pipe(
+			catchError(error => {
+				console.error('Error en deleteExam:', error);
+
+				return of(error);
+			})
+		);
+	}
 }

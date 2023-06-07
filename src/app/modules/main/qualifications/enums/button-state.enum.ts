@@ -3,4 +3,6 @@ export enum ButtonState {
 	SAVING = 'Guardando',
 	EDIT = 'Editar',
 	CREATE = 'Crear',
+	DELETE = 'Eliminar',
+	DELETING = 'Eliminando',
 }

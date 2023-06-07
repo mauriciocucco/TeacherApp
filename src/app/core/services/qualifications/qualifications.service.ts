@@ -293,7 +293,7 @@ export class QualificationsService {
 		updatedWork: UpdateTask | UpdateExam,
 		works: Task[] | Exam[]
 	) {
-		const selectedWorkIndex = works.findIndex(task => task.id === workId);
+		const selectedWorkIndex = works.findIndex(work => work.id === workId);
 
 		if (
 			// cuando se actualiza el nombre o la fecha o la descripción de la tarea o exámen
@@ -315,7 +315,7 @@ export class QualificationsService {
 			).studentToTask.find(
 				relation =>
 					relation.student ===
-					(updatedWork as UpdateTask).studentToTask?.student
+					(updatedWork as UpdateTask).studentToTask?.student // que el id del estudiante sea igual al que quiero actualizar
 			);
 			let relationToUpdate = (works[selectedWorkIndex] as Task)
 				.studentToTask[relationIndex as unknown as number];
