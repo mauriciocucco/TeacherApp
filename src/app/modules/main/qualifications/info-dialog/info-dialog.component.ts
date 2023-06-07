@@ -71,7 +71,7 @@ export class InfoDialogComponent implements OnDestroy {
 			if (result instanceof HttpErrorResponse) {
 				this.qs.handleHttpResponseMessage(result.error?.message);
 			} else {
-				this.qs.handleHttpResponseMessage('La edición fue exitosa');
+				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 				this.qs.updateWorkCardInfo(
 					this.payload.workType,
 					workId,

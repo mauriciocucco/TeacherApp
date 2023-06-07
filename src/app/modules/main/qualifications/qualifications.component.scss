@@ -135,7 +135,7 @@
 .card-loading {
 	@include flex-center;
 	width: 24.4rem;
-	height: 60%;
+	min-height: 26.5rem;
 	mat-spinner {
 		height: 5rem !important;
 		width: 5rem !important;

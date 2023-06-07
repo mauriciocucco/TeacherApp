@@ -59,6 +59,9 @@ export class DeleteDialogComponent implements OnDestroy {
 				this.qs.handleHttpResponseMessage();
 			} else {
 				this.qs.getTasksExamsAndStudents(queryParams, null);
+				this.qs.handleHttpResponseMessage(
+					`Se eliminó a "${this.payload.workName}" con éxito.`
+				);
 			}
 
 			this.closeDialog();

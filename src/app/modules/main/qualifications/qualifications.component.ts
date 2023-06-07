@@ -402,7 +402,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		const updatedWork = this.setUpdatedWorkBody(
 			updateWorkInfo.workType,
 			commonValues,
-			updateWorkElements.controlElement.value
+			updateWorkElements.controlElement.value,
+			updateWorkInfo.workId
 		);
 		const { cardContent, cardLoading, ...toggleEditElements } =
 			updateWorkElements;
@@ -439,19 +440,22 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 			this.toggleDisappearClass(cardContent, cardLoading); // Loading off
 			this.changeEditStatus(toggleEditElements, false);
+			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 		});
 	}
 
 	private setUpdatedWorkBody(
 		workType: string,
 		commonValues: { student: number; observation: string },
-		marking: number | string
+		marking: number | string,
+		workId: number
 	) {
 		return workType === this.WorkEnum.TASK
 			? {
 					studentToTask: {
 						...commonValues,
-						markingId: marking,
+						marking,
+						taskId: workId,
 					},
 			  }
 			: {
@@ -480,7 +484,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				task => task.id === toggleEditInfo.workId
 			);
 			previousState = (task as Task)?.studentToTask?.find(
-				relation => relation.student === toggleEditInfo.studentId
+				relation => relation.studentId === toggleEditInfo.studentId
 			);
 		} else {
 			const exam = this.exams().find(
@@ -491,7 +495,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			);
 		}
 
-		controlElement.value = previousState?.marking;
+		controlElement.value =
+			toggleEditInfo.workType === Work.TASK
+				? (previousState as StudentToTask)?.markingId
+				: previousState?.marking;
 		textarea.value = previousState?.observation ?? '';
 	}
 }
