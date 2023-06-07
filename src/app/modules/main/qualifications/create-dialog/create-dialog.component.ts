@@ -7,7 +7,7 @@ import { CreatePayload } from './interfaces/create-payload.interface';
 import { Work } from '../../../../core/enums/work.enum';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../core/services/exams/exams.service';
-import { Observable, Subject, catchError, of, takeUntil } from 'rxjs';
+import { Observable, Subject, of, takeUntil } from 'rxjs';
 import { CreateTask } from '../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../core/interfaces/create-exam.interface';
 import { ButtonState } from '../enums/button-state.enum';
@@ -24,8 +24,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class CreateDialogComponent implements OnDestroy {
 	public createForm = this.fb.nonNullable.group({
 		type: '',
-		courseId: [{ value: '' }],
-		subjectId: [{ value: '' }],
+		course: [{ value: '' }],
+		subject: [{ value: '' }],
 		date: [{ value: '' }],
 		name: '',
 		description: '',
@@ -58,7 +58,7 @@ export class CreateDialogComponent implements OnDestroy {
 
 	public sendForm() {
 		const cleanedForm = this.setForm();
-		const queryParams = { courseId: cleanedForm.courseId };
+		const queryParams = { course: cleanedForm.course };
 		let create$: Observable<CreateTask | CreateExam | undefined> =
 			of(undefined);
 
@@ -92,15 +92,15 @@ export class CreateDialogComponent implements OnDestroy {
 
 		delete formDeepCopy.type;
 
-		formDeepCopy.courseId = this.payload.courseId;
+		formDeepCopy.course = this.payload.course;
 		formDeepCopy.description = formDeepCopy.description?.trimEnd();
 
 		return formDeepCopy as unknown as CreateTask | CreateExam;
 	}
 
 	private setTaskOrExamToStudentAttribute() {
-		return this.students().map(student => ({
-			studentId: student.id,
+		return this.students()!.map(student => ({
+			student: student.id,
 		}));
 	}
 }

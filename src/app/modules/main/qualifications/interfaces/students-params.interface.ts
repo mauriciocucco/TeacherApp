@@ -1,3 +1,3 @@
 export interface StudentsParams {
-	courseId: number | null;
+	course: number | null;
 }

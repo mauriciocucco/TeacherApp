@@ -5,7 +5,7 @@ import { Work } from '../../../../core/enums/work.enum';
 export interface UpdateWorkParameters {
 	controlElement: MatSelect | HTMLInputElement;
 	textArea: HTMLTextAreaElement;
-	studentId: number;
+	student: number;
 	workId: number;
 	cardContent: HTMLElement;
 	cardLoading: HTMLDivElement;

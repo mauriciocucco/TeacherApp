@@ -52,7 +52,7 @@ import { StudentToExam } from '../../../core/interfaces/student-to-exam.interfac
 export class QualificationsComponent implements OnInit, OnDestroy {
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
-	public students: Signal<Student[]> = this.qs.students;
+	public students: Signal<Student[] | undefined> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public markings: Signal<Marking[]> = this.qs.markings;
@@ -126,8 +126,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.filtersForm
 			.get('subject')
 			?.valueChanges.pipe(takeUntil(this.destroy))
-			.subscribe(subjectId => {
-				this.qs.filterTasksAndExamsBySubject(subjectId);
+			.subscribe(subject => {
+				this.qs.filterTasksAndExamsBySubject(subject);
 			});
 	}
 
@@ -135,8 +135,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.filtersForm
 			.get('course')
 			?.valueChanges.pipe(takeUntil(this.destroy))
-			.subscribe(courseId => {
-				const queryParam = { courseId };
+			.subscribe(course => {
+				const queryParam = { course };
 
 				this.studentsQueryParams = queryParam;
 				this.taskAndExamsQueryParams = queryParam;
@@ -253,10 +253,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private enableFormWhenCourseIsSelected() {
 		toObservable(this.students) //puede ser students, exams o tasks ya que se setean al mismo tiempo
 			.pipe(
-				filter(
-					students =>
-						students.length > 0 &&
-						(this.filtersForm.get('subject')?.disabled as boolean) //puede ser cualquier control de un filtro que esté disabled
+				filter(students =>
+					students
+						? students.length > 0 &&
+						  (this.filtersForm.get('subject')?.disabled as boolean) //puede ser cualquier control de un filtro que esté disabled
+						: false
 				),
 				takeUntil(this.destroy)
 			)
@@ -287,7 +288,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public openCreateDialog(): void {
 		const dialogRef = this.dialog.open(CreateDialogComponent, {
-			data: { courseId: this.filtersForm.get('course')?.value },
+			data: { course: this.filtersForm.get('course')?.value },
 		});
 
 		dialogRef
@@ -363,7 +364,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public updateWork({
 		controlElement,
 		textArea,
-		studentId,
+		student,
 		workId,
 		cardContent,
 		cardLoading,
@@ -373,7 +374,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		workType = this.WorkEnum.TASK,
 	}: UpdateWorkParameters) {
 		const commonValues = {
-			studentId,
+			student,
 			observation: textArea.value.trimEnd(),
 		};
 		const updatedWork = this.setUpdatedWork(
@@ -396,12 +397,13 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					controlElement,
 					textArea,
 					workId,
-					studentId
+					student
 				);
 				this.qs.handleHttpResponseMessage(result.error?.message);
+			} else {
+				this.qs.updateWorkCardInfo(workType, workId, updatedWork);
 			}
 
-			this.qs.updateWorkCardInfo(workType, workId, updatedWork);
 			this.toggleDisappearClass(cardContent, cardLoading);
 			this.changeEditStatus(
 				{
@@ -418,7 +420,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	private setUpdatedWork(
 		workType: string,
-		commonValues: { studentId: number; observation: string },
+		commonValues: { student: number; observation: string },
 		marking: number | string
 	) {
 		return workType === this.WorkEnum.TASK
@@ -448,23 +450,24 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		studentId: number,
 		workType: Work = Work.TASK
 	) {
-		const work =
-			workType === Work.TASK
-				? this.tasks().find(task => task.id === workId)
-				: this.exams().find(exam => exam.id === workId);
-		const previousState =
-			workType === Work.TASK
-				? (work as Task)?.studentToTask?.find(
-						relation => relation.studentId === studentId
-				  )
-				: (work as Exam)?.studentToExam?.find(
-						relation => relation.studentId === studentId
-				  );
+		let previousState: StudentToTask | StudentToExam | undefined =
+			undefined;
 
-		controlElement.value =
-			workType === Work.TASK
-				? (previousState as StudentToTask)?.markingId
-				: (previousState as StudentToExam)?.marking;
+		if (workType === Work.TASK) {
+			const work = this.tasks().find(task => task.id === workId);
+			previousState = (work as Task)?.studentToTask?.find(
+				relation => relation.student === studentId
+			);
+
+			controlElement.value = (previousState as StudentToTask)?.marking;
+		} else {
+			const work = this.exams().find(exam => exam.id === workId);
+			previousState = (work as Exam)?.studentToExam?.find(
+				relation => relation.student === studentId
+			);
+			controlElement.value = (previousState as StudentToExam)?.marking;
+		}
+
 		textarea.value = previousState?.observation ?? '';
 	}
 }

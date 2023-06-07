@@ -4,8 +4,8 @@ import { StudentToExam } from '../../../../../core/interfaces/student-to-exam.in
 
 export interface CreateForm {
 	type?: Work;
-	courseId: number;
-	subjectId: number;
+	course: number;
+	subject: number;
 	date: string;
 	name: string;
 	description: string;

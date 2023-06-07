@@ -4,7 +4,7 @@ export interface UpdateExam {
 	name?: string;
 	description?: string;
 	date?: string;
-	subjectId?: number;
-	courseId?: number;
+	subject?: number;
+	course?: number;
 	studentToExam?: StudentToExam;
 }

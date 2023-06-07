@@ -4,7 +4,7 @@ export interface UpdateTask {
 	name?: string;
 	description?: string;
 	date?: string;
-	subjectId?: number;
-	courseId?: number;
+	subject?: number;
+	course?: number;
 	studentToTask?: StudentToTask;
 }

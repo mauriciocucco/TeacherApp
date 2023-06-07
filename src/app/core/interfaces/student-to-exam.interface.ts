@@ -1,5 +1,5 @@
 export interface StudentToExam {
-	studentId: number;
+	student: number;
 	marking: string;
 	observation: string;
 }

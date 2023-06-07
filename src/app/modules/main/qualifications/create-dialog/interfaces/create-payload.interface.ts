@@ -1,3 +1,3 @@
 export interface CreatePayload {
-	courseId: number;
+	course: number;
 }

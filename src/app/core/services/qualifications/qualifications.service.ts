@@ -8,6 +8,7 @@ import {
 	filter,
 	forkJoin,
 	map,
+	of,
 	startWith,
 	switchMap,
 	tap,
@@ -52,7 +53,7 @@ export class QualificationsService {
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
-	public students: WritableSignal<Student[]> = signal([]);
+	public students: WritableSignal<Student[] | undefined> = signal(undefined);
 	public filteredTasksForAutocomplete: WritableSignal<Task[]> = signal([]);
 	public filteredExamsForAutocomplete: WritableSignal<Exam[]> = signal([]);
 	public filteredStudentsForAutocomplete: WritableSignal<Student[]> = signal(
@@ -69,11 +70,17 @@ export class QualificationsService {
 			tap(() => {
 				this.spinnerProgressOn.set(true);
 			}),
-			map(([tasksAndExamsQueryParams, studentsQueryParams]) => [
-				this.ts.getTasks(tasksAndExamsQueryParams),
-				this.es.getExams(tasksAndExamsQueryParams),
-				this.ss.getStudents(studentsQueryParams),
-			]),
+			map(([tasksAndExamsQueryParams, studentsQueryParams]) => {
+				const students$ = studentsQueryParams
+					? this.ss.getStudents(studentsQueryParams)
+					: of(this.students());
+
+				return [
+					this.ts.getTasks(tasksAndExamsQueryParams),
+					this.es.getExams(tasksAndExamsQueryParams),
+					students$,
+				] as Observable<Task[] | Exam[] | Student[]>[];
+			}),
 			switchMap(observablesArray => forkJoin(observablesArray)),
 			tap(result => {
 				this.setSignalsValues(
@@ -122,12 +129,8 @@ export class QualificationsService {
 		this.filteredTasksForAutocomplete.set(tasks);
 		this.exams.set(exams);
 		this.filteredExamsForAutocomplete.set(exams);
-
-		if (students.length) {
-			//Porque sin ellos no se muestran las tareas y exámenes en el template
-			this.students.set(students);
-			this.filteredStudentsForAutocomplete.set(students);
-		}
+		this.students.set(students);
+		this.filteredStudentsForAutocomplete.set(students);
 	}
 
 	public processValueChanges(
@@ -144,7 +147,8 @@ export class QualificationsService {
 		value: string | null,
 		controlType: ControlType = 'Students'
 	): Student[] | Task[] | Exam[] {
-		let selectedArray: Student[] | Task[] | Exam[] = this.students();
+		let selectedArray: Student[] | Task[] | Exam[] =
+			this.students() as Student[];
 
 		if (controlType === 'Tasks') selectedArray = this.tasks();
 		if (controlType === 'Exams') selectedArray = this.exams();
@@ -182,16 +186,16 @@ export class QualificationsService {
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
 		const value = option.option.value;
 
-		this.cleanShow(this.students);
+		this.cleanShow(this.students as WritableSignal<Student[]>);
 
 		if (value === AllWord.INCLUSIVE) return;
 
-		const studentSelected = this.students().find(
+		const studentSelected = this.students()!.find(
 			student => `${student.name} ${student.lastname}` === value
 		);
 
 		this.students.mutate(students => {
-			students.forEach(student => {
+			students!.forEach(student => {
 				if (student.id !== studentSelected?.id) student.show = false;
 			});
 		});
@@ -231,13 +235,13 @@ export class QualificationsService {
 
 		this.tasks.mutate(tasks => {
 			tasks.forEach(task => {
-				if (task.subjectId !== subjectId) task.show = false;
+				if (task.subject !== subjectId) task.show = false;
 			});
 		});
 
 		this.exams.mutate(exams => {
 			exams.forEach(exam => {
-				if (exam.subjectId !== subjectId) exam.show = false;
+				if (exam.subject !== subjectId) exam.show = false;
 			});
 		});
 	}
@@ -251,7 +255,7 @@ export class QualificationsService {
 	private cleanAllShow() {
 		this.cleanShow(this.tasks);
 		this.cleanShow(this.exams);
-		this.cleanShow(this.students);
+		this.cleanShow(this.students as WritableSignal<Student[]>);
 	}
 
 	public handleHttpResponseMessage(
@@ -269,19 +273,19 @@ export class QualificationsService {
 			this.tasks.mutate(tasks =>
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
-
 			this.filteredTasksForAutocomplete.mutate(tasks =>
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
-		} else if (workType === Work.EXAM) {
-			this.exams.mutate(exams =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-			);
 
-			this.filteredExamsForAutocomplete.mutate(exams =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-			);
+			return;
 		}
+
+		this.exams.mutate(exams =>
+			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+		);
+		this.filteredExamsForAutocomplete.mutate(exams =>
+			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+		);
 	}
 
 	private filterAndUpdateSelectedWork(
@@ -292,6 +296,7 @@ export class QualificationsService {
 		const selectedWorkIndex = works.findIndex(task => task.id === workId);
 
 		if (
+			// cuando se actualiza el nombre o la fecha o la descripción de la tarea o exámen
 			!(updatedWork as UpdateTask).studentToTask &&
 			!(updatedWork as UpdateExam).studentToExam
 		) {
@@ -303,13 +308,14 @@ export class QualificationsService {
 			return;
 		}
 
+		// cuando se actualiza la nota o la observación del estudiante sobre la tarea o exámen
 		if ((updatedWork as UpdateTask).studentToTask) {
 			const relationIndex = (
 				works[selectedWorkIndex] as Task
 			).studentToTask.find(
 				relation =>
-					relation.studentId ===
-					(updatedWork as UpdateTask).studentToTask?.studentId
+					relation.student ===
+					(updatedWork as UpdateTask).studentToTask?.student
 			);
 			let relationToUpdate = (works[selectedWorkIndex] as Task)
 				.studentToTask[relationIndex as unknown as number];
@@ -323,8 +329,8 @@ export class QualificationsService {
 				works[selectedWorkIndex] as Exam
 			).studentToExam.find(
 				relation =>
-					relation.studentId ===
-					(updatedWork as UpdateExam).studentToExam?.studentId
+					relation.student ===
+					(updatedWork as UpdateExam).studentToExam?.student
 			);
 			let relationToUpdate = (works[selectedWorkIndex] as Exam)
 				.studentToExam[relationIndex as unknown as number];

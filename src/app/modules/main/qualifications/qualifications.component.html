@@ -34,7 +34,7 @@
 								</mat-select>
 							</mat-form-field>
 							<mat-form-field>
-								<mat-label>Alumno</mat-label>
+								<mat-label>Alumnx</mat-label>
 								<input
 									type="text"
 									matInput
@@ -47,6 +47,7 @@
 									autoActiveFirstOption
 									#auto="matAutocomplete">
 									<mat-option
+									*ngIf="students() ? students()!.length > 1 : false"
 										[value]="allWordEnum.INCLUSIVE"
 										>{{ allWordEnum.INCLUSIVE }}</mat-option
 									>
@@ -163,10 +164,15 @@
 		</mat-card>
 	</div>
 
-	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista -->
+	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista y tienen que haber alumnxs -->
 	<div
 		id="students-cards-container"
-		*ngIf="tasksExamsAndStudents$ | async; else selectCourseWarning">
+		*ngIf="
+			(tasksExamsAndStudents$ | async) &&
+				students() &&
+				students()!.length > 0;
+			else selectCourseWarning
+		">
 		<!-- Mientras se espera que se cargue todo se muestra un spinner -->
 		<ng-container
 			[ngTemplateOutlet]="spinnerProgressOn() ? loadingOn : loadingOff">
@@ -239,20 +245,20 @@
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
-																updateWork({
-																	controlElement:
-																		matSelect,
-																	textArea,
-																	studentId:
-																		student.id,
-																	workId: task.id,
-																	cardContent,
-																	cardLoading,
-																	editButton,
-																	confirmDiv,
-																	deleteButton,
-																})
-															">
+																	updateWork({
+																		controlElement:
+																			matSelect,
+																		textArea,
+																		student:
+																			student.id,
+																		workId: task.id,
+																		cardContent,
+																		cardLoading,
+																		editButton,
+																		confirmDiv,
+																		deleteButton,
+																	})
+																">
 															<mat-icon
 																>check</mat-icon
 															>
@@ -323,7 +329,7 @@
 															[value]="
 																{
 																	works: task.studentToTask,
-																	studentId:
+																	student:
 																		student.id
 																}
 																	| studentRelation
@@ -365,14 +371,13 @@
 															"
 															#textArea
 															>{{
-																{
-																	works: task.studentToTask,
-																	studentId:
-																		student.id,
-																} | studentRelation : 'observation'
-
+																	{
+																		works: task.studentToTask,
+																		student:
+																			student.id,
+																	} | studentRelation : 'observation'
 															}}
-												</textarea
+													</textarea
 														>
 													</mat-form-field>
 												</div>
@@ -383,11 +388,7 @@
 								<ng-template #noMatchedTasks>
 									<mat-card id="warning-card">
 										<mat-card-content>
-											<h2>
-												No se encontraron tareas que
-												cumplan con los criterios de
-												búsqueda
-											</h2>
+											<h2>No se encontraron tareas</h2>
 										</mat-card-content>
 									</mat-card>
 								</ng-template>
@@ -450,7 +451,7 @@
 																	controlElement:
 																		matInput,
 																	textArea,
-																	studentId:
+																	student:
 																		student.id,
 																	workId: exam.id,
 																	cardContent,
@@ -540,7 +541,7 @@
 															[value]="
 																{
 																	works: exam.studentToExam,
-																	studentId:
+																	student:
 																		student.id
 																}
 																	| studentRelation
@@ -560,13 +561,12 @@
 															"
 															#textArea
 															>{{
-																{
-																	works: exam.studentToExam,
-																	studentId: student.id,
-																} | studentRelation:"observation"
-
+																	{
+																		works: exam.studentToExam,
+																		student: student.id,
+																	} | studentRelation:"observation"
 															}}
-												</textarea
+													</textarea
 														>
 													</mat-form-field>
 												</div>
@@ -590,13 +590,30 @@
 	</div>
 
 	<ng-template #selectCourseWarning>
-		<div class="warning-container">
-			<mat-card id="warning-card">
-				<mat-card-content>
-					<h2>Por favor, seleccione un curso</h2>
-				</mat-card-content>
-			</mat-card>
-		</div>
+		<ng-container
+			[ngTemplateOutlet]="
+				students()?.length === 0 ? noStudents : studentsFound
+			"></ng-container>
+
+		<ng-template #studentsFound>
+			<div class="warning-container">
+				<mat-card id="warning-card">
+					<mat-card-content>
+						<h2>Por favor, seleccione un curso</h2>
+					</mat-card-content>
+				</mat-card>
+			</div>
+		</ng-template>
+
+		<ng-template #noStudents>
+			<div class="warning-container">
+				<mat-card id="warning-card">
+					<mat-card-content>
+						<h2>No existen alumnxs cargados para este curso</h2>
+					</mat-card-content>
+				</mat-card>
+			</div>
+		</ng-template>
 	</ng-template>
 
 	<button
@@ -605,7 +622,7 @@
 		mat-fab
 		color="accent"
 		aria-label="Crear una nueva tarea o exámen"
-		*ngIf="students().length > 0"
+		*ngIf="students() ? students()!.length > 0 : false"
 		(click)="openCreateDialog()">
 		<mat-icon>add</mat-icon>
 	</button>
