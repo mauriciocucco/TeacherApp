@@ -1,5 +1,6 @@
 import {
 	Component,
+	HostListener,
 	OnDestroy,
 	OnInit,
 	QueryList,
@@ -9,7 +10,6 @@ import {
 	ViewChildren,
 	WritableSignal,
 	computed,
-	effect,
 	inject,
 	signal,
 } from '@angular/core';
@@ -44,6 +44,7 @@ import { StudentToExam } from '../../../core/interfaces/student-to-exam.interfac
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 import { UpdateWorkElements } from './interfaces/update-work.interface';
 import { WorkInfo } from './interfaces/work-info.interface';
+import { ViewService } from '../../../core/services/view/view.service';
 
 @Component({
 	selector: 'app-qualifications',
@@ -87,6 +88,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public editMode = signal(false);
 	public defaultRowsNumber = signal(5);
 	public selectedTab = signal(0);
+	public screenType = this.vs.screenType;
+	public openFiltersMenu = signal(false);
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
@@ -107,20 +110,24 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearDateRangeButton!: MatMiniFabButton;
+	@HostListener('window:resize', ['$event'])
+	onResize(): void {
+		this.vs.setScreenType();
+	}
 
 	constructor(
 		private qs: QualificationsService,
 		private fb: FormBuilder,
 		public dialog: MatDialog,
-		private renderer: Renderer2
+		private renderer: Renderer2,
+		private vs: ViewService
 	) {
-		//  effect() can only be used within an injection context such as a constructor, a factory function, a field initializer, or a function used with `runInInjectionContext`. Find more at https://angular.io/errors/NG0203
-		this.scrollToLatestTaskOrExam();
 		this.enableFormWhenCourseIsSelected();
 	}
 
 	ngOnInit() {
 		this.listenCourseFilterChanges();
+		this.vs.setScreenType();
 	}
 
 	ngOnDestroy(): void {
@@ -142,6 +149,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
+				if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
 			});
 	}
 
@@ -154,7 +162,12 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 				this.studentsQueryParams = queryParam;
 				this.taskAndExamsQueryParams = queryParam;
-
+				if (
+					this.screenType() === 'MOBILE' &&
+					this.students() &&
+					this.students()!.length > 0
+				)
+					this.toggleFiltersMenu();
 				this.resetForm();
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
@@ -176,7 +189,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					startDate: value.start.getTime(),
 					endDate: value.end.getTime(),
 				};
-
+				if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
 				this.disableRangeClearButton(false);
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
@@ -240,30 +253,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		delete this.taskAndExamsQueryParams?.endDate;
 	}
 
-	private scrollToLatestTaskOrExam() {
-		effect(() => {
-			// cuando emita cualquiera de los siguientes signals se va a disparar
-			this.tasks(); //puede ser students, exams o tasks ya que se setean al mismo tiempo
-			this.filteredExamsForAutocomplete();
-			this.filteredTasksForAutocomplete();
-			this.filteredStudentsForAutocomplete();
-
-			setTimeout(() => {
-				for (const tab of this.tabChildren) {
-					const containerElement = tab._elementRef.nativeElement;
-					const scrollOwnerElement: Element =
-						containerElement.lastChild?.firstChild?.firstChild; //.mat-mdc-tab-body-content
-
-					if (scrollOwnerElement)
-						scrollOwnerElement.scrollTo({
-							left: containerElement.scrollWidth + 1000000, // Establece la posición a la derecha (al final),
-							behavior: 'smooth',
-						});
-				}
-			}, 0);
-		});
-	}
-
 	private enableFormWhenCourseIsSelected() {
 		toObservable(this.students) //puede ser students, exams o tasks ya que se setean al mismo tiempo
 			.pipe(
@@ -291,6 +280,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
 		this.qs.showSelectedStudent(option);
+		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
 	}
 
 	public taskOrExamSelected(
@@ -298,6 +288,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		type = Work.TASK
 	) {
 		this.qs.showSelectedTaskOrExam(option, type);
+		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
 	}
 
 	public openCreateDialog(): void {
@@ -308,8 +299,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
-			.subscribe(() => {
+			.subscribe(queryParams => {
 				this.changeToCorrectTab();
+				if (queryParams.course)
+					this.qs.getTasksExamsAndStudents(queryParams, null);
 			});
 	}
 
@@ -496,5 +489,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				? (previousState as StudentToTask)?.markingId
 				: previousState?.marking;
 		textArea.value = previousState?.observation ?? '';
+	}
+
+	public toggleFiltersMenu() {
+		this.openFiltersMenu.set(!this.openFiltersMenu());
 	}
 }

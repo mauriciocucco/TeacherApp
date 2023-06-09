@@ -4,16 +4,14 @@
 	display: flex;
 	flex-direction: column;
 	gap: 3rem;
-	// height: calc(100vh - ($viewport-padding * 2));
 }
 
-// #filters {
-// 	position: sticky;
-// 	top: 0;
-// 	z-index: 2;
-// }
-
 #content-container {
+	.first-row {
+		@include mq-mobile {
+			text-align: center;
+		}
+	}
 	.second-row {
 		display: flex;
 		gap: 3rem;
@@ -45,7 +43,8 @@
 		}
 		.edit-and-delete-settings {
 			display: flex;
-			gap: 1rem;
+			gap: 2.5rem;
+			margin-bottom: 1rem;
 		}
 	}
 	.mat-mdc-card-content {
@@ -55,9 +54,13 @@
 		.qualification-card-content {
 			display: flex;
 			flex-direction: column;
-			padding-top: 1.2rem;
 		}
 	}
+}
+
+.confirm-icons {
+	display: flex;
+	gap: 2.5rem;
 }
 
 #students-cards-container {
@@ -71,6 +74,9 @@
 				padding-bottom: 0.5rem;
 			}
 		}
+	}
+	@include mq-mobile {
+		margin-top: 23vh;
 	}
 }
 
@@ -140,4 +146,73 @@
 		height: 5rem !important;
 		width: 5rem !important;
 	}
+}
+
+.mobile-hide {
+	display: none;
+}
+
+.mobile-container {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+.hide-menu-state {
+	max-height: 16vh;
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.open-menu-state {
+	max-height: 64vh;
+}
+
+.mobile-card-state {
+	left: 50%;
+	position: absolute;
+	transform: translateX(-50%);
+	width: 86%;
+	z-index: 3;
+}
+
+#filters-button {
+	margin-bottom: 2.2rem;
+}
+
+#date-filter-form-field {
+	@include mq-mobile {
+		margin-bottom: 1rem;
+		width: -webkit-fill-available;
+	}
+}
+
+.warning-container {
+	@include mq-mobile {
+		margin-top: 18vh;
+	}
+}
+
+.pdlColor {
+	background-color: #e83b55;
+	color: white;
+}
+
+.socialesColor {
+	background-color: #2e9523;
+	color: white;
+}
+
+.confirm-button {
+	background-color: green;
+	color: white;
+}
+
+.cancel-button {
+	background-color: red;
+	color: white;
+}
+
+.info-button {
+	background-color: blue;
+	color: white;
 }

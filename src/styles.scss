@@ -3,6 +3,10 @@
 @import './variables.scss';
 
 //TABS
+.mat-mdc-card-header {
+	justify-content: center;
+}
+
 #qualifications-tab-group {
 	.mat-mdc-tab-body-wrapper {
 		padding: 2rem;
@@ -10,4 +14,18 @@
 			padding: 0.5rem;
 		}
 	}
+}
+
+.mat-mdc-tab-body-content {
+	direction: rtl; /* Establece la dirección de derecha a izquierda */
+}
+
+.mat-mdc-card {
+	direction: ltr;
+}
+
+//BUTTONS
+.mdc-fab--mini {
+	width: 3rem !important;
+	height: 3rem !important;
 }

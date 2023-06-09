@@ -1,11 +1,14 @@
 <div id="container">
-	<div id="filters">
+	<div id="filters" [ngClass]="{'mobile-card-state': screenType() === 'MOBILE'}">
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
-			<mat-card-content>
+			<mat-card-content [ngClass]="{
+				'hide-menu-state': screenType() === 'MOBILE' && students(),
+				'open-menu-state': openFiltersMenu()
+			}">
 				<form [formGroup]="filtersForm">
-					<div id="content-container">
-						<div class="first-row">
+					<div id="content-container" [ngClass]="{'mobile-container': screenType() === 'MOBILE' && students()}">
+						<div class="first-row" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}">
 							<mat-radio-group
 								aria-label="Elegí una materia"
 								formControlName="subject">
@@ -33,7 +36,13 @@
 									</mat-option>
 								</mat-select>
 							</mat-form-field>
-							<mat-form-field>
+							<button mat-stroked-button id="filters-button" color="primary" 
+								[ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}"
+								(click)="toggleFiltersMenu()"
+								>
+								{{ openFiltersMenu()? 'Ocultar filtros' : 'Mostrar más filtros'}}
+						    </button>
+							<mat-form-field [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}">
 								<mat-label>Alumnx</mat-label>
 								<input
 									type="text"
@@ -65,7 +74,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill">
+							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}">
 								<mat-label>Tarea</mat-label>
 								<input
 									type="text"
@@ -93,7 +102,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill">
+							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}">
 								<mat-label>Exámen</mat-label>
 								<input
 									type="text"
@@ -124,8 +133,8 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<div class="range-date-wrapper">
-								<mat-form-field appearance="fill">
+							<div class="range-date-wrapper" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students()!.length === 0)}">
+								<mat-form-field id="date-filter-form-field" appearance="fill">
 									<mat-label>Ingrese un período</mat-label>
 									<mat-date-range-input
 										[rangePicker]="picker"
@@ -207,6 +216,10 @@
 									<ng-container *ngFor="let task of tasks()">
 										<mat-card
 											class="qualification-card"
+											[ngClass]="{
+												'pdlColor': task.subject === 1,
+												'socialesColor': task.subject === 2
+											}"
 											*ngIf="task.show">
 											<mat-card-header
 												class="qualification-card-header">
@@ -218,7 +231,7 @@
 													class="edit-and-delete-settings">
 													<button
 														#editButton
-														mat-icon-button
+														mat-mini-fab
 														color="primary"
 														aria-label="Icono para editar"
 														(click)="
@@ -240,8 +253,9 @@
 														#confirmDiv
 														class="confirm-icons disappear">
 														<button
+														    class="confirm-button"
 															title="Guardar edición"
-															mat-icon-button
+															mat-mini-fab
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
@@ -267,9 +281,10 @@
 															>
 														</button>
 														<button
+														    class="cancel-button"
 															#cancelEditButton
 															title="Cancelar edición"
-															mat-icon-button
+															mat-mini-fab
 															color="red"
 															aria-label="Icono para cancelar edición"
 															(click)="
@@ -296,7 +311,7 @@
 													</div>
 													<button
 														#deleteButton
-														mat-icon-button
+														mat-mini-fab
 														color="warn"
 														aria-label="Icono para borrar"
 														(click)="openDeleteDialog(task, WorkEnum.TASK)"
@@ -306,8 +321,9 @@
 														>
 													</button>
 													<button
+													    class="info-button"
 														title="Ver más información"
-														mat-icon-button
+														mat-mini-fab
 														color="blue"
 														aria-label="Icono para ver más detalles de la tarea"
 														(click)="
@@ -411,7 +427,12 @@
 									<ng-container *ngFor="let exam of exams()">
 										<mat-card
 											*ngIf="exam.show"
-											class="qualification-card">
+											class="qualification-card"
+											[ngClass]="{
+												'pdlColor': exam.subject === 1,
+												'socialesColor': exam.subject === 2
+											}"
+											>
 											<mat-card-header
 												class="qualification-card-header">
 												<h3>{{ exam.name }}</h3>
@@ -422,7 +443,7 @@
 													class="edit-and-delete-settings">
 													<button
 														#editButton
-														mat-icon-button
+														mat-mini-fab
 														color="primary"
 														aria-label="Icono para editar"
 														(click)="
@@ -449,8 +470,9 @@
 														#confirmDiv
 														class="confirm-icons disappear">
 														<button
+														    class="confirm-button"
 															title="Guardar edición"
-															mat-icon-button
+															mat-mini-fab
 															color="green"
 															aria-label="Icono para confirmar edición"
 															(click)="
@@ -476,9 +498,10 @@
 															>
 														</button>
 														<button
+														    class="cancel-button"
 															#cancelEditButton
 															title="Cancelar edición"
-															mat-icon-button
+															mat-mini-fab
 															color="red"
 															aria-label="Icono para cancelar edición"
 															(click)="
@@ -505,7 +528,7 @@
 													</div>
 													<button
 														#deleteButton
-														mat-icon-button
+														mat-mini-fab
 														color="warn"
 														aria-label="Icono para borrar"
 														(click)="openDeleteDialog(exam, WorkEnum.EXAM)"
@@ -515,8 +538,9 @@
 														>
 													</button>
 													<button
+													    class="info-button"
 														title="Ver más información"
-														mat-icon-button
+														mat-mini-fab
 														color="blue"
 														aria-label="Icono para ver más detalles del exámen"
 														(click)="
@@ -607,7 +631,7 @@
 			"></ng-container>
 
 		<ng-template #studentsFound>
-			<div class="warning-container">
+			<div class="warning-container" appViewListener>
 				<mat-card id="warning-card">
 					<mat-card-content>
 						<h2>Por favor, seleccione un curso</h2>

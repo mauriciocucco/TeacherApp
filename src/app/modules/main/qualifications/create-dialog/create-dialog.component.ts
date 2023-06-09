@@ -52,14 +52,14 @@ export class CreateDialogComponent implements OnDestroy {
 		this.destroy.unsubscribe();
 	}
 
-	public closeDialog(): void {
+	public closeDialog(reloadData = false): void {
+		const queryParams = { course: this.payload.course };
 		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
-		this.dialogRef.close();
+		reloadData ? this.dialogRef.close(queryParams) : this.dialogRef.close();
 	}
 
 	public sendForm() {
 		const cleanedForm = this.setForm();
-		const queryParams = { course: cleanedForm.course };
 		let create$: Observable<CreateTask | CreateExam | undefined> =
 			of(undefined);
 
@@ -71,8 +71,7 @@ export class CreateDialogComponent implements OnDestroy {
 
 		create$.pipe(takeUntil(this.destroy)).subscribe({
 			next: () => {
-				this.qs.getTasksExamsAndStudents(queryParams, null);
-				this.closeDialog();
+				this.closeDialog(true);
 			},
 			error: () => {
 				this.qs.handleHttpResponseMessage();
