@@ -1,8 +1,6 @@
-import { ToggleEditElements, ToggleEditInfo } from './toggle-edit.interface';
+import { ToggleEditElements } from './toggle-edit.interface';
 
 export interface UpdateWorkElements extends ToggleEditElements {
 	cardContent: HTMLElement;
 	cardLoading: HTMLDivElement;
 }
-
-export type UpdateWorkInfo = ToggleEditInfo;

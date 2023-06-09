@@ -54,6 +54,7 @@ export class QualificationsService {
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
+	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
 	public filteredTasksForAutocomplete: WritableSignal<Task[]> = signal([]);
 	public filteredExamsForAutocomplete: WritableSignal<Exam[]> = signal([]);
 	public filteredStudentsForAutocomplete: WritableSignal<Student[]> = signal(
@@ -265,17 +266,18 @@ export class QualificationsService {
 	}
 
 	public updateWorkCardInfo(
-		workType: Work,
 		workId: number,
 		updatedWork: UpdateTask | UpdateExam
 	) {
-		if (workType === Work.TASK) {
+		if (this.selectedWorkType() === Work.TASK) {
 			this.tasks.mutate(tasks =>
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
 			this.filteredTasksForAutocomplete.mutate(tasks =>
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
+
+			console.log('DESPUÉS DE LA MUTACIÓN ', this.tasks());
 
 			return;
 		}
@@ -312,33 +314,39 @@ export class QualificationsService {
 		if ((updatedWork as UpdateTask).studentToTask) {
 			const relationIndex = (
 				works[selectedWorkIndex] as Task
-			).studentToTask.find(
+			).studentToTask.findIndex(
 				relation =>
-					relation.student ===
-					(updatedWork as UpdateTask).studentToTask?.student // que el id del estudiante sea igual al que quiero actualizar
+					relation.studentId ===
+					(updatedWork as UpdateTask).studentToTask?.studentId // que el id del estudiante sea igual al que quiero actualizar
 			);
-			let relationToUpdate = (works[selectedWorkIndex] as Task)
-				.studentToTask[relationIndex as unknown as number];
+			const studentToTaskArray = [
+				...(works[selectedWorkIndex] as Task).studentToTask,
+			];
 
-			relationToUpdate = {
-				...relationToUpdate,
-				...(updatedWork as UpdateTask).studentToTask,
-			};
+			studentToTaskArray[relationIndex] = (
+				updatedWork as UpdateTask
+			).studentToTask!;
+
+			(works[selectedWorkIndex] as Task).studentToTask =
+				studentToTaskArray;
 		} else {
 			const relationIndex = (
 				works[selectedWorkIndex] as Exam
-			).studentToExam.find(
+			).studentToExam.findIndex(
 				relation =>
-					relation.student ===
-					(updatedWork as UpdateExam).studentToExam?.student
+					relation.studentId ===
+					(updatedWork as UpdateExam).studentToExam?.studentId
 			);
-			let relationToUpdate = (works[selectedWorkIndex] as Exam)
-				.studentToExam[relationIndex as unknown as number];
+			const studentToExamArray = [
+				...(works[selectedWorkIndex] as Exam).studentToExam,
+			];
 
-			relationToUpdate = {
-				...relationToUpdate,
-				...(updatedWork as UpdateExam).studentToExam,
-			};
+			studentToExamArray[relationIndex] = (
+				updatedWork as UpdateExam
+			).studentToExam!;
+
+			(works[selectedWorkIndex] as Exam).studentToExam =
+				studentToExamArray;
 		}
 	}
 }

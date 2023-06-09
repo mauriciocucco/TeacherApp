@@ -195,6 +195,7 @@
 					<mat-card-content>
 						<mat-tab-group
 							#tabChildren
+							[selectedIndex]="selectedTab()"
 							id="qualifications-tab-group">
 							<mat-tab label="Tareas">
 								<div
@@ -335,7 +336,7 @@
 															[value]="
 																{
 																	works: task.studentToTask,
-																	student:
+																	studentId:
 																		student.id
 																}
 																	| studentRelation
@@ -379,7 +380,7 @@
 															>{{
 																	{
 																		works: task.studentToTask,
-																		student:
+																		studentId:
 																			student.id,
 																	} | studentRelation : 'observation'
 															}}
@@ -551,7 +552,7 @@
 															[value]="
 																{
 																	works: exam.studentToExam,
-																	student:
+																	studentId:
 																		student.id
 																}
 																	| studentRelation
@@ -573,7 +574,7 @@
 															>{{
 																	{
 																		works: exam.studentToExam,
-																		student: student.id,
+																		studentId: student.id,
 																	} | studentRelation:"observation"
 															}}
 													</textarea

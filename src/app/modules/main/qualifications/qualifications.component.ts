@@ -34,22 +34,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { CreateDialogComponent } from './create-dialog/create-dialog.component';
 import { MatSelect } from '@angular/material/select';
 import { TasksService } from 'src/app/core/services/tasks/tasks.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { InfoDialogComponent } from './info-dialog/info-dialog.component';
 import { UpdateTask } from '../../../core/interfaces/update-task.interface';
 import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
 import { ExamsService } from '../../../core/services/exams/exams.service';
-import {
-	ToggleEditElements,
-	ToggleEditInfo,
-} from './interfaces/toggle-edit.interface';
+import { ToggleEditElements } from './interfaces/toggle-edit.interface';
 import { StudentToTask } from '../../../core/interfaces/student-to-task.interface';
 import { StudentToExam } from '../../../core/interfaces/student-to-exam.interface';
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
-import {
-	UpdateWorkElements,
-	UpdateWorkInfo,
-} from './interfaces/update-work.interface';
+import { UpdateWorkElements } from './interfaces/update-work.interface';
+import { WorkInfo } from './interfaces/work-info.interface';
 
 @Component({
 	selector: 'app-qualifications',
@@ -92,15 +86,23 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	);
 	public editMode = signal(false);
 	public defaultRowsNumber = signal(5);
+	public selectedTab = signal(0);
+	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
-	private defaultToggleEditInfo = {
+	private defaultWorkInfo = {
 		workId: 0,
 		studentId: 0,
 		workType: Work.TASK,
 	};
+	private editHTMLElements: WritableSignal<
+		ToggleEditElements | UpdateWorkElements | undefined
+	> = signal(undefined);
+	private selectedWorkInfo: WritableSignal<WorkInfo> = signal(
+		this.defaultWorkInfo
+	);
 	private destroy: Subject<boolean> = new Subject<boolean>();
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
@@ -306,80 +308,70 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		dialogRef
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
-			.subscribe((workType: Work) => {
-				this.handleCreateOrDelete(workType);
+			.subscribe(() => {
+				this.changeToCorrectTab();
 			});
 	}
 
-	private clickSpecificTab(tabIndex = 0) {
-		this.tabChildren.forEach(tab => (tab.selectedIndex = tabIndex));
-	}
+	public openInfoDialog(work: Task | Exam, workType = Work.TASK) {
+		this.selectedWorkType.set(workType);
 
-	public openInfoDialog(work: Task | Exam, workType = this.WorkEnum.TASK) {
 		const dialogRef = this.dialog.open(InfoDialogComponent, {
 			data: {
 				name: work.name,
 				date: work.date,
 				description: work.description,
 				workId: work.id,
-				workType,
+				workSubject: work.subject,
 			},
 		});
 
 		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
 	}
 
-	public openDeleteDialog(work: Task | Exam, workType = this.WorkEnum.TASK) {
+	public openDeleteDialog(work: Task | Exam, workType = Work.TASK) {
+		this.selectedWorkType.set(workType);
+
 		const dialogRef = this.dialog.open(DeleteDialogComponent, {
 			data: {
 				courseId: this.filtersForm.get('course')?.value,
 				workId: work.id,
 				workName: work.name,
-				workType,
 			},
 		});
 
-		dialogRef
-			.afterClosed()
-			.pipe(takeUntil(this.destroy))
-			.subscribe((workType: Work) => {
-				this.handleCreateOrDelete(workType);
-			});
+		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
 	}
 
-	private handleCreateOrDelete(workType: Work) {
-		if (workType === this.WorkEnum.TASK) this.clickSpecificTab();
-		if (workType === this.WorkEnum.EXAM) this.clickSpecificTab(1);
+	private changeToCorrectTab() {
+		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
+		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
 
 		this.resetForm();
 	}
 
 	public toggleEditOnSelectedItem(
 		toggleEditElements: ToggleEditElements,
-		toggleEditInfo: ToggleEditInfo = this.defaultToggleEditInfo,
+		toggleEditInfo: WorkInfo = this.defaultWorkInfo,
 		allowEdit = true
 	) {
-		this.changeEditStatus(toggleEditElements, allowEdit);
+		this.setEditSignals(toggleEditElements, toggleEditInfo);
+		this.changeEditUIStatus(allowEdit);
 
 		if (!allowEdit) {
-			this.returnToPreviousState(
-				toggleEditElements.controlElement,
-				toggleEditElements.textArea,
-				toggleEditInfo
-			);
+			this.returnToPreviousState();
 		}
 	}
 
-	private changeEditStatus(
-		{
+	private changeEditUIStatus(allowEdit: boolean) {
+		const {
 			controlElement,
 			textArea,
-			editButton,
 			confirmDiv,
+			editButton,
 			deleteButton,
-		}: ToggleEditElements,
-		allowEdit = true
-	) {
+		} = this.editHTMLElements() as ToggleEditElements;
+
 		controlElement instanceof MatSelect
 			? controlElement.setDisabledState(!allowEdit)
 			: (controlElement.readOnly = !allowEdit);
@@ -393,26 +385,20 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public updateWork(
 		updateWorkElements: UpdateWorkElements,
-		updateWorkInfo: UpdateWorkInfo
+		updateWorkInfo: WorkInfo
 	) {
+		this.setEditSignals(updateWorkElements, updateWorkInfo);
+
 		const commonValues = {
-			student: updateWorkInfo.studentId,
+			studentId: updateWorkInfo.studentId,
 			observation: updateWorkElements.textArea.value.trimEnd(),
 		};
-		const updatedWork = this.setUpdatedWorkBody(
-			updateWorkInfo.workType,
-			commonValues,
-			updateWorkElements.controlElement.value,
-			updateWorkInfo.workId
-		);
-		const { cardContent, cardLoading, ...toggleEditElements } =
-			updateWorkElements;
-		let update$: Observable<UpdateTask | UpdateExam | undefined> =
-			of(undefined);
+		const updatedWork = this.setUpdatedWorkBody(commonValues);
+		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
-		this.toggleDisappearClass(cardLoading, cardContent); // Loading on
+		this.loadingCardContent();
 
-		updateWorkInfo.workType === this.WorkEnum.TASK
+		updateWorkInfo.workType === Work.TASK
 			? (update$ = this.ts.updateTask(
 					updatedWork as UpdateTask,
 					updateWorkInfo.workId
@@ -422,46 +408,59 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					updateWorkInfo.workId
 			  ));
 
-		update$.pipe(takeUntil(this.destroy)).subscribe(result => {
-			if (result instanceof HttpErrorResponse) {
-				this.returnToPreviousState(
-					updateWorkElements.controlElement,
-					updateWorkElements.textArea,
-					updateWorkInfo
-				);
-				this.qs.handleHttpResponseMessage(result.error?.message);
-			} else {
-				this.qs.updateWorkCardInfo(
-					updateWorkInfo.workType,
-					updateWorkInfo.workId,
-					updatedWork
-				);
-			}
-
-			this.toggleDisappearClass(cardContent, cardLoading); // Loading off
-			this.changeEditStatus(toggleEditElements, false);
-			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
+		update$.pipe(takeUntil(this.destroy)).subscribe({
+			next: () => {
+				this.qs.updateWorkCardInfo(updateWorkInfo.workId, updatedWork);
+				this.loadingCardContent(false);
+				this.changeEditUIStatus(false);
+				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
+			},
+			error: () => {
+				this.returnToPreviousState();
+				this.loadingCardContent(false);
+				this.changeEditUIStatus(false);
+				this.qs.handleHttpResponseMessage();
+			},
 		});
 	}
 
-	private setUpdatedWorkBody(
-		workType: string,
-		commonValues: { student: number; observation: string },
-		marking: number | string,
-		workId: number
+	private setEditSignals(
+		workElements: ToggleEditElements | UpdateWorkElements,
+		workInfo: WorkInfo
 	) {
-		return workType === this.WorkEnum.TASK
+		this.selectedWorkType.set(workInfo.workType);
+		this.editHTMLElements.set(workElements);
+		this.selectedWorkInfo.set(workInfo);
+	}
+
+	private loadingCardContent(loading = true) {
+		const { cardLoading, cardContent } =
+			this.editHTMLElements() as UpdateWorkElements;
+
+		loading
+			? this.toggleDisappearClass(cardLoading, cardContent)
+			: this.toggleDisappearClass(cardContent, cardLoading);
+	}
+
+	private setUpdatedWorkBody(commonValues: {
+		studentId: number;
+		observation: string;
+	}) {
+		const marking = this.editHTMLElements()?.controlElement.value;
+
+		return this.selectedWorkType() === Work.TASK
 			? {
 					studentToTask: {
 						...commonValues,
-						marking,
-						taskId: workId,
+						markingId: marking,
+						taskId: this.selectedWorkInfo()?.workId,
 					},
 			  }
 			: {
 					studentToExam: {
 						...commonValues,
 						marking,
+						examId: this.selectedWorkInfo()?.workId,
 					},
 			  };
 	}
@@ -471,34 +470,31 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.renderer.addClass(addTo, 'disappear');
 	}
 
-	private returnToPreviousState(
-		controlElement: MatSelect | HTMLInputElement,
-		textarea: HTMLTextAreaElement,
-		toggleEditInfo: ToggleEditInfo
-	) {
+	private returnToPreviousState() {
+		const { controlElement, textArea } =
+			this.editHTMLElements() as ToggleEditElements;
+		const { workId, studentId } = this.selectedWorkInfo() as WorkInfo;
 		let previousState: StudentToTask | StudentToExam | undefined =
 			undefined;
 
-		if (toggleEditInfo.workType === Work.TASK) {
-			const task = this.tasks().find(
-				task => task.id === toggleEditInfo.workId
-			);
+		if (this.selectedWorkType() === Work.TASK) {
+			const task = this.tasks().find(task => task.id === workId);
+
 			previousState = (task as Task)?.studentToTask?.find(
-				relation => relation.studentId === toggleEditInfo.studentId
+				relation => relation.studentId === studentId
 			);
 		} else {
-			const exam = this.exams().find(
-				exam => exam.id === toggleEditInfo.workId
-			);
+			const exam = this.exams().find(exam => exam.id === workId);
+
 			previousState = (exam as Exam)?.studentToExam?.find(
-				relation => relation.student === toggleEditInfo.studentId
+				relation => relation.studentId === studentId
 			);
 		}
 
 		controlElement.value =
-			toggleEditInfo.workType === Work.TASK
+			this.selectedWorkType() === Work.TASK
 				? (previousState as StudentToTask)?.markingId
 				: previousState?.marking;
-		textarea.value = previousState?.observation ?? '';
+		textArea.value = previousState?.observation ?? '';
 	}
 }

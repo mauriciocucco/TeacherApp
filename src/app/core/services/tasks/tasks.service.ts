@@ -14,7 +14,7 @@ export class TasksService {
 	private api = inject(ApiService);
 
 	public createTask(task: CreateTask) {
-		return this.api.post<CreateTask>(Endpoints.TASKS, task).pipe(
+		return this.api.post(Endpoints.TASKS, task).pipe(
 			catchError(error => {
 				console.error('Error en createTask:', error);
 
@@ -32,15 +32,13 @@ export class TasksService {
 	}
 
 	public updateTask(task: UpdateTask, taskId: number) {
-		return this.api
-			.patch<UpdateTask>(`${Endpoints.TASKS}/${taskId}`, task)
-			.pipe(
-				catchError(error => {
-					console.error('Error en updateTask:', error);
+		return this.api.patch<Task>(`${Endpoints.TASKS}/${taskId}`, task).pipe(
+			catchError(error => {
+				console.error('Error en updateTask:', error);
 
-					return of(error);
-				})
-			);
+				return of(error);
+			})
+		);
 	}
 
 	public deleteTask(taskId: number) {

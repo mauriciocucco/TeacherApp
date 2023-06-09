@@ -4,7 +4,7 @@ import { Endpoints } from '../../enums/endpoints.enum';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-query-params.interface';
 import { Exam } from '../../interfaces/exam.interface';
-import { catchError, of } from 'rxjs';
+import { catchError, of, throwError } from 'rxjs';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class ExamsService {
 	api = inject(ApiService);
 
 	public createExam(task: CreateExam) {
-		return this.api.post<CreateExam>(Endpoints.EXAMS, task).pipe(
+		return this.api.post(Endpoints.EXAMS, task).pipe(
 			catchError(error => {
 				console.error('Error en createExam:', error);
 
@@ -32,15 +32,7 @@ export class ExamsService {
 	}
 
 	public updateExam(task: UpdateExam, examId: number) {
-		return this.api
-			.patch<UpdateExam>(`${Endpoints.EXAMS}/${examId}`, task)
-			.pipe(
-				catchError(error => {
-					console.error('Error en updateExam:', error);
-
-					return of(error);
-				})
-			);
+		return this.api.patch<Exam>(`${Endpoints.EXAMS}/${examId}`, task);
 	}
 
 	public deleteExam(examId: number) {

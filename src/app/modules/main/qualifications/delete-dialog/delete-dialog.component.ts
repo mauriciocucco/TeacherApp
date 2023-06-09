@@ -26,6 +26,7 @@ export class DeleteDialogComponent implements OnDestroy {
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
 	private qs = inject(QualificationsService);
+	private selectedWorkType = this.qs.selectedWorkType;
 	private destroy: Subject<boolean> = new Subject<boolean>();
 
 	constructor(
@@ -41,7 +42,7 @@ export class DeleteDialogComponent implements OnDestroy {
 	}
 
 	public closeDialog(): void {
-		this.dialogRef.close(this.payload.workType);
+		this.dialogRef.close(this.selectedWorkType());
 	}
 
 	public sendForm() {
@@ -50,21 +51,22 @@ export class DeleteDialogComponent implements OnDestroy {
 
 		this.deleteButtonMessage.set(ButtonState.DELETING);
 
-		this.payload.workType === Work.TASK
+		this.selectedWorkType() === Work.TASK
 			? (delete$ = this.ts.deleteTask(this.payload.workId))
 			: (delete$ = this.es.deleteExam(this.payload.workId));
 
-		delete$.pipe(takeUntil(this.destroy)).subscribe(result => {
-			if (result instanceof HttpErrorResponse) {
-				this.qs.handleHttpResponseMessage();
-			} else {
+		delete$.pipe(takeUntil(this.destroy)).subscribe({
+			next: () => {
 				this.qs.getTasksExamsAndStudents(queryParams, null);
 				this.qs.handleHttpResponseMessage(
 					`Se eliminó a "${this.payload.workName}" con éxito.`
 				);
-			}
-
-			this.closeDialog();
+				this.closeDialog();
+			},
+			error: () => {
+				this.qs.handleHttpResponseMessage();
+				this.closeDialog();
+			},
 		});
 	}
 }

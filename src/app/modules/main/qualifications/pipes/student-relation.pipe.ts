@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 interface StudentRelation {
 	works: any[]; //TODO: tipar esto
-	student: number;
+	studentId: number;
 }
 
 @Pipe({
@@ -11,7 +11,7 @@ interface StudentRelation {
 export class StudentRelationPipe implements PipeTransform {
 	transform(studentInfo: StudentRelation, argument: any): string {
 		for (const work of studentInfo.works) {
-			if (work.student.id === studentInfo.student) return work[argument];
+			if (work.studentId === studentInfo.studentId) return work[argument];
 		}
 
 		return '';
