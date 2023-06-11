@@ -280,7 +280,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
 		this.qs.showSelectedStudent(option);
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
+		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
 	}
 
 	public taskOrExamSelected(
@@ -288,7 +288,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		type = Work.TASK
 	) {
 		this.qs.showSelectedTaskOrExam(option, type);
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
+		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
 	}
 
 	public openCreateDialog(): void {
@@ -492,7 +492,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		textArea.value = previousState?.observation ?? '';
 	}
 
-	public toggleFiltersMenu() {
-		this.openFiltersMenu.set(!this.openFiltersMenu());
+	public toggleFiltersMenu(open: null | boolean = null) {
+		this.openFiltersMenu.set(open ? open : !this.openFiltersMenu());
 	}
 }

@@ -50,11 +50,12 @@
 									placeholder="Seleccione un alumnx"
 									[matAutocomplete]="auto"
 									aria-label="Number"
-									formControlName="student" />
+									formControlName="student" 
+								/>
 								<mat-autocomplete
 									(optionSelected)="studentSelected($event)"
-									autoActiveFirstOption
-									#auto="matAutocomplete">
+									#auto="matAutocomplete"
+								>
 									<mat-option
 									*ngIf="students() ? students()!.length > 1 : false"
 										[value]="allWordEnum.INCLUSIVE"
