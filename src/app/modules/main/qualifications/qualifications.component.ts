@@ -271,7 +271,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private resetForm() {
-		this.filtersForm.get('subject')?.patchValue(0);
+		this.filtersForm.get('subject')?.patchValue(0, { emitEvent: false });
 		this.filtersForm.get('student')?.reset();
 		this.filtersForm.get('task')?.reset();
 		this.filtersForm.get('exam')?.reset();
@@ -300,9 +300,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
 			.subscribe(queryParams => {
-				this.changeToCorrectTab();
-				if (queryParams.course)
+				if (queryParams?.course) {
+					this.changeToCorrectTab();
 					this.qs.getTasksExamsAndStudents(queryParams, null);
+				}
 			});
 	}
 
