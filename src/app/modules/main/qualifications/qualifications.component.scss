@@ -76,7 +76,7 @@
 		}
 	}
 	@include mq-mobile {
-		margin-top: 23vh;
+		margin-top: calc(180px + 3rem);
 	}
 }
 
@@ -164,14 +164,15 @@
 }
 
 .open-menu-state {
-	max-height: 64vh;
+	max-height: -webkit-fill-available;
 }
 
 .mobile-card-state {
 	left: 50%;
+	padding: 0 3rem;
 	position: absolute;
 	transform: translateX(-50%);
-	width: 86%;
+	width: 100%;
 	z-index: 3;
 }
 
@@ -188,7 +189,7 @@
 
 .warning-container {
 	@include mq-mobile {
-		margin-top: 18vh;
+		margin-top: calc(140.4px + 3rem);
 	}
 }
 
