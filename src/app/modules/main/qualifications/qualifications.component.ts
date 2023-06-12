@@ -170,7 +170,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					this.students() &&
 					this.students()!.length > 0
 				)
-					this.toggleFiltersMenu();
+					this.toggleFiltersMenu(false);
 				this.resetForm();
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
