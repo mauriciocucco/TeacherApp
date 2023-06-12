@@ -45,18 +45,17 @@
 							<mat-form-field [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
 								<mat-label>Alumnx</mat-label>
 								<input
+								    #studentsInput
 									type="text"
 									matInput
 									placeholder="Seleccione un alumnx"
 									[matAutocomplete]="auto"
 									aria-label="Number"
 									formControlName="student" 
-									[autofocus]="false"
 								/>
 								<mat-autocomplete
-									(optionSelected)="studentSelected($event)"
+									(optionSelected)="studentSelected($event, studentsInput)"
 									#auto="matAutocomplete"
-									[autofocus]="false"
 								>
 									<mat-option
 									*ngIf="students() ? students()!.length > 1 : false"

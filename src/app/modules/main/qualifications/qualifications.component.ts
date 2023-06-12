@@ -278,7 +278,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.filtersForm.get('dateRange')?.reset();
 	}
 
-	public studentSelected(option: MatAutocompleteSelectedEvent) {
+	public studentSelected(
+		option: MatAutocompleteSelectedEvent,
+		studentsInput: HTMLInputElement
+	) {
+		studentsInput.blur();
 		this.qs.showSelectedStudent(option);
 		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
 	}
