@@ -110,8 +110,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearDateRangeButton!: MatMiniFabButton;
-	@ViewChild('studentsInput', { static: false })
-	studentsInput!: HTMLInputElement;
+	@ViewChild('courseSelect', { static: false })
+	courseSelect!: MatSelect;
 	@HostListener('window:resize', ['$event'])
 	onResize(): void {
 		this.vs.setScreenType();
@@ -496,6 +496,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public toggleFiltersMenu(open: null | boolean = null) {
 		this.openFiltersMenu.set(open ? open : !this.openFiltersMenu());
-		this.studentsInput.blur();
+		this.courseSelect.focus();
 	}
 }
