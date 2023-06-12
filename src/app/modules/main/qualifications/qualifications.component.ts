@@ -152,7 +152,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
-				if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
+				if (this.screenType() === 'MOBILE')
+					this.toggleFiltersMenu(false);
 			});
 	}
 
@@ -192,7 +193,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					startDate: value.start.getTime(),
 					endDate: value.end.getTime(),
 				};
-				if (this.screenType() === 'MOBILE') this.toggleFiltersMenu();
+				if (this.screenType() === 'MOBILE')
+					this.toggleFiltersMenu(false);
 				this.disableRangeClearButton(false);
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
@@ -497,6 +499,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public toggleFiltersMenu(open: null | boolean = null) {
-		this.openFiltersMenu.set(open ? open : !this.openFiltersMenu());
+		this.openFiltersMenu.set(open ?? !this.openFiltersMenu());
 	}
 }
