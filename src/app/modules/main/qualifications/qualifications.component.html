@@ -52,10 +52,11 @@
 									[matAutocomplete]="auto"
 									aria-label="Number"
 									formControlName="student" 
+									[autofocus]="false"
 									tabindex="-1"
 								/>
 								<mat-autocomplete
-									(optionSelected)="studentSelected($event, studentsInput)"
+									(optionSelected)="studentSelected($event)"
 									#auto="matAutocomplete"
 								>
 									<mat-option

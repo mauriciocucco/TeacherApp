@@ -110,6 +110,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearDateRangeButton!: MatMiniFabButton;
+	@ViewChild('studentsInput', { static: false })
+	studentsInput!: HTMLInputElement;
 	@HostListener('window:resize', ['$event'])
 	onResize(): void {
 		this.vs.setScreenType();
@@ -278,11 +280,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.filtersForm.get('dateRange')?.reset();
 	}
 
-	public studentSelected(
-		option: MatAutocompleteSelectedEvent,
-		studentsInput: HTMLInputElement
-	) {
-		studentsInput.blur();
+	public studentSelected(option: MatAutocompleteSelectedEvent) {
 		this.qs.showSelectedStudent(option);
 		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
 	}
@@ -498,5 +496,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public toggleFiltersMenu(open: null | boolean = null) {
 		this.openFiltersMenu.set(open ? open : !this.openFiltersMenu());
+		this.studentsInput.blur();
 	}
 }
