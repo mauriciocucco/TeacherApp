@@ -249,6 +249,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.cleanDateQueryParams();
 		this.qs.getTasksExamsAndStudents(this.taskAndExamsQueryParams, null);
 		this.disableRangeClearButton();
+		this.toggleFiltersMenu(false);
 	}
 
 	private cleanDateQueryParams() {
