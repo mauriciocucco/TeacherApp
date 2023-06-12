@@ -51,10 +51,12 @@
 									[matAutocomplete]="auto"
 									aria-label="Number"
 									formControlName="student" 
+									[autofocus]="false"
 								/>
 								<mat-autocomplete
 									(optionSelected)="studentSelected($event)"
 									#auto="matAutocomplete"
+									[autofocus]="false"
 								>
 									<mat-option
 									*ngIf="students() ? students()!.length > 1 : false"
