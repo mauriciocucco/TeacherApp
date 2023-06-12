@@ -162,7 +162,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.get('course')
 			?.valueChanges.pipe(takeUntil(this.destroy))
 			.subscribe(course => {
-				const queryParam = { course };
+				const queryParam = { courseId: course };
 
 				this.studentsQueryParams = queryParam;
 				this.taskAndExamsQueryParams = queryParam;

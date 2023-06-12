@@ -46,7 +46,7 @@ export class DeleteDialogComponent implements OnDestroy {
 	}
 
 	public sendForm() {
-		const queryParams = { course: this.payload.courseId };
+		const queryParams = { courseId: this.payload.courseId };
 		let delete$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.deleteButtonMessage.set(ButtonState.DELETING);

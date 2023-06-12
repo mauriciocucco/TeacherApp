@@ -207,10 +207,6 @@
 									<ng-container *ngFor="let task of tasks()">
 										<mat-card
 											class="qualification-card"
-											[ngClass]="{
-												'pdlColor': task.subject === 1,
-												'socialesColor': task.subject === 2
-											}"
 											*ngIf="task.show">
 											<mat-card-header
 												class="qualification-card-header">
