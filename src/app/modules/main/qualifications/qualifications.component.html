@@ -26,7 +26,6 @@
 							<mat-form-field appearance="fill">
 								<mat-label>Curso</mat-label>
 								<mat-select
-								    #courseSelect
 									formControlName="course"
 									placeholder="Seleccionar un curso">
 									<mat-option
@@ -43,7 +42,7 @@
 								>
 								{{ openFiltersMenu()? 'Ocultar filtros' : 'Mostrar más filtros'}}
 						    </button>
-							<mat-form-field [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
+							<mat-form-field [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || hideFilters())}">
 								<mat-label>Alumnx</mat-label>
 								<input
 								    #studentsInput
@@ -53,8 +52,6 @@
 									[matAutocomplete]="auto"
 									aria-label="Number"
 									formControlName="student" 
-									[autofocus]="false"
-									tabindex="-1"
 								/>
 								<mat-autocomplete
 									(optionSelected)="studentSelected($event)"
@@ -79,7 +76,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
+							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || hideFilters())}">
 								<mat-label>Tarea</mat-label>
 								<input
 									type="text"
@@ -107,7 +104,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
+							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || hideFilters())}">
 								<mat-label>Exámen</mat-label>
 								<input
 									type="text"
@@ -138,7 +135,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<div class="range-date-wrapper" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
+							<div class="range-date-wrapper" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || hideFilters())}">
 								<mat-form-field id="date-filter-form-field" appearance="fill">
 									<mat-label>Ingrese un período</mat-label>
 									<mat-date-range-input

@@ -90,6 +90,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public selectedTab = signal(0);
 	public screenType = this.vs.screenType;
 	public openFiltersMenu = signal(false);
+	public hideFilters = computed(() =>
+		!this.openFiltersMenu() ? true : false
+	);
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
@@ -110,8 +113,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearDateRangeButton!: MatMiniFabButton;
-	@ViewChild('courseSelect', { static: false })
-	courseSelect!: MatSelect;
 	@HostListener('window:resize', ['$event'])
 	onResize(): void {
 		this.vs.setScreenType();
@@ -496,6 +497,5 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public toggleFiltersMenu(open: null | boolean = null) {
 		this.openFiltersMenu.set(open ? open : !this.openFiltersMenu());
-		this.courseSelect.focus();
 	}
 }
