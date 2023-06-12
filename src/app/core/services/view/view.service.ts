@@ -11,12 +11,4 @@ export class ViewService {
 			? this.screenType.set('MOBILE')
 			: this.screenType.set('DESKTOP');
 	}
-
-	// public isMobile(): boolean {
-	//   if (window.screen.width <= 1024) {
-	//     return true;
-	//   }
-
-	//   return false;
-	// }
 }
