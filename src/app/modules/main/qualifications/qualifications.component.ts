@@ -306,7 +306,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.afterClosed()
 			.pipe(takeUntil(this.destroy))
 			.subscribe(queryParams => {
-				if (queryParams?.course) {
+				if (queryParams?.courseId) {
 					this.changeToCorrectTab();
 					this.qs.getTasksExamsAndStudents(queryParams, null);
 				}

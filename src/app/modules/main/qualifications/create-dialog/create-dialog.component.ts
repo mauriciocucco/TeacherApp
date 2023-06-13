@@ -53,7 +53,7 @@ export class CreateDialogComponent implements OnDestroy {
 	}
 
 	public closeDialog(reloadData = false): void {
-		const queryParams = { course: this.payload.course };
+		const queryParams = { courseId: this.payload.course };
 		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
 		reloadData ? this.dialogRef.close(queryParams) : this.dialogRef.close();
 	}
