@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
 import { SharedModule } from '../../../../shared/shared.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
@@ -6,11 +6,11 @@ import { ExamsService } from '../../../../core/services/exams/exams.service';
 import { DeletePayload } from './interfaces/delete-payload.interface';
 import { ButtonState } from '../enums/button-state.enum';
 import { Work } from '../../../../core/enums/work.enum';
-import { Observable, Subject, of, takeUntil } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Task } from '../../../../core/interfaces/task.interface';
 import { Exam } from '../../../../core/interfaces/exam.interface';
-import { HttpErrorResponse } from '@angular/common/http';
 import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
 	selector: 'app-delete-dialog',
@@ -19,7 +19,7 @@ import { QualificationsService } from '../../../../core/services/qualifications/
 	templateUrl: './delete-dialog.component.html',
 	styleUrls: ['./delete-dialog.component.scss'],
 })
-export class DeleteDialogComponent implements OnDestroy {
+export class DeleteDialogComponent {
 	public deleteButtonMessage = signal(ButtonState.DELETE);
 	public buttonStateEnum = ButtonState;
 	public workName = '';
@@ -27,18 +27,13 @@ export class DeleteDialogComponent implements OnDestroy {
 	private es = inject(ExamsService);
 	private qs = inject(QualificationsService);
 	private selectedWorkType = this.qs.selectedWorkType;
-	private destroy: Subject<boolean> = new Subject<boolean>();
+	private destroyRef = inject(DestroyRef);
 
 	constructor(
 		public dialogRef: MatDialogRef<DeleteDialogComponent>,
 		@Inject(MAT_DIALOG_DATA) public payload: DeletePayload
 	) {
 		this.workName = this.payload.workName;
-	}
-
-	ngOnDestroy(): void {
-		this.destroy.next(true);
-		this.destroy.unsubscribe();
 	}
 
 	public closeDialog(): void {
@@ -55,7 +50,7 @@ export class DeleteDialogComponent implements OnDestroy {
 			? (delete$ = this.ts.deleteTask(this.payload.workId))
 			: (delete$ = this.es.deleteExam(this.payload.workId));
 
-		delete$.pipe(takeUntil(this.destroy)).subscribe({
+		delete$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.qs.getTasksExamsAndStudents(queryParams, null);
 				this.qs.handleHttpResponseMessage(

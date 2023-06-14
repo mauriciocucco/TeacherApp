@@ -277,8 +277,6 @@ export class QualificationsService {
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
 
-			console.log('DESPUÉS DE LA MUTACIÓN ', this.tasks());
-
 			return;
 		}
 

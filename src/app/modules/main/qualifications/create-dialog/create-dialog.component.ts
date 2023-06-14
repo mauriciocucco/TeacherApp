@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
@@ -7,11 +7,12 @@ import { CreatePayload } from './interfaces/create-payload.interface';
 import { Work } from '../../../../core/enums/work.enum';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../core/services/exams/exams.service';
-import { Observable, Subject, of, takeUntil } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { CreateTask } from '../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../core/interfaces/create-exam.interface';
 import { ButtonState } from '../enums/button-state.enum';
 import { CreateForm } from './interfaces/create-form.interface';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
 	selector: 'app-create-dialog',
@@ -20,7 +21,7 @@ import { CreateForm } from './interfaces/create-form.interface';
 	templateUrl: './create-dialog.component.html',
 	styleUrls: ['./create-dialog.component.scss'],
 })
-export class CreateDialogComponent implements OnDestroy {
+export class CreateDialogComponent {
 	public createForm = this.fb.nonNullable.group({
 		type: '',
 		course: '',
@@ -38,7 +39,7 @@ export class CreateDialogComponent implements OnDestroy {
 	private es = inject(ExamsService);
 	private students = this.qs.students;
 	private selectedWorkType = this.qs.selectedWorkType;
-	private destroy: Subject<boolean> = new Subject<boolean>();
+	private destroyRef = inject(DestroyRef);
 
 	constructor(
 		public dialogRef: MatDialogRef<CreateDialogComponent>,
@@ -46,11 +47,6 @@ export class CreateDialogComponent implements OnDestroy {
 		private fb: FormBuilder,
 		private qs: QualificationsService
 	) {}
-
-	ngOnDestroy(): void {
-		this.destroy.next(true);
-		this.destroy.unsubscribe();
-	}
 
 	public closeDialog(reloadData = false): void {
 		const queryParams = { courseId: this.payload.course };
@@ -69,7 +65,7 @@ export class CreateDialogComponent implements OnDestroy {
 			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
 			: (create$ = this.es.createExam(cleanedForm as CreateExam));
 
-		create$.pipe(takeUntil(this.destroy)).subscribe({
+		create$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.closeDialog(true);
 			},
