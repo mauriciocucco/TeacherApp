@@ -90,9 +90,6 @@ export class QualificationsComponent implements OnInit {
 	public selectedTab = signal(0);
 	public screenType = this.vs.screenType;
 	public openFiltersMenu = signal(false);
-	public hideFilters = computed(() =>
-		!this.openFiltersMenu() ? true : false
-	);
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
