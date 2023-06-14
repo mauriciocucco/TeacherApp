@@ -1,10 +1,10 @@
-import { Component, Inject, signal, inject, OnDestroy } from '@angular/core';
+import { Component, Inject, signal, inject, DestroyRef } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ButtonState } from '../enums/button-state.enum';
 import { InfoPayload } from './interfaces/info-payload.interface';
 import { TasksService } from '../../../../core/services/tasks/tasks.service';
-import { Observable, Subject, of, takeUntil } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
 import { UpdateTask } from '../../../../core/interfaces/update-task.interface';
@@ -13,13 +13,14 @@ import { Work } from '../../../../core/enums/work.enum';
 import { ExamsService } from '../../../../core/services/exams/exams.service';
 import { Task } from '../../../../core/interfaces/task.interface';
 import { Exam } from '../../../../core/interfaces/exam.interface';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
 	selector: 'app-info-dialog',
 	templateUrl: './info-dialog.component.html',
 	styleUrls: ['./info-dialog.component.scss'],
 })
-export class InfoDialogComponent implements OnDestroy {
+export class InfoDialogComponent {
 	public infoForm = this.fb.nonNullable.group({
 		name: '',
 		date: '',
@@ -36,7 +37,7 @@ export class InfoDialogComponent implements OnDestroy {
 	private es = inject(ExamsService);
 	private qs = inject(QualificationsService);
 	private selectedWorkType = this.qs.selectedWorkType;
-	private destroy: Subject<boolean> = new Subject<boolean>();
+	private destroyRef = inject(DestroyRef);
 
 	constructor(
 		public dialogRef: MatDialogRef<InfoDialogComponent>,
@@ -44,11 +45,6 @@ export class InfoDialogComponent implements OnDestroy {
 		private fb: FormBuilder
 	) {
 		this.setFormValues();
-	}
-
-	ngOnDestroy(): void {
-		this.destroy.next(true);
-		this.destroy.unsubscribe();
 	}
 
 	public closeDialog(): void {
@@ -72,7 +68,7 @@ export class InfoDialogComponent implements OnDestroy {
 			? (update$ = this.ts.updateTask(updatedWork as UpdateTask, workId))
 			: (update$ = this.es.updateExam(updatedWork as UpdateExam, workId));
 
-		update$.pipe(takeUntil(this.destroy)).subscribe({
+		update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 				this.qs.updateWorkCardInfo(workId, updatedWork);

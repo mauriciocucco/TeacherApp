@@ -220,6 +220,7 @@
 														#editButton
 														mat-mini-fab
 														color="primary"
+														title="Editar observación"
 														aria-label="Icono para editar"
 														(click)="
 															toggleEditOnSelectedItem(
@@ -345,9 +346,18 @@
 																	| studentRelation
 																		: 'markingId'
 															"
-															[disabled]="
-																!editMode()
-															"
+															(selectionChange)="updateWork(
+																{
+																controlElement: matSelect,
+																cardContent,
+																cardLoading,
+																},
+																{
+																	workId: task.id,
+																	studentId: student.id,
+																	workType: WorkEnum.TASK
+																}
+															)"
 															#matSelect>
 															<mat-option
 																*ngFor="
@@ -432,6 +442,7 @@
 														#editButton
 														mat-mini-fab
 														color="primary"
+														title="Editar observación"
 														aria-label="Icono para editar"
 														(click)="
 															toggleEditOnSelectedItem(

@@ -1,7 +1,7 @@
 import {
 	Component,
+	DestroyRef,
 	HostListener,
-	OnDestroy,
 	OnInit,
 	QueryList,
 	Renderer2,
@@ -14,7 +14,7 @@ import {
 	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Observable, Subject, filter, of, takeUntil } from 'rxjs';
+import { Observable, filter, of } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -28,7 +28,7 @@ import { MatMiniFabButton } from '@angular/material/button';
 import { AllWord } from '../../../core/enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
 import { CreateDialogComponent } from './create-dialog/create-dialog.component';
@@ -51,7 +51,7 @@ import { ViewService } from '../../../core/services/view/view.service';
 	templateUrl: './qualifications.component.html',
 	styleUrls: ['./qualifications.component.scss'],
 })
-export class QualificationsComponent implements OnInit, OnDestroy {
+export class QualificationsComponent implements OnInit {
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[] | undefined> = this.qs.students;
@@ -109,7 +109,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private selectedWorkInfo: WritableSignal<WorkInfo> = signal(
 		this.defaultWorkInfo
 	);
-	private destroy: Subject<boolean> = new Subject<boolean>();
+	private destroyRef = inject(DestroyRef);
 	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
 	@ViewChild('clearRangeButton', { static: false })
 	clearDateRangeButton!: MatMiniFabButton;
@@ -133,11 +133,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.vs.setScreenType();
 	}
 
-	ngOnDestroy(): void {
-		this.destroy.next(true);
-		this.destroy.unsubscribe();
-	}
-
 	private startToListenFiltersChanges() {
 		this.listenSubjectFilterChanges();
 		this.listenDatesRange();
@@ -149,7 +144,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private listenSubjectFilterChanges() {
 		this.filtersForm
 			.get('subject')
-			?.valueChanges.pipe(takeUntil(this.destroy))
+			?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
 				if (this.screenType() === 'MOBILE')
@@ -160,7 +155,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private listenCourseFilterChanges() {
 		this.filtersForm
 			.get('course')
-			?.valueChanges.pipe(takeUntil(this.destroy))
+			?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(course => {
 				const queryParam = { courseId: course };
 
@@ -185,7 +180,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.get('dateRange')
 			?.valueChanges.pipe(
 				filter((value: any) => value.start && value.end),
-				takeUntil(this.destroy)
+				takeUntilDestroyed(this.destroyRef)
 			)
 			.subscribe((value: { start: Date; end: Date }) => {
 				this.taskAndExamsQueryParams = {
@@ -206,7 +201,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private listenTasksFilterChanges() {
 		this.qs
 			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
-			?.pipe(takeUntil(this.destroy))
+			?.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(studentSelected =>
 				this.filteredStudentsForAutocomplete.set(
 					studentSelected as Student[]
@@ -220,7 +215,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				this.filtersForm.get('task')?.valueChanges,
 				'Tasks'
 			)
-			?.pipe(takeUntil(this.destroy))
+			?.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(taskSelected =>
 				this.filteredTasksForAutocomplete.set(taskSelected as Task[])
 			);
@@ -232,7 +227,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 				this.filtersForm.get('exam')?.valueChanges,
 				'Exams'
 			)
-			?.pipe(takeUntil(this.destroy))
+			?.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(examSelected =>
 				this.filteredExamsForAutocomplete.set(examSelected as Exam[])
 			);
@@ -268,7 +263,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 						  (this.filtersForm.get('subject')?.disabled as boolean) //puede ser cualquier control de un filtro que esté disabled
 						: false
 				),
-				takeUntil(this.destroy)
+				takeUntilDestroyed(this.destroyRef)
 			)
 			.subscribe(() => {
 				this.enableControls();
@@ -304,7 +299,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 		dialogRef
 			.afterClosed()
-			.pipe(takeUntil(this.destroy))
+			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(queryParams => {
 				if (queryParams?.courseId) {
 					this.changeToCorrectTab();
@@ -326,7 +321,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			},
 		});
 
-		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
+		dialogRef
+			.afterClosed()
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe();
 	}
 
 	public openDeleteDialog(work: Task | Exam, workType = Work.TASK) {
@@ -340,7 +338,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			},
 		});
 
-		dialogRef.afterClosed().pipe(takeUntil(this.destroy)).subscribe();
+		dialogRef
+			.afterClosed()
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe();
 	}
 
 	private changeToCorrectTab() {
@@ -373,14 +374,15 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		} = this.editHTMLElements() as ToggleEditElements;
 
 		controlElement instanceof MatSelect
-			? controlElement.setDisabledState(!allowEdit)
+			? null
 			: (controlElement.readOnly = !allowEdit);
-		textArea.readOnly = !allowEdit;
-		this.toggleDisappearClass(
-			allowEdit ? confirmDiv : editButton._elementRef.nativeElement,
-			allowEdit ? editButton._elementRef.nativeElement : confirmDiv
-		);
-		deleteButton.disabled = allowEdit;
+		if (textArea) textArea.readOnly = !allowEdit;
+		if (confirmDiv && editButton)
+			this.toggleDisappearClass(
+				allowEdit ? confirmDiv : editButton._elementRef.nativeElement,
+				allowEdit ? editButton._elementRef.nativeElement : confirmDiv
+			);
+		if (deleteButton) deleteButton.disabled = allowEdit;
 	}
 
 	public updateWork(
@@ -389,10 +391,14 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	) {
 		this.setEditSignals(updateWorkElements, updateWorkInfo);
 
-		const commonValues = {
+		const commonValues: { studentId: number; observation?: string } = {
 			studentId: updateWorkInfo.studentId,
-			observation: updateWorkElements.textArea.value.trimEnd(),
 		};
+
+		if (updateWorkElements.textArea)
+			commonValues.observation =
+				updateWorkElements.textArea.value.trimEnd();
+
 		const updatedWork = this.setUpdatedWorkBody(commonValues);
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
@@ -408,7 +414,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					updateWorkInfo.workId
 			  ));
 
-		update$.pipe(takeUntil(this.destroy)).subscribe({
+		update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.qs.updateWorkCardInfo(updateWorkInfo.workId, updatedWork);
 				this.loadingCardContent(false);
@@ -444,9 +450,16 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	private setUpdatedWorkBody(commonValues: {
 		studentId: number;
-		observation: string;
+		observation?: string;
 	}) {
-		const marking = this.editHTMLElements()?.controlElement.value;
+		const actualMarking =
+			this.selectedWorkType() === Work.TASK
+				? (this.getOldState() as StudentToTask)?.markingId
+				: this.getOldState()?.marking;
+		const marking =
+			this.editHTMLElements()?.controlElement?.value ?? actualMarking;
+
+		if (!commonValues.observation) delete commonValues.observation;
 
 		return this.selectedWorkType() === Work.TASK
 			? {
@@ -473,6 +486,16 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private returnToPreviousState() {
 		const { controlElement, textArea } =
 			this.editHTMLElements() as ToggleEditElements;
+		const previousState = this.getOldState();
+
+		controlElement.value =
+			this.selectedWorkType() === Work.TASK
+				? (previousState as StudentToTask)?.markingId
+				: previousState?.marking;
+		if (textArea) textArea.value = previousState?.observation ?? '';
+	}
+
+	private getOldState() {
 		const { workId, studentId } = this.selectedWorkInfo() as WorkInfo;
 		let previousState: StudentToTask | StudentToExam | undefined =
 			undefined;
@@ -491,11 +514,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			);
 		}
 
-		controlElement.value =
-			this.selectedWorkType() === Work.TASK
-				? (previousState as StudentToTask)?.markingId
-				: previousState?.marking;
-		textArea.value = previousState?.observation ?? '';
+		return previousState;
 	}
 
 	public toggleFiltersMenu(open: null | boolean = null) {
