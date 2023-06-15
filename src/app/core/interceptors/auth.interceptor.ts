@@ -33,6 +33,8 @@ export class AuthInterceptor implements HttpInterceptor {
 			setHeaders: { Authorization: `Bearer ${authToken}` },
 		});
 
+		console.log('SETEANDO EL HEADER: ', authReq);
+
 		// send cloned request with header to the next handler.
 		return next.handle(authReq);
 	}
