@@ -90,9 +90,6 @@ export class QualificationsComponent implements OnInit {
 	public selectedTab = signal(0);
 	public screenType = this.vs.screenType;
 	public openFiltersMenu = signal(false);
-	public hideFilters = computed(() =>
-		!this.openFiltersMenu() ? true : false
-	);
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
@@ -198,7 +195,7 @@ export class QualificationsComponent implements OnInit {
 			});
 	}
 
-	private listenTasksFilterChanges() {
+	private listenStudentsFilterChanges() {
 		this.qs
 			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
 			?.pipe(takeUntilDestroyed(this.destroyRef))
@@ -209,7 +206,7 @@ export class QualificationsComponent implements OnInit {
 			);
 	}
 
-	private listenExamsFilterChanges() {
+	private listenTasksFilterChanges() {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('task')?.valueChanges,
@@ -221,7 +218,7 @@ export class QualificationsComponent implements OnInit {
 			);
 	}
 
-	private listenStudentsFilterChanges() {
+	private listenExamsFilterChanges() {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('exam')?.valueChanges,
@@ -280,16 +277,16 @@ export class QualificationsComponent implements OnInit {
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		this.qs.showSelectedStudent(option);
 		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		this.qs.showSelectedStudent(option);
 	}
 
 	public taskOrExamSelected(
 		option: MatAutocompleteSelectedEvent,
 		type = Work.TASK
 	) {
-		this.qs.showSelectedTaskOrExam(option, type);
 		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		this.qs.showSelectedTaskOrExam(option, type);
 	}
 
 	public openCreateDialog(): void {

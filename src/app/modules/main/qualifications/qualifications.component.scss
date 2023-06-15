@@ -107,6 +107,9 @@
 			height: 2rem;
 			width: 2rem;
 		}
+		@include mq-mobile {
+			bottom: 1.5rem;
+		}
 	}
 }
 
@@ -149,18 +152,30 @@
 }
 
 .mobile-hide {
-	display: none;
+	@include mq-mobile {
+		display: none;
+	}
+}
+
+.mobile-show {
+	@include mq-mobile {
+		display: flex !important;
+	}
 }
 
 .mobile-container {
-	display: flex;
-	flex-direction: column-reverse;
+	@include mq-mobile {
+		display: flex;
+		flex-direction: column-reverse;
+	}
 }
 
 .hide-menu-state {
-	max-height: 150px;
-	overflow: hidden;
-	transition: max-height 0.3s ease;
+	@include mq-mobile {
+		max-height: 150px;
+		overflow: hidden;
+		transition: max-height 0.3s ease;
+	}
 }
 
 .open-menu-state {
@@ -168,15 +183,18 @@
 }
 
 .mobile-card-state {
-	left: 50%;
-	padding: 0 3rem;
-	position: absolute;
-	transform: translateX(-50%);
-	width: 100%;
-	z-index: 3;
+	@include mq-mobile {
+		left: 50%;
+		padding: 0 3rem;
+		position: absolute;
+		transform: translateX(-50%);
+		width: 100%;
+		z-index: 3;
+	}
 }
 
 #filters-button {
+	display: none;
 	margin-bottom: 2.2rem;
 }
 

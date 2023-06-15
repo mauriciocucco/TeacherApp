@@ -1,14 +1,14 @@
 <div id="container">
-	<div id="filters" [ngClass]="{'mobile-card-state': screenType() === 'MOBILE'}">
+	<div id="filters" class="mobile-card-state">
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
 			<mat-card-content [ngClass]="{
-				'hide-menu-state': screenType() === 'MOBILE' && students(),
+				'hide-menu-state': students(),
 				'open-menu-state': openFiltersMenu()
 			}">
 				<form [formGroup]="filtersForm">
-					<div id="content-container" [ngClass]="{'mobile-container': screenType() === 'MOBILE' && students()}">
-						<div class="first-row" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}">
+					<div id="content-container" [ngClass]="{'mobile-container': students()}">
+						<div class="first-row mobile-hide" [ngClass]="{'mobile-show': students()}">
 							<mat-radio-group
 								aria-label="Elegí una materia"
 								formControlName="subject">
@@ -37,12 +37,12 @@
 								</mat-select>
 							</mat-form-field>
 							<button mat-stroked-button id="filters-button" color="primary" 
-								[ngClass]="{'mobile-hide': screenType() === 'DESKTOP' || (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0)}"
+								[ngClass]="{'mobile-show': students()}"
 								(click)="toggleFiltersMenu()"
 								>
 								{{ openFiltersMenu()? 'Ocultar filtros' : 'Mostrar más filtros'}}
 						    </button>
-							<mat-form-field [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || (screenType() === 'MOBILE' && hideFilters()))}">
+							<mat-form-field class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-label>Alumnx</mat-label>
 								<input
 								    #studentsInput
@@ -76,7 +76,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || (screenType() === 'MOBILE' && hideFilters()))}">
+							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-label>Tarea</mat-label>
 								<input
 									type="text"
@@ -104,7 +104,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<mat-form-field appearance="fill" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || (screenType() === 'MOBILE' && hideFilters()))}">
+							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-label>Exámen</mat-label>
 								<input
 									type="text"
@@ -135,7 +135,7 @@
 									</mat-option>
 								</mat-autocomplete>
 							</mat-form-field>
-							<div class="range-date-wrapper" [ngClass]="{'mobile-hide': (screenType() === 'MOBILE' && !students()) || (students() && students()!.length === 0 || (screenType() === 'MOBILE' && hideFilters()))}">
+							<div class="range-date-wrapper mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-form-field id="date-filter-form-field" appearance="fill">
 									<mat-label>Ingrese un período</mat-label>
 									<mat-date-range-input
