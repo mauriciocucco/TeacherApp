@@ -22,11 +22,11 @@ import { UnauthorizedInterceptor } from './core/interceptors/unauthorized.interc
 	],
 	providers: [
 		{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-		// {
-		// 	provide: HTTP_INTERCEPTORS,
-		// 	useClass: UnauthorizedInterceptor,
-		// 	multi: true,
-		// },
+		{
+			provide: HTTP_INTERCEPTORS,
+			useClass: UnauthorizedInterceptor,
+			multi: true,
+		},
 	],
 	bootstrap: [AppComponent],
 })
