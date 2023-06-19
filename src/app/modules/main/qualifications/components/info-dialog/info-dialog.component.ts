@@ -66,7 +66,6 @@ export class InfoDialogComponent {
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.editButtonMessage.set(this.buttonStateEnum.SAVING);
-
 		this.selectedWorkType() === Work.TASK
 			? (update$ = this.ts.updateTask(updatedWork as UpdateTask, workId))
 			: (update$ = this.es.updateExam(updatedWork as UpdateExam, workId));

@@ -37,7 +37,7 @@ export class DeleteDialogComponent {
 	}
 
 	public closeDialog(): void {
-		this.dialogRef.close(this.selectedWorkType());
+		this.dialogRef.close();
 	}
 
 	public sendForm() {

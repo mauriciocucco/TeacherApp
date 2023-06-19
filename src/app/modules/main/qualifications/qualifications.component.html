@@ -54,26 +54,24 @@
 									formControlName="student" 
 								/>
 								<mat-autocomplete
+									#studentsAutocomplete
 									(optionSelected)="studentSelected($event)"
 									#auto="matAutocomplete"
 								>
-									<mat-option
-									*ngIf="students() ? students()!.length > 1 : false"
-										[value]="allWordEnum.INCLUSIVE"
-										>{{ allWordEnum.INCLUSIVE }}</mat-option
-									>
-									<mat-option
-										*ngFor="
-											let student of filteredStudentsForAutocomplete()
-										"
-										[value]="
+									<ng-container *ngFor="
+									let student of students()
+								    ">
+										<mat-option
+											*ngIf="student.show"
+											[value]="
 											student.name +
 											' ' +
 											student.lastname
 										">
-										{{ student.name }}
-										{{ student?.lastname }}
-									</mat-option>
+											{{ student.name }}
+											{{ student?.lastname }}
+										</mat-option>
+									</ng-container>
 								</mat-autocomplete>
 							</mat-form-field>
 							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
@@ -86,22 +84,19 @@
 									aria-label="Number"
 									formControlName="task" />
 								<mat-autocomplete
+									#tasksAutocomplete
 									(optionSelected)="
 										taskOrExamSelected($event)
 									"
-									autoActiveFirstOption
 									#autoTask="matAutocomplete">
-									<mat-option [value]="allWordEnum.FEMALE">{{
-										allWordEnum.FEMALE
-									}}</mat-option>
-									<mat-option
-										*ngFor="
-											let task of filteredTasksForAutocomplete()
-										"
+									<ng-container *ngFor="let task of tasks()">
+										<mat-option
+										*ngIf="task.show"
 										[value]="task.name">
-										{{ task.name }} -
-										{{ task.date | shortDate }}
-									</mat-option>
+											{{ task.name }} -
+											{{ task.date | shortDate }}
+										</mat-option>
+									</ng-container>
 								</mat-autocomplete>
 							</mat-form-field>
 							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
@@ -114,25 +109,22 @@
 									aria-label="Number"
 									formControlName="exam" />
 								<mat-autocomplete
+									#examsAutocomplete
 									(optionSelected)="
 										taskOrExamSelected(
 											$event,
 											WorkEnum.EXAM
 										)
 									"
-									autoActiveFirstOption
 									#autoExam="matAutocomplete">
-									<mat-option [value]="allWordEnum.MALE">{{
-										allWordEnum.MALE
-									}}</mat-option>
-									<mat-option
-										*ngFor="
-											let exam of filteredExamsForAutocomplete()
-										"
+									<ng-container *ngFor="let exam of exams()">
+										<mat-option
+										*ngIf="exam.show"
 										[value]="exam.name">
-										{{ exam.name }} -
-										{{ exam.date | shortDate }}
-									</mat-option>
+											{{ exam.name }} -
+											{{ exam.date | shortDate }}
+										</mat-option>
+									</ng-container>
 								</mat-autocomplete>
 							</mat-form-field>
 							<div class="range-date-wrapper mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">

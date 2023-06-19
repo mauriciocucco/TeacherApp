@@ -50,7 +50,7 @@ export class CreateDialogComponent {
 
 	public closeDialog(reloadData = false): void {
 		const queryParams = { courseId: this.payload.course };
-		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
+
 		reloadData ? this.dialogRef.close(queryParams) : this.dialogRef.close();
 	}
 
@@ -60,7 +60,7 @@ export class CreateDialogComponent {
 			of(undefined);
 
 		this.saveButtonMessage.set(ButtonState.SAVING);
-
+		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
 		this.createForm.get('type')?.value === Work.TASK
 			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
 			: (create$ = this.es.createExam(cleanedForm as CreateExam));
