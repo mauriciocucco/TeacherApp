@@ -719,4 +719,6 @@
 		(click)="openCreateDialog()">
 		<mat-icon>add</mat-icon>
 	</button>
+
+	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>

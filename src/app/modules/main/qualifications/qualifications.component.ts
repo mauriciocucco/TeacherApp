@@ -19,6 +19,8 @@ import {
 	debounce,
 	distinctUntilChanged,
 	filter,
+	fromEvent,
+	map,
 	of,
 	tap,
 	timer,
@@ -57,6 +59,7 @@ import { ViewService } from '../../../core/services/view/view.service';
 import { DateRange } from './interfaces/range-date.interface';
 import { ControlType } from './components/create-dialog/interfaces/control-type.interface';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
 
 @Component({
 	selector: 'app-qualifications',
@@ -114,6 +117,12 @@ export class QualificationsComponent implements OnInit {
 	);
 	private deselectedOption = '*';
 	private destroyRef = inject(DestroyRef);
+	private readonly document = inject(DOCUMENT);
+	private readonly viewport = inject(ViewportScroller);
+	public readonly showScroll$: Observable<boolean> = fromEvent(
+		this.document,
+		'scroll'
+	).pipe(map(() => this.viewport.getScrollPosition()?.[1] > 0));
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;
@@ -606,5 +615,9 @@ export class QualificationsComponent implements OnInit {
 		}
 
 		this.toggleFiltersMenu(false);
+	}
+
+	public onScrollToTop(): void {
+		this.viewport.scrollToPosition([0, 0]);
 	}
 }

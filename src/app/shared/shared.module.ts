@@ -5,9 +5,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AngularMaterialModule } from '../angular-material/angular-material.module';
 import { ShortDatePipe } from './pipes/short-date.pipe';
+import { ScrollComponent } from './components/scroll/scroll.component';
 
 @NgModule({
-	declarations: [ShortDatePipe],
+	declarations: [ShortDatePipe, ScrollComponent],
 	imports: [
 		CommonModule,
 		FormsModule,
@@ -22,6 +23,7 @@ import { ShortDatePipe } from './pipes/short-date.pipe';
 		ReactiveFormsModule,
 		AngularMaterialModule,
 		ShortDatePipe,
+		ScrollComponent,
 	],
 })
 export class SharedModule {}
