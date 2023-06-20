@@ -80,7 +80,10 @@
 								</mat-form-field>
 								<button
 									class="disappear"
-									[ngClass]="{'mobile-show': openFiltersMenu() && filtersForm.get('student')?.value}"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('student')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('student')?.value
+									}"
 									mat-mini-fab
 									color="primary"
 									title="Limpiar estudiante seleccionado"
@@ -118,7 +121,10 @@
 								</mat-form-field>
 								<button
 									class="disappear"
-									[ngClass]="{'mobile-show': openFiltersMenu() && filtersForm.get('task')?.value}"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('task')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('task')?.value
+									}"
 									mat-mini-fab
 									color="primary"
 									title="Limpiar tarea seleccionada"
@@ -158,9 +164,11 @@
 									</mat-autocomplete>
 								</mat-form-field>
 								<button
-									#clearExamsButton
 									class="disappear"
-									[ngClass]="{'mobile-show': openFiltersMenu() && filtersForm.get('exam')?.value}"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('exam')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('exam')?.value
+									}"
 									mat-mini-fab
 									color="primary"
 									title="Limpiar exámen seleccionado"
@@ -193,8 +201,15 @@
 										#picker></mat-date-range-picker>
 								</mat-form-field>
 								<button
-									#clearRangeButton
-									disabled
+									class="disappear"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && 
+													   filtersForm.get('dateRange')?.get('start')?.value &&
+													   filtersForm.get('dateRange')?.get('end')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && 
+												filtersForm.get('dateRange')?.get('start')?.value &&
+												filtersForm.get('dateRange')?.get('end')?.value			   
+									}"
 									mat-mini-fab
 									color="primary"
 									title="Limpiar período"

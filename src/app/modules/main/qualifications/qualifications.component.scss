@@ -14,12 +14,15 @@
 	}
 	.second-row {
 		display: flex;
-		gap: 3rem;
+		gap: 2rem;
 		justify-content: space-around;
 		padding-top: 1rem;
 		width: 100%;
 		& > mat-form-field {
-			width: 100%;
+			width: 80%;
+			@include mq-mobile {
+				width: 100%;
+			}
 		}
 		@include mq-mobile {
 			display: flex;
@@ -94,15 +97,19 @@
 	text-align: center;
 }
 .control-wrapper {
+	@include flex-center;
+	gap: 1rem;
+	width: 100%;
+	mat-form-field {
+		width: -webkit-fill-available;
+	}
+	button {
+		bottom: 1rem;
+		position: relative;
+	}
 	@include mq-mobile {
-		@include flex-center;
 		gap: 0.5rem;
-		mat-form-field {
-			width: -webkit-fill-available;
-		}
 		button {
-			bottom: 1rem;
-			position: relative;
 			mat-icon {
 				font-size: 2rem;
 				height: 2rem;
@@ -114,6 +121,7 @@
 
 .range-date-wrapper {
 	@include flex-center;
+	width: 100%;
 	button {
 		bottom: 1rem;
 		height: 3rem;
@@ -179,6 +187,10 @@
 	@include mq-mobile {
 		display: flex !important;
 	}
+}
+
+.show {
+	display: flex !important;
 }
 
 .mobile-container {

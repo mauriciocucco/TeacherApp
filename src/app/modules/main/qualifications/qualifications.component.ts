@@ -95,6 +95,7 @@ export class QualificationsComponent implements OnInit {
 	public selectedTab = signal(0);
 	public screenType = this.vs.screenType;
 	public openFiltersMenu = signal(false);
+	public ScreenTypeEnum = ScreenType;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
@@ -114,8 +115,6 @@ export class QualificationsComponent implements OnInit {
 	private deselectedOption = '*';
 	private destroyRef = inject(DestroyRef);
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
-	@ViewChild('clearRangeButton', { static: false })
-	clearDateRangeButton?: MatMiniFabButton;
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;
 	@ViewChild('tasksAutocomplete', { static: false })
@@ -202,7 +201,6 @@ export class QualificationsComponent implements OnInit {
 				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 
-				this.disableRangeClearButton(false);
 				this.getNewTasksAndExams();
 			});
 	}
@@ -311,18 +309,12 @@ export class QualificationsComponent implements OnInit {
 		this.filtersForm.enable({ emitEvent: false });
 	}
 
-	private disableRangeClearButton(disable = true) {
-		if (!this.clearDateRangeButton) return;
-
-		this.clearDateRangeButton.disabled = disable;
-	}
-
 	public resetDateRange() {
 		this.filtersForm.get('dateRange')?.reset();
 		this.cleanDateQueryParams();
 		this.getNewTasksAndExams();
-		this.disableRangeClearButton();
-		this.toggleFiltersMenu(false);
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
 	}
 
 	private cleanDateQueryParams() {
