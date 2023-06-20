@@ -1,0 +1,12 @@
+<mat-card>
+	<mat-card-content id="alphabet-content">
+		<button
+			*ngFor="let letter of alphabet"
+			mat-flat-button
+			color="accent"
+			routerLink="/"
+			fragment="{{ letter }}">
+			{{ letter }}
+		</button>
+	</mat-card-content>
+</mat-card>

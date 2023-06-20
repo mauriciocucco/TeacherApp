@@ -5,9 +5,10 @@ import { QualificationsComponent } from './qualifications.component';
 import { SharedModule } from '../../../shared/shared.module';
 import { StudentRelationPipe } from './pipes/student-relation.pipe';
 import { ShiftPipe } from './pipes/shift.pipe';
+import { AlphabetComponent } from './components/alphabet/alphabet.component';
 
 @NgModule({
 	declarations: [QualificationsComponent, StudentRelationPipe, ShiftPipe],
-	imports: [QualificationsRoutingModule, SharedModule],
+	imports: [QualificationsRoutingModule, SharedModule, AlphabetComponent],
 })
 export class QualificationsModule {}

@@ -78,9 +78,6 @@
 			}
 		}
 	}
-	@include mq-mobile {
-		margin-top: calc(180px + 3rem);
-	}
 }
 
 .student-header {
@@ -99,17 +96,22 @@
 .control-wrapper {
 	@include flex-center;
 	gap: 1rem;
+	position: relative;
 	width: 100%;
 	mat-form-field {
 		width: -webkit-fill-available;
 	}
 	button {
-		bottom: 1rem;
-		position: relative;
+		bottom: 3.7rem;
+		height: 2.5rem !important;
+		position: absolute;
+		right: 1rem;
+		z-index: 2;
+		width: 2.5rem !important;
 		mat-icon {
-			font-size: 2rem;
-			height: 2rem;
-			width: 2rem;
+			font-size: 1.6rem;
+			height: 1.6rem;
+			width: 1.6rem;
 		}
 	}
 	@include mq-mobile {
@@ -122,14 +124,14 @@
 	width: 100%;
 	button {
 		bottom: 1rem;
-		height: 3rem;
+		height: 2.5rem !important;
 		margin-left: 0.5rem;
 		position: relative;
-		width: 3rem;
+		width: 2.5rem !important;
 		mat-icon {
-			font-size: 2rem;
-			height: 2rem;
-			width: 2rem;
+			font-size: 1.6rem;
+			height: 1.6rem;
+			width: 1.6rem;
 		}
 		@include mq-mobile {
 			bottom: 1.5rem;
@@ -252,4 +254,10 @@
 .info-button {
 	background-color: blue;
 	color: white;
+}
+
+.mobile-margin-top {
+	@include mq-mobile {
+		margin-top: calc(180px + 3rem);
+	}
 }

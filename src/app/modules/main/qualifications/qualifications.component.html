@@ -225,6 +225,12 @@
 		</mat-card>
 	</div>
 
+	<app-alphabet 
+		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
+		[ngClass]="{'disappear': filtersForm.get('student')?.value}"
+	>
+	</app-alphabet>
+
 	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista y tienen que haber alumnxs -->
 	<div
 		id="students-cards-container"
@@ -233,10 +239,11 @@
 				students() &&
 				students()!.length > 0 &&
 				!spinnerProgressOn();
-			else selectCourseWarning
-	">
+			else selectCourseWarning"
+		[ngClass]="{'mobile-margin-top': filtersForm.get('student')?.value}"
+	>
 		<ng-container *ngFor="let student of students()">
-			<mat-card *ngIf="student.show">
+			<mat-card *ngIf="student.show" id="{{ student.lastname.charAt(0).toUpperCase()}}">
 					<mat-card-header
 						><h2 class="student-header">
 							{{ student.name }} {{ student.lastname }}
