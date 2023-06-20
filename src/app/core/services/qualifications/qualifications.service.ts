@@ -34,8 +34,7 @@ import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { StudentToTask } from '../../interfaces/student-to-task.interface';
 import { StudentToExam } from '../../interfaces/student-to-exam.interface';
-
-type ControlType = 'Students' | 'Tasks' | 'Exams';
+import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -49,6 +48,7 @@ export class QualificationsService {
 	private tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
 	>([null, null]);
+	public selectedSubjectIdFilter = signal(0);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
@@ -84,7 +84,11 @@ export class QualificationsService {
 					result[1] as Exam[],
 					result[2] as Student[]
 				);
-				this.cleanAllShow();
+				this.selectedSubjectIdFilter()
+					? this.filterTasksAndExamsBySubject(
+							this.selectedSubjectIdFilter()
+					  )
+					: this.cleanAllShow();
 				this.spinnerProgressOn.set(false);
 			}),
 			catchError(error => {
@@ -108,7 +112,7 @@ export class QualificationsService {
 
 	public getTasksExamsAndStudents(
 		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
-		studentsQueryParams: StudentsParams | null
+		studentsQueryParams: StudentsParams | null = null
 	) {
 		this.tasksExamsAndStudentsSubject.next([
 			tasksAndExamsQueryParams,

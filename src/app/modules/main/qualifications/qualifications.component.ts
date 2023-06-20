@@ -55,6 +55,8 @@ import { UpdateWorkElements } from './interfaces/update-work.interface';
 import { WorkInfo } from './interfaces/work-info.interface';
 import { ViewService } from '../../../core/services/view/view.service';
 import { DateRange } from './interfaces/range-date.interface';
+import { ControlType } from './components/create-dialog/interfaces/control-type.interface';
+import { ScreenType } from '../../../core/enums/screen-type.enum';
 
 @Component({
 	selector: 'app-qualifications',
@@ -154,7 +156,7 @@ export class QualificationsComponent implements OnInit {
 			?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
-				if (this.screenType() === 'MOBILE')
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 			});
 	}
@@ -169,9 +171,10 @@ export class QualificationsComponent implements OnInit {
 				this.studentsQueryParams = queryParam;
 				this.taskAndExamsQueryParams = queryParam;
 
-				if (this.screenType() === 'MOBILE')
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 
+				this.qs.selectedSubjectIdFilter.set(0);
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
 					this.studentsQueryParams
@@ -195,14 +198,24 @@ export class QualificationsComponent implements OnInit {
 					startDate: start?.getTime(),
 					endDate: end?.getTime(),
 				};
-				if (this.screenType() === 'MOBILE')
+
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
+
 				this.disableRangeClearButton(false);
-				this.qs.getTasksExamsAndStudents(
-					this.taskAndExamsQueryParams,
-					null
-				);
+				this.getNewTasksAndExams();
 			});
+	}
+
+	private getNewTasksAndExams(
+		queryParams: TasksAndExamsQueryParams | null = null
+	) {
+		const subjectId = this.filtersForm.get('subject')?.value;
+
+		this.qs.selectedSubjectIdFilter.set(subjectId as number); //necesito setear el filtro por materia en el servicio
+		this.qs.getTasksExamsAndStudents(
+			queryParams ? queryParams : this.taskAndExamsQueryParams
+		);
 	}
 
 	private listenStudentsFilterChanges() {
@@ -211,9 +224,6 @@ export class QualificationsComponent implements OnInit {
 				this.filtersForm.get('student')?.valueChanges.pipe(
 					debounceTime(500),
 					distinctUntilChanged(),
-					filter(() =>
-						this.screenType() === 'MOBILE' ? false : true
-					),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
 						this.cleanSelectedAutocompleteOption(
@@ -234,9 +244,6 @@ export class QualificationsComponent implements OnInit {
 				this.filtersForm.get('task')?.valueChanges.pipe(
 					debounceTime(500),
 					distinctUntilChanged(),
-					filter(() =>
-						this.screenType() === 'MOBILE' ? false : true
-					),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
 						this.cleanSelectedAutocompleteOption(
@@ -258,9 +265,6 @@ export class QualificationsComponent implements OnInit {
 				this.filtersForm.get('exam')?.valueChanges.pipe(
 					debounceTime(500),
 					distinctUntilChanged(),
-					filter(() =>
-						this.screenType() === 'MOBILE' ? false : true
-					),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
 						this.cleanSelectedAutocompleteOption(
@@ -285,6 +289,7 @@ export class QualificationsComponent implements OnInit {
 		return true;
 	}
 
+	// esto sirve para que cuando se limpie el autocomplete también se limpie cualquier opción ya seleccionada previamente
 	private cleanSelectedAutocompleteOption(
 		value: string,
 		autocomplete: MatAutocomplete | undefined,
@@ -315,7 +320,7 @@ export class QualificationsComponent implements OnInit {
 	public resetDateRange() {
 		this.filtersForm.get('dateRange')?.reset();
 		this.cleanDateQueryParams();
-		this.qs.getTasksExamsAndStudents(this.taskAndExamsQueryParams, null);
+		this.getNewTasksAndExams();
 		this.disableRangeClearButton();
 		this.toggleFiltersMenu(false);
 	}
@@ -356,7 +361,9 @@ export class QualificationsComponent implements OnInit {
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
+
 		if (this.deselectedOption === option.option.value) return;
 
 		this.qs.showSelectedStudent(option);
@@ -366,7 +373,9 @@ export class QualificationsComponent implements OnInit {
 		option: MatAutocompleteSelectedEvent,
 		type = Work.TASK
 	) {
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
+
 		if (this.deselectedOption === option.option.value) return;
 
 		this.qs.showSelectedTaskOrExam(option, type);
@@ -383,7 +392,7 @@ export class QualificationsComponent implements OnInit {
 			.subscribe(queryParams => {
 				if (queryParams?.courseId) {
 					this.changeToCorrectTab();
-					this.qs.getTasksExamsAndStudents(queryParams, null);
+					this.getNewTasksAndExams(queryParams);
 				}
 			});
 	}
@@ -589,5 +598,21 @@ export class QualificationsComponent implements OnInit {
 
 	public toggleFiltersMenu(open: null | boolean = null) {
 		this.openFiltersMenu.set(open ?? !this.openFiltersMenu());
+	}
+
+	public clearControl(control: ControlType) {
+		switch (control) {
+			case 'Tasks':
+				this.filtersForm.get('task')?.setValue('');
+				break;
+			case 'Students':
+				this.filtersForm.get('student')?.setValue('');
+				break;
+			default:
+				this.filtersForm.get('exam')?.setValue('');
+				break;
+		}
+
+		this.toggleFiltersMenu(false);
 	}
 }
