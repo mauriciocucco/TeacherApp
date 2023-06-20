@@ -1,22 +1,25 @@
 import { Component, Inject, signal, inject, DestroyRef } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ButtonState } from '../enums/button-state.enum';
-import { InfoPayload } from './interfaces/info-payload.interface';
-import { TasksService } from '../../../../core/services/tasks/tasks.service';
+import { ButtonState } from '../../enums/button-state.enum';
+import { InfoPayload } from '../../components/info-dialog/interfaces/info-payload.interface';
+import { TasksService } from '../../../../../core/services/tasks/tasks.service';
 import { Observable, of } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
-import { UpdateTask } from '../../../../core/interfaces/update-task.interface';
-import { UpdateExam } from '../../../../core/interfaces/update-exam.interface';
-import { Work } from '../../../../core/enums/work.enum';
-import { ExamsService } from '../../../../core/services/exams/exams.service';
-import { Task } from '../../../../core/interfaces/task.interface';
-import { Exam } from '../../../../core/interfaces/exam.interface';
+import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
+import { UpdateTask } from '../../../../../core/interfaces/update-task.interface';
+import { UpdateExam } from '../../../../../core/interfaces/update-exam.interface';
+import { Work } from '../../../../../core/enums/work.enum';
+import { ExamsService } from '../../../../../core/services/exams/exams.service';
+import { Task } from '../../../../../core/interfaces/task.interface';
+import { Exam } from '../../../../../core/interfaces/exam.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SharedModule } from '../../../../../shared/shared.module';
 
 @Component({
 	selector: 'app-info-dialog',
+	standalone: true,
+	imports: [SharedModule],
 	templateUrl: './info-dialog.component.html',
 	styleUrls: ['./info-dialog.component.scss'],
 })
@@ -63,7 +66,6 @@ export class InfoDialogComponent {
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.editButtonMessage.set(this.buttonStateEnum.SAVING);
-
 		this.selectedWorkType() === Work.TASK
 			? (update$ = this.ts.updateTask(updatedWork as UpdateTask, workId))
 			: (update$ = this.es.updateExam(updatedWork as UpdateExam, workId));

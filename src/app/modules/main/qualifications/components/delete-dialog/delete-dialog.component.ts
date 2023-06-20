@@ -1,15 +1,15 @@
 import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
-import { SharedModule } from '../../../../shared/shared.module';
+import { SharedModule } from '../../../../../shared/shared.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { TasksService } from '../../../../core/services/tasks/tasks.service';
-import { ExamsService } from '../../../../core/services/exams/exams.service';
-import { DeletePayload } from './interfaces/delete-payload.interface';
-import { ButtonState } from '../enums/button-state.enum';
-import { Work } from '../../../../core/enums/work.enum';
+import { TasksService } from '../../../../../core/services/tasks/tasks.service';
+import { ExamsService } from '../../../../../core/services/exams/exams.service';
+import { DeletePayload } from '../../components/delete-dialog/interfaces/delete-payload.interface';
+import { ButtonState } from '../../enums/button-state.enum';
+import { Work } from '../../../../../core/enums/work.enum';
 import { Observable, of } from 'rxjs';
-import { Task } from '../../../../core/interfaces/task.interface';
-import { Exam } from '../../../../core/interfaces/exam.interface';
-import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
+import { Task } from '../../../../../core/interfaces/task.interface';
+import { Exam } from '../../../../../core/interfaces/exam.interface';
+import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -37,7 +37,7 @@ export class DeleteDialogComponent {
 	}
 
 	public closeDialog(): void {
-		this.dialogRef.close(this.selectedWorkType());
+		this.dialogRef.close();
 	}
 
 	public sendForm() {

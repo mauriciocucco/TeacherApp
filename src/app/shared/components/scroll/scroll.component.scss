@@ -1,0 +1,23 @@
+@import '../../../../variables.scss';
+
+:host {
+	position: fixed;
+	float: right;
+	cursor: pointer;
+	right: 1.4rem;
+	bottom: 5.6rem;
+	z-index: 100;
+	opacity: 0.75;
+}
+
+:host:hover {
+	opacity: 1;
+}
+
+.scroll-icon {
+	@include flex-center;
+}
+
+.mat-mdc-mini-fab.mat-primary {
+	background-color: rgba(18, 18, 18, 0.8);
+}

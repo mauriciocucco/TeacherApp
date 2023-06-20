@@ -14,7 +14,17 @@ import {
 	signal,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Observable, filter, of } from 'rxjs';
+import {
+	Observable,
+	debounce,
+	distinctUntilChanged,
+	filter,
+	fromEvent,
+	map,
+	of,
+	tap,
+	timer,
+} from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
 import { Exam } from '../../../core/interfaces/exam.interface';
@@ -24,27 +34,32 @@ import { Course } from '../../../core/interfaces/course.interface';
 import { TasksAndExamsQueryParams } from './interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
 import { Work } from '../../../core/enums/work.enum';
-import { MatMiniFabButton } from '@angular/material/button';
-import { AllWord } from '../../../core/enums/all-word.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import {
+	MatAutocomplete,
+	MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
-import { CreateDialogComponent } from './create-dialog/create-dialog.component';
+import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
 import { MatSelect } from '@angular/material/select';
 import { TasksService } from 'src/app/core/services/tasks/tasks.service';
-import { InfoDialogComponent } from './info-dialog/info-dialog.component';
+import { InfoDialogComponent } from './components/info-dialog/info-dialog.component';
 import { UpdateTask } from '../../../core/interfaces/update-task.interface';
 import { UpdateExam } from '../../../core/interfaces/update-exam.interface';
 import { ExamsService } from '../../../core/services/exams/exams.service';
 import { ToggleEditElements } from './interfaces/toggle-edit.interface';
 import { StudentToTask } from '../../../core/interfaces/student-to-task.interface';
 import { StudentToExam } from '../../../core/interfaces/student-to-exam.interface';
-import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
+import { DeleteDialogComponent } from './components/delete-dialog/delete-dialog.component';
 import { UpdateWorkElements } from './interfaces/update-work.interface';
 import { WorkInfo } from './interfaces/work-info.interface';
 import { ViewService } from '../../../core/services/view/view.service';
+import { DateRange } from './interfaces/range-date.interface';
+import { ControlType } from './components/create-dialog/interfaces/control-type.interface';
+import { ScreenType } from '../../../core/enums/screen-type.enum';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
 
 @Component({
 	selector: 'app-qualifications',
@@ -58,12 +73,6 @@ export class QualificationsComponent implements OnInit {
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public filteredTasksForAutocomplete: WritableSignal<Task[]> =
-		this.qs.filteredTasksForAutocomplete;
-	public filteredExamsForAutocomplete: WritableSignal<Exam[]> =
-		this.qs.filteredExamsForAutocomplete;
-	public filteredStudentsForAutocomplete: WritableSignal<Student[]> =
-		this.qs.filteredStudentsForAutocomplete;
 	public tasksExamsAndStudents$ = this.qs.tasksExamsAndStudents$;
 	public filtersForm = this.fb.nonNullable.group({
 		student: [{ value: '', disabled: true }],
@@ -76,7 +85,6 @@ export class QualificationsComponent implements OnInit {
 			end: { value: null, disabled: true },
 		}),
 	});
-	public allWordEnum = AllWord;
 	public WorkEnum = Work;
 	public spinnerProgressOn = this.qs.spinnerProgressOn;
 	public taskMatchSomeFilter = computed(() =>
@@ -90,6 +98,7 @@ export class QualificationsComponent implements OnInit {
 	public selectedTab = signal(0);
 	public screenType = this.vs.screenType;
 	public openFiltersMenu = signal(false);
+	public ScreenTypeEnum = ScreenType;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private studentsQueryParams: StudentsParams | null = null;
@@ -106,10 +115,21 @@ export class QualificationsComponent implements OnInit {
 	private selectedWorkInfo: WritableSignal<WorkInfo> = signal(
 		this.defaultWorkInfo
 	);
+	private deselectedOption = '*';
 	private destroyRef = inject(DestroyRef);
-	@ViewChildren('tabChildren') tabChildren!: QueryList<MatTabGroup>;
-	@ViewChild('clearRangeButton', { static: false })
-	clearDateRangeButton!: MatMiniFabButton;
+	private readonly document = inject(DOCUMENT);
+	private readonly viewport = inject(ViewportScroller);
+	public readonly showScroll$: Observable<boolean> = fromEvent(
+		this.document,
+		'scroll'
+	).pipe(map(() => this.viewport.getScrollPosition()?.[1] > 0));
+	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
+	@ViewChild('studentsAutocomplete', { static: false })
+	studentsAutocomplete?: MatAutocomplete;
+	@ViewChild('tasksAutocomplete', { static: false })
+	tasksAutocomplete?: MatAutocomplete;
+	@ViewChild('examsAutocomplete', { static: false })
+	examsAutocomplete?: MatAutocomplete;
 	@HostListener('window:resize', ['$event'])
 	onResize(): void {
 		this.vs.setScreenType();
@@ -144,7 +164,7 @@ export class QualificationsComponent implements OnInit {
 			?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
-				if (this.screenType() === 'MOBILE')
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 			});
 	}
@@ -158,17 +178,16 @@ export class QualificationsComponent implements OnInit {
 
 				this.studentsQueryParams = queryParam;
 				this.taskAndExamsQueryParams = queryParam;
-				if (
-					this.screenType() === 'MOBILE' &&
-					this.students() &&
-					this.students()!.length > 0
-				)
+
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
-				this.resetForm();
+
+				this.qs.selectedSubjectIdFilter.set(0);
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
 					this.studentsQueryParams
 				);
+				this.resetForm();
 			});
 	}
 
@@ -176,74 +195,135 @@ export class QualificationsComponent implements OnInit {
 		this.filtersForm
 			.get('dateRange')
 			?.valueChanges.pipe(
-				filter((value: any) => value.start && value.end),
+				filter<DateRange>(({ start, end }) =>
+					start && end ? true : false
+				),
 				takeUntilDestroyed(this.destroyRef)
 			)
-			.subscribe((value: { start: Date; end: Date }) => {
+			.subscribe(({ start, end }) => {
 				this.taskAndExamsQueryParams = {
 					...this.taskAndExamsQueryParams,
-					startDate: value.start.getTime(),
-					endDate: value.end.getTime(),
+					startDate: start?.getTime(),
+					endDate: end?.getTime(),
 				};
-				if (this.screenType() === 'MOBILE')
+
+				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
-				this.disableRangeClearButton(false);
-				this.qs.getTasksExamsAndStudents(
-					this.taskAndExamsQueryParams,
-					null
-				);
+
+				this.getNewTasksAndExams();
 			});
+	}
+
+	private getNewTasksAndExams(
+		queryParams: TasksAndExamsQueryParams | null = null
+	) {
+		const subjectId = this.filtersForm.get('subject')?.value;
+
+		this.qs.selectedSubjectIdFilter.set(subjectId as number); //necesito setear el filtro por materia en el servicio
+		this.qs.getTasksExamsAndStudents(
+			queryParams ? queryParams : this.taskAndExamsQueryParams
+		);
 	}
 
 	private listenStudentsFilterChanges() {
 		this.qs
-			.processValueChanges(this.filtersForm.get('student')?.valueChanges)
-			?.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(studentSelected =>
-				this.filteredStudentsForAutocomplete.set(
-					studentSelected as Student[]
+			.processValueChanges(
+				this.filtersForm.get('student')?.valueChanges.pipe(
+					debounce(value => (value ? timer(500) : timer(0))),
+					distinctUntilChanged(),
+					filter(value => this.filterByDeselectedOption(value)),
+					tap(value =>
+						this.cleanSelectedAutocompleteOption(
+							value,
+							this.studentsAutocomplete,
+							'student'
+						)
+					)
 				)
-			);
+			)
+			?.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe();
 	}
 
 	private listenTasksFilterChanges() {
 		this.qs
 			.processValueChanges(
-				this.filtersForm.get('task')?.valueChanges,
+				this.filtersForm.get('task')?.valueChanges.pipe(
+					debounce(value => (value ? timer(500) : timer(0))),
+					distinctUntilChanged(),
+					filter(value => this.filterByDeselectedOption(value)),
+					tap(value =>
+						this.cleanSelectedAutocompleteOption(
+							value,
+							this.tasksAutocomplete,
+							'task'
+						)
+					)
+				),
 				'Tasks'
 			)
 			?.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(taskSelected =>
-				this.filteredTasksForAutocomplete.set(taskSelected as Task[])
-			);
+			.subscribe();
 	}
 
 	private listenExamsFilterChanges() {
 		this.qs
 			.processValueChanges(
-				this.filtersForm.get('exam')?.valueChanges,
+				this.filtersForm.get('exam')?.valueChanges.pipe(
+					debounce(value => (value ? timer(500) : timer(0))),
+					distinctUntilChanged(),
+					filter(value => this.filterByDeselectedOption(value)),
+					tap(value =>
+						this.cleanSelectedAutocompleteOption(
+							value,
+							this.examsAutocomplete,
+							'exam'
+						)
+					)
+				),
 				'Exams'
 			)
 			?.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(examSelected =>
-				this.filteredExamsForAutocomplete.set(examSelected as Exam[])
-			);
+			.subscribe();
+	}
+
+	private filterByDeselectedOption(value: string): boolean {
+		if (this.deselectedOption === value) {
+			this.deselectedOption = '*';
+			return false;
+		}
+
+		return true;
+	}
+
+	// esto sirve para que cuando se limpie el autocomplete también se limpie cualquier opción ya seleccionada previamente
+	private cleanSelectedAutocompleteOption(
+		value: string,
+		autocomplete: MatAutocomplete | undefined,
+		controlName: string
+	) {
+		if (!value)
+			autocomplete?.options.forEach(option => {
+				if (option.selected) {
+					this.deselectedOption = option.value;
+					option.deselect();
+					this.filtersForm.get(controlName)?.patchValue('', {
+						emitEvent: false,
+					});
+				}
+			});
 	}
 
 	private enableControls() {
 		this.filtersForm.enable({ emitEvent: false });
 	}
 
-	private disableRangeClearButton(disable = true) {
-		this.clearDateRangeButton.disabled = disable;
-	}
-
 	public resetDateRange() {
 		this.filtersForm.get('dateRange')?.reset();
 		this.cleanDateQueryParams();
-		this.qs.getTasksExamsAndStudents(this.taskAndExamsQueryParams, null);
-		this.disableRangeClearButton();
-		this.toggleFiltersMenu(false);
+		this.getNewTasksAndExams();
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
 	}
 
 	private cleanDateQueryParams() {
@@ -269,15 +349,24 @@ export class QualificationsComponent implements OnInit {
 	}
 
 	private resetForm() {
-		this.filtersForm.get('subject')?.patchValue(0, { emitEvent: false });
-		this.filtersForm.get('student')?.reset();
-		this.filtersForm.get('task')?.reset();
-		this.filtersForm.get('exam')?.reset();
-		this.filtersForm.get('dateRange')?.reset();
+		this.filtersForm.reset(
+			{
+				subject: 0,
+				student: '',
+				task: '',
+				exam: '',
+				course: this.filtersForm.get('course')?.value,
+			},
+			{ emitEvent: false }
+		);
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
+
+		if (this.deselectedOption === option.option.value) return;
+
 		this.qs.showSelectedStudent(option);
 	}
 
@@ -285,7 +374,11 @@ export class QualificationsComponent implements OnInit {
 		option: MatAutocompleteSelectedEvent,
 		type = Work.TASK
 	) {
-		if (this.screenType() === 'MOBILE') this.toggleFiltersMenu(false);
+		if (this.screenType() === ScreenType.MOBILE)
+			this.toggleFiltersMenu(false);
+
+		if (this.deselectedOption === option.option.value) return;
+
 		this.qs.showSelectedTaskOrExam(option, type);
 	}
 
@@ -300,15 +393,14 @@ export class QualificationsComponent implements OnInit {
 			.subscribe(queryParams => {
 				if (queryParams?.courseId) {
 					this.changeToCorrectTab();
-					this.qs.getTasksExamsAndStudents(queryParams, null);
+					this.getNewTasksAndExams(queryParams);
 				}
 			});
 	}
 
 	public openInfoDialog(work: Task | Exam, workType = Work.TASK) {
 		this.selectedWorkType.set(workType);
-
-		const dialogRef = this.dialog.open(InfoDialogComponent, {
+		this.dialog.open(InfoDialogComponent, {
 			data: {
 				name: work.name,
 				date: work.date,
@@ -317,28 +409,17 @@ export class QualificationsComponent implements OnInit {
 				workSubject: work.subject,
 			},
 		});
-
-		dialogRef
-			.afterClosed()
-			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe();
 	}
 
 	public openDeleteDialog(work: Task | Exam, workType = Work.TASK) {
 		this.selectedWorkType.set(workType);
-
-		const dialogRef = this.dialog.open(DeleteDialogComponent, {
+		this.dialog.open(DeleteDialogComponent, {
 			data: {
 				courseId: this.filtersForm.get('course')?.value,
 				workId: work.id,
 				workName: work.name,
 			},
 		});
-
-		dialogRef
-			.afterClosed()
-			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe();
 	}
 
 	private changeToCorrectTab() {
@@ -400,7 +481,6 @@ export class QualificationsComponent implements OnInit {
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.loadingCardContent();
-
 		updateWorkInfo.workType === Work.TASK
 			? (update$ = this.ts.updateTask(
 					updatedWork as UpdateTask,
@@ -414,17 +494,20 @@ export class QualificationsComponent implements OnInit {
 		update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.qs.updateWorkCardInfo(updateWorkInfo.workId, updatedWork);
-				this.loadingCardContent(false);
-				this.changeEditUIStatus(false);
+				this.resetUI();
 				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 			},
 			error: () => {
 				this.returnToPreviousState();
-				this.loadingCardContent(false);
-				this.changeEditUIStatus(false);
+				this.resetUI();
 				this.qs.handleHttpResponseMessage();
 			},
 		});
+	}
+
+	private resetUI() {
+		this.loadingCardContent(false);
+		this.changeEditUIStatus(false);
 	}
 
 	private setEditSignals(
@@ -516,5 +599,25 @@ export class QualificationsComponent implements OnInit {
 
 	public toggleFiltersMenu(open: null | boolean = null) {
 		this.openFiltersMenu.set(open ?? !this.openFiltersMenu());
+	}
+
+	public clearControl(control: ControlType) {
+		switch (control) {
+			case 'Tasks':
+				this.filtersForm.get('task')?.setValue('');
+				break;
+			case 'Students':
+				this.filtersForm.get('student')?.setValue('');
+				break;
+			default:
+				this.filtersForm.get('exam')?.setValue('');
+				break;
+		}
+
+		this.toggleFiltersMenu(false);
+	}
+
+	public onScrollToTop(): void {
+		this.viewport.scrollToPosition([0, 0]);
 	}
 }

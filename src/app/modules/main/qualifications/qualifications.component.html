@@ -2,10 +2,13 @@
 	<div id="filters" class="mobile-card-state">
 		<mat-card>
 			<mat-card-header>Filtros</mat-card-header>
-			<mat-card-content [ngClass]="{
-				'hide-menu-state': students(),
-				'open-menu-state': openFiltersMenu()
-			}">
+			<mat-card-content 
+				[ngClass]="{
+					'hide-menu-state': students(),
+					'open-menu-state': openFiltersMenu(),
+				}"
+				[ngStyle]="{'padding-bottom': 'unset'}"
+			>
 				<form [formGroup]="filtersForm">
 					<div id="content-container" [ngClass]="{'mobile-container': students()}">
 						<div class="first-row mobile-hide" [ngClass]="{'mobile-show': students()}">
@@ -42,7 +45,8 @@
 								>
 								{{ openFiltersMenu()? 'Ocultar filtros' : 'Mostrar más filtros'}}
 						    </button>
-							<mat-form-field class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
+							<div class="control-wrapper">
+								<mat-form-field class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-label>Alumnx</mat-label>
 								<input
 								    #studentsInput
@@ -54,87 +58,126 @@
 									formControlName="student" 
 								/>
 								<mat-autocomplete
+									#studentsAutocomplete
 									(optionSelected)="studentSelected($event)"
 									#auto="matAutocomplete"
 								>
-									<mat-option
-									*ngIf="students() ? students()!.length > 1 : false"
-										[value]="allWordEnum.INCLUSIVE"
-										>{{ allWordEnum.INCLUSIVE }}</mat-option
-									>
-									<mat-option
-										*ngFor="
-											let student of filteredStudentsForAutocomplete()
-										"
-										[value]="
+									<ng-container *ngFor="
+									let student of students()
+								    ">
+										<mat-option
+											*ngIf="student.show"
+											[value]="
 											student.name +
 											' ' +
 											student.lastname
 										">
-										{{ student.name }}
-										{{ student?.lastname }}
-									</mat-option>
+											{{ student.name }}
+											{{ student?.lastname }}
+										</mat-option>
+									</ng-container>
 								</mat-autocomplete>
-							</mat-form-field>
-							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-								<mat-label>Tarea</mat-label>
-								<input
-									type="text"
-									matInput
-									placeholder="Seleccione una tarea"
-									[matAutocomplete]="autoTask"
-									aria-label="Number"
-									formControlName="task" />
-								<mat-autocomplete
-									(optionSelected)="
-										taskOrExamSelected($event)
-									"
-									autoActiveFirstOption
-									#autoTask="matAutocomplete">
-									<mat-option [value]="allWordEnum.FEMALE">{{
-										allWordEnum.FEMALE
-									}}</mat-option>
-									<mat-option
-										*ngFor="
-											let task of filteredTasksForAutocomplete()
+								</mat-form-field>
+								<button
+									class="disappear"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('student')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('student')?.value
+									}"
+									mat-mini-fab
+									color="primary"
+									title="Limpiar estudiante seleccionado"
+									aria-label="Botón para limpiar autocompletar de estudiantes"
+									(click)="clearControl('Students')"
+								>
+									<mat-icon>clear</mat-icon>
+								</button>
+						    </div>
+							<div class="control-wrapper">
+								<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
+									<mat-label>Tarea</mat-label>
+									<input
+										type="text"
+										matInput
+										placeholder="Seleccione una tarea"
+										[matAutocomplete]="autoTask"
+										aria-label="Number"
+										formControlName="task" />
+									<mat-autocomplete
+										#tasksAutocomplete
+										(optionSelected)="
+											taskOrExamSelected($event)
 										"
-										[value]="task.name">
-										{{ task.name }} -
-										{{ task.date | shortDate }}
-									</mat-option>
-								</mat-autocomplete>
-							</mat-form-field>
-							<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-								<mat-label>Exámen</mat-label>
-								<input
-									type="text"
-									matInput
-									placeholder="Seleccione un exámen"
-									[matAutocomplete]="autoExam"
-									aria-label="Number"
-									formControlName="exam" />
-								<mat-autocomplete
-									(optionSelected)="
-										taskOrExamSelected(
-											$event,
-											WorkEnum.EXAM
-										)
-									"
-									autoActiveFirstOption
-									#autoExam="matAutocomplete">
-									<mat-option [value]="allWordEnum.MALE">{{
-										allWordEnum.MALE
-									}}</mat-option>
-									<mat-option
-										*ngFor="
-											let exam of filteredExamsForAutocomplete()
+										#autoTask="matAutocomplete">
+										<ng-container *ngFor="let task of tasks()">
+											<mat-option
+											*ngIf="task.show"
+											[value]="task.name">
+												{{ task.name }} -
+												{{ task.date | shortDate }}
+											</mat-option>
+										</ng-container>
+									</mat-autocomplete>
+								</mat-form-field>
+								<button
+									class="disappear"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('task')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('task')?.value
+									}"
+									mat-mini-fab
+									color="primary"
+									title="Limpiar tarea seleccionada"
+									aria-label="Botón para limpiar autocompletar de tareas"
+									(click)="clearControl('Tasks')"
+								>
+									<mat-icon>clear</mat-icon>
+								</button>
+							</div>
+							<div class="control-wrapper">
+								<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
+									<mat-label>Exámen</mat-label>
+									<input
+										type="text"
+										matInput
+										placeholder="Seleccione un exámen"
+										[matAutocomplete]="autoExam"
+										aria-label="Number"
+										formControlName="exam" />
+									<mat-autocomplete
+										#examsAutocomplete
+										(optionSelected)="
+											taskOrExamSelected(
+												$event,
+												WorkEnum.EXAM
+											)
 										"
-										[value]="exam.name">
-										{{ exam.name }} -
-										{{ exam.date | shortDate }}
-									</mat-option>
-								</mat-autocomplete>
-							</mat-form-field>
+										#autoExam="matAutocomplete">
+										<ng-container *ngFor="let exam of exams()">
+											<mat-option
+											*ngIf="exam.show"
+											[value]="exam.name">
+												{{ exam.name }} -
+												{{ exam.date | shortDate }}
+											</mat-option>
+										</ng-container>
+									</mat-autocomplete>
+								</mat-form-field>
+								<button
+									class="disappear"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && filtersForm.get('exam')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('exam')?.value
+									}"
+									mat-mini-fab
+									color="primary"
+									title="Limpiar exámen seleccionado"
+									aria-label="Botón para limpiar autocompletar de exámenes"
+									(click)="clearControl('Exams')"
+								>
+									<mat-icon>clear</mat-icon>
+								</button>
+							</div>
 							<div class="range-date-wrapper mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
 								<mat-form-field id="date-filter-form-field" appearance="fill">
 									<mat-label>Ingrese un período</mat-label>
@@ -158,8 +201,15 @@
 										#picker></mat-date-range-picker>
 								</mat-form-field>
 								<button
-									#clearRangeButton
-									disabled
+									class="disappear"
+									[ngClass]="{
+										'mobile-show': openFiltersMenu() && 
+													   filtersForm.get('dateRange')?.get('start')?.value &&
+													   filtersForm.get('dateRange')?.get('end')?.value,
+										'show': screenType() === ScreenTypeEnum.DESKTOP && 
+												filtersForm.get('dateRange')?.get('start')?.value &&
+												filtersForm.get('dateRange')?.get('end')?.value			   
+									}"
 									mat-mini-fab
 									color="primary"
 									title="Limpiar período"
@@ -175,6 +225,12 @@
 		</mat-card>
 	</div>
 
+	<app-alphabet 
+		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
+		[ngClass]="{'disappear': filtersForm.get('student')?.value}"
+	>
+	</app-alphabet>
+
 	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista y tienen que haber alumnxs -->
 	<div
 		id="students-cards-container"
@@ -183,10 +239,11 @@
 				students() &&
 				students()!.length > 0 &&
 				!spinnerProgressOn();
-			else selectCourseWarning
-	">
+			else selectCourseWarning"
+		[ngClass]="{'mobile-margin-top': filtersForm.get('student')?.value}"
+	>
 		<ng-container *ngFor="let student of students()">
-			<mat-card *ngIf="student.show">
+			<mat-card *ngIf="student.show" id="{{ student.lastname.charAt(0).toUpperCase()}}">
 					<mat-card-header
 						><h2 class="student-header">
 							{{ student.name }} {{ student.lastname }}
@@ -662,4 +719,6 @@
 		(click)="openCreateDialog()">
 		<mat-icon>add</mat-icon>
 	</button>
+
+	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>

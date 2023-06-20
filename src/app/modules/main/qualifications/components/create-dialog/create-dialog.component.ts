@@ -1,17 +1,17 @@
 import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
-import { QualificationsService } from '../../../../core/services/qualifications/qualifications.service';
-import { SharedModule } from '../../../../shared/shared.module';
-import { CreatePayload } from './interfaces/create-payload.interface';
-import { Work } from '../../../../core/enums/work.enum';
-import { TasksService } from '../../../../core/services/tasks/tasks.service';
-import { ExamsService } from '../../../../core/services/exams/exams.service';
+import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
+import { SharedModule } from '../../../../../shared/shared.module';
+import { CreatePayload } from '../../components/create-dialog/interfaces/create-payload.interface';
+import { Work } from '../../../../../core/enums/work.enum';
+import { TasksService } from '../../../../../core/services/tasks/tasks.service';
+import { ExamsService } from '../../../../../core/services/exams/exams.service';
 import { Observable, of } from 'rxjs';
-import { CreateTask } from '../../../../core/interfaces/create-task.interface';
-import { CreateExam } from '../../../../core/interfaces/create-exam.interface';
-import { ButtonState } from '../enums/button-state.enum';
-import { CreateForm } from './interfaces/create-form.interface';
+import { CreateTask } from '../../../../../core/interfaces/create-task.interface';
+import { CreateExam } from '../../../../../core/interfaces/create-exam.interface';
+import { ButtonState } from '../../enums/button-state.enum';
+import { CreateForm } from '../../components/create-dialog/interfaces/create-form.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -50,7 +50,7 @@ export class CreateDialogComponent {
 
 	public closeDialog(reloadData = false): void {
 		const queryParams = { courseId: this.payload.course };
-		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
+
 		reloadData ? this.dialogRef.close(queryParams) : this.dialogRef.close();
 	}
 
@@ -60,7 +60,7 @@ export class CreateDialogComponent {
 			of(undefined);
 
 		this.saveButtonMessage.set(ButtonState.SAVING);
-
+		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
 		this.createForm.get('type')?.value === Work.TASK
 			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
 			: (create$ = this.es.createExam(cleanedForm as CreateExam));

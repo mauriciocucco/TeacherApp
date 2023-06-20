@@ -25,7 +25,6 @@ import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/i
 import { StudentsParams } from '../../../modules/main/qualifications/interfaces/students-params.interface';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { Work } from '../../enums/work.enum';
-import { AllWord } from '../../enums/all-word.enum';
 import { TasksService } from '../tasks/tasks.service';
 import { ExamsService } from '../exams/exams.service';
 import { StudentsService } from '../students/students.service';
@@ -33,8 +32,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { WorkBase } from '../../interfaces/work-base.interface';
 import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
-
-type ControlType = 'Students' | 'Tasks' | 'Exams';
+import { StudentToTask } from '../../interfaces/student-to-task.interface';
+import { StudentToExam } from '../../interfaces/student-to-exam.interface';
+import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -48,6 +48,7 @@ export class QualificationsService {
 	private tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
 	>([null, null]);
+	public selectedSubjectIdFilter = signal(0);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
@@ -55,18 +56,12 @@ export class QualificationsService {
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
-	public filteredTasksForAutocomplete: WritableSignal<Task[]> = signal([]);
-	public filteredExamsForAutocomplete: WritableSignal<Exam[]> = signal([]);
-	public filteredStudentsForAutocomplete: WritableSignal<Student[]> = signal(
-		[]
-	);
 	public spinnerProgressOn = signal(false);
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(
 			filter(
-				([tasksAnExamsQueryParams, studentsQueryParams]) =>
-					tasksAnExamsQueryParams !== null
+				([tasksAnExamsQueryParams]) => tasksAnExamsQueryParams !== null
 			),
 			tap(() => {
 				this.spinnerProgressOn.set(true);
@@ -89,7 +84,11 @@ export class QualificationsService {
 					result[1] as Exam[],
 					result[2] as Student[]
 				);
-				this.cleanAllShow();
+				this.selectedSubjectIdFilter()
+					? this.filterTasksAndExamsBySubject(
+							this.selectedSubjectIdFilter()
+					  )
+					: this.cleanAllShow();
 				this.spinnerProgressOn.set(false);
 			}),
 			catchError(error => {
@@ -113,7 +112,7 @@ export class QualificationsService {
 
 	public getTasksExamsAndStudents(
 		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
-		studentsQueryParams: StudentsParams | null
+		studentsQueryParams: StudentsParams | null = null
 	) {
 		this.tasksExamsAndStudentsSubject.next([
 			tasksAndExamsQueryParams,
@@ -127,11 +126,8 @@ export class QualificationsService {
 		students: Student[]
 	) {
 		this.tasks.set(tasks);
-		this.filteredTasksForAutocomplete.set(tasks);
 		this.exams.set(exams);
-		this.filteredExamsForAutocomplete.set(exams);
 		this.students.set(students);
-		this.filteredStudentsForAutocomplete.set(students);
 	}
 
 	public processValueChanges(
@@ -147,33 +143,41 @@ export class QualificationsService {
 	private filterValues(
 		value: string | null,
 		controlType: ControlType = 'Students'
-	): Student[] | Task[] | Exam[] {
-		let selectedArray: Student[] | Task[] | Exam[] =
-			this.students() as Student[];
+	): void {
+		const valueToFilter = value?.toLowerCase();
+		let signalToFilter: WritableSignal<Student[] | Task[] | Exam[]> = this
+			.students as WritableSignal<Student[]>;
 
-		if (controlType === 'Tasks') selectedArray = this.tasks();
-		if (controlType === 'Exams') selectedArray = this.exams();
+		if (controlType === 'Tasks') signalToFilter = this.tasks;
+		if (controlType === 'Exams') signalToFilter = this.exams;
 
-		if (!value) return selectedArray;
+		if (!value) return this.cleanShow(signalToFilter);
 
-		return this.processAutocompleteOutput(
-			value.toLowerCase(),
-			selectedArray
-		);
+		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
 
 	private processAutocompleteOutput(
-		filterValue: string,
-		arrayToFilter: any[]
+		valueToFilter: string,
+		signalToFilter: WritableSignal<Student[] | Task[] | Exam[]>
 	) {
-		return arrayToFilter.filter((element: Student | Task | Exam) => {
-			if (this.isStudentElement(element)) {
-				return `${element.name} ${element.lastname}`
-					.toLowerCase()
-					.includes(filterValue);
-			}
-
-			return element.name.toLowerCase().includes(filterValue);
+		signalToFilter.mutate(elements => {
+			elements.forEach(element => {
+				if (this.isStudentElement(element as Task | Exam | Student)) {
+					`${(element as Student).name} ${
+						(element as Student).lastname
+					}`
+						.toLowerCase()
+						.includes(valueToFilter)
+						? (element.show = true)
+						: (element.show = false);
+				} else {
+					(element as Task | Exam).name
+						.toLowerCase()
+						.includes(valueToFilter)
+						? (element.show = true)
+						: (element.show = false);
+				}
+			});
 		});
 	}
 
@@ -186,19 +190,21 @@ export class QualificationsService {
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
 		const value = option.option.value;
+		const students = this.students() ?? [];
 
 		this.cleanShow(this.students as WritableSignal<Student[]>);
 
-		if (value === AllWord.INCLUSIVE) return;
-
-		const studentSelected = this.students()!.find(
+		const studentSelected = students.find(
 			student => `${student.name} ${student.lastname}` === value
 		);
 
 		this.students.mutate(students => {
-			students!.forEach(student => {
-				if (student.id !== studentSelected?.id) student.show = false;
-			});
+			students
+				? students.forEach(student => {
+						if (student.id !== studentSelected?.id)
+							student.show = false;
+				  })
+				: null;
 		});
 	}
 
@@ -213,9 +219,6 @@ export class QualificationsService {
 		if (type === Work.EXAM) selectedSignal = this.exams;
 
 		this.cleanShow(selectedSignal);
-
-		if (valueSelected === AllWord.FEMALE || valueSelected === AllWord.MALE)
-			return;
 
 		const selectedElement = (selectedSignal() as WorkBase[]).find(
 			element => element.name === valueSelected
@@ -273,17 +276,11 @@ export class QualificationsService {
 			this.tasks.mutate(tasks =>
 				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
 			);
-			this.filteredTasksForAutocomplete.mutate(tasks =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			);
 
 			return;
 		}
 
 		this.exams.mutate(exams =>
-			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-		);
-		this.filteredExamsForAutocomplete.mutate(exams =>
 			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
 		);
 	}
@@ -321,9 +318,8 @@ export class QualificationsService {
 				...(works[selectedWorkIndex] as Task).studentToTask,
 			];
 
-			studentToTaskArray[relationIndex] = (
-				updatedWork as UpdateTask
-			).studentToTask!;
+			studentToTaskArray[relationIndex] = (updatedWork as UpdateTask)
+				.studentToTask as StudentToTask;
 
 			(works[selectedWorkIndex] as Task).studentToTask =
 				studentToTaskArray;
@@ -339,9 +335,8 @@ export class QualificationsService {
 				...(works[selectedWorkIndex] as Exam).studentToExam,
 			];
 
-			studentToExamArray[relationIndex] = (
-				updatedWork as UpdateExam
-			).studentToExam!;
+			studentToExamArray[relationIndex] = (updatedWork as UpdateExam)
+				.studentToExam as StudentToExam;
 
 			(works[selectedWorkIndex] as Exam).studentToExam =
 				studentToExamArray;
