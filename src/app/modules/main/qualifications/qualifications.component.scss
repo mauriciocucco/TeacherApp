@@ -106,16 +106,14 @@
 	button {
 		bottom: 1rem;
 		position: relative;
+		mat-icon {
+			font-size: 2rem;
+			height: 2rem;
+			width: 2rem;
+		}
 	}
 	@include mq-mobile {
 		gap: 0.5rem;
-		button {
-			mat-icon {
-				font-size: 2rem;
-				height: 2rem;
-				width: 2rem;
-			}
-		}
 	}
 }
 

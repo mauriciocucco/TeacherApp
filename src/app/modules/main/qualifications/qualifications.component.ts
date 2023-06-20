@@ -16,11 +16,12 @@ import {
 import { FormBuilder } from '@angular/forms';
 import {
 	Observable,
-	debounceTime,
+	debounce,
 	distinctUntilChanged,
 	filter,
 	of,
 	tap,
+	timer,
 } from 'rxjs';
 import { Task } from '../../../core/interfaces/task.interface';
 import { Marking } from '../../../core/interfaces/marking.interface';
@@ -31,7 +32,6 @@ import { Course } from '../../../core/interfaces/course.interface';
 import { TasksAndExamsQueryParams } from './interfaces/tasks-and-exams-query-params.interface';
 import { StudentsParams } from './interfaces/students-params.interface';
 import { Work } from '../../../core/enums/work.enum';
-import { MatMiniFabButton } from '@angular/material/button';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
@@ -220,7 +220,7 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('student')?.valueChanges.pipe(
-					debounceTime(500),
+					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
@@ -240,7 +240,7 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('task')?.valueChanges.pipe(
-					debounceTime(500),
+					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
@@ -261,7 +261,7 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('exam')?.valueChanges.pipe(
-					debounceTime(500),
+					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
 					tap(value =>
