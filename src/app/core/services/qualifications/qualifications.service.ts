@@ -251,9 +251,15 @@ export class QualificationsService {
 	}
 
 	private cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
-		signal.mutate(elements => {
-			elements.forEach(element => (element.show = true));
-		});
+		signal.update(
+			elements =>
+				elements.map(element => ({
+					...element,
+					show: true,
+				})) as Task[] | Exam[] | Student[]
+		);
+
+		if (this.spinnerProgressOn()) this.spinnerProgressOn.set(false);
 	}
 
 	private cleanAllShow() {

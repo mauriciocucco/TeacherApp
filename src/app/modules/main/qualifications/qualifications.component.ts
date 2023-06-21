@@ -122,7 +122,10 @@ export class QualificationsComponent implements OnInit {
 	public readonly showScroll$: Observable<boolean> = fromEvent(
 		this.document,
 		'scroll'
-	).pipe(map(() => this.viewport.getScrollPosition()?.[1] > 0));
+	).pipe(
+		map(() => this.viewport.getScrollPosition()?.[1] > 0), // chequea que el usuario scrolee hacia abajo
+		takeUntilDestroyed(this.destroyRef)
+	);
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;
@@ -229,6 +232,9 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('student')?.valueChanges.pipe(
+					tap(value => {
+						if (!value) this.qs.spinnerProgressOn.set(true); // luego se cierra en el cleanShow del service
+					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
@@ -302,7 +308,7 @@ export class QualificationsComponent implements OnInit {
 		autocomplete: MatAutocomplete | undefined,
 		controlName: string
 	) {
-		if (!value)
+		if (!value) {
 			autocomplete?.options.forEach(option => {
 				if (option.selected) {
 					this.deselectedOption = option.value;
@@ -312,6 +318,7 @@ export class QualificationsComponent implements OnInit {
 					});
 				}
 			});
+		}
 	}
 
 	private enableControls() {
@@ -365,7 +372,7 @@ export class QualificationsComponent implements OnInit {
 		if (this.screenType() === ScreenType.MOBILE)
 			this.toggleFiltersMenu(false);
 
-		if (this.deselectedOption === option.option.value) return;
+		if (this.deselectedOption === option.option.value) return; // esto es por que al hacer el deselect() llama al click
 
 		this.qs.showSelectedStudent(option);
 	}
