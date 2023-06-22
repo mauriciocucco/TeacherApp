@@ -725,14 +725,14 @@
 	<mat-menu #menu="matMenu">
 		<button mat-menu-item (click)="openCreateDialog()">
 			<div class="menu-option-wrapper">
-				<p>Crear una tarea / exámen</p>
-				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / exámen" fontIcon="note_add"></mat-icon>
+				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / examen" fontIcon="note_add"></mat-icon>
+				<span>Crear una tarea / examen</span>
 			</div>
 		</button>
-		<button mat-menu-item>
+		<button mat-menu-item (click)="openMultipleMarkingSetterDialog()">
 			<div class="menu-option-wrapper">
-				<p>Asignar múltiples calificaciones</p>
-				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / exámen" fontIcon="grading"></mat-icon>
+				<mat-icon aria-hidden="false" aria-label="Asignar múltiples calificaciones" fontIcon="grading"></mat-icon>
+				<span>Asignar múltiples calificaciones</span>
 			</div>
 		</button>
 	  </mat-menu>

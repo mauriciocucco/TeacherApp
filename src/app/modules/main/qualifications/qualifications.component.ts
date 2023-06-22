@@ -60,6 +60,7 @@ import { DateRange } from './interfaces/range-date.interface';
 import { ControlType } from './components/create-dialog/interfaces/control-type.interface';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
 import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 
 @Component({
 	selector: 'app-qualifications',
@@ -441,6 +442,17 @@ export class QualificationsComponent implements OnInit {
 				courseId: this.filtersForm.get('course')?.value,
 				workId: work.id,
 				workName: work.name,
+			},
+		});
+	}
+
+	public openMultipleMarkingSetterDialog() {
+		this.dialog.open(MultipleMarkingSetterComponent, {
+			data: {
+				students: this.students(),
+				markings: this.markings(),
+				tasks: this.tasks(),
+				exams: this.exams(),
 			},
 		});
 	}

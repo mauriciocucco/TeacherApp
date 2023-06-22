@@ -1,0 +1,47 @@
+@import '../../../../../../variables.scss';
+
+#container {
+	padding: 2rem 3rem;
+	h1 {
+		text-align: center;
+	}
+}
+
+#selectors {
+	display: flex;
+	gap: 4rem;
+	max-height: 45rem;
+	#selection-list {
+		align-items: center;
+		display: flex;
+		flex-direction: column;
+		gap: 1.2rem;
+		#students-list {
+			overflow: scroll;
+			overflow-x: unset;
+		}
+	}
+}
+
+#buttons-wrapper {
+	@include flex-center;
+	gap: 2rem;
+	padding-top: 2rem;
+}
+
+#options-wrapper {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 30rem;
+}
+
+.option-wrapper {
+	@include flex-center;
+	.work-option-name {
+		max-width: 17rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-wrap: nowrap;
+	}
+}
