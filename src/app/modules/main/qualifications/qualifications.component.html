@@ -111,7 +111,7 @@
 										#autoTask="matAutocomplete">
 										<ng-container *ngFor="let task of tasks()">
 											<mat-option
-											*ngIf="task.show"
+											[ngClass]="{'disappear': task.show}"
 											[value]="task.name">
 												{{ task.name }} -
 												{{ task.date | shortDate }}
@@ -155,7 +155,7 @@
 										#autoExam="matAutocomplete">
 										<ng-container *ngFor="let exam of exams()">
 											<mat-option
-											*ngIf="exam.show"
+											[ngClass]="{'disappear': exam.show}"
 											[value]="exam.name">
 												{{ exam.name }} -
 												{{ exam.date | shortDate }}
@@ -264,7 +264,8 @@
 									<ng-container *ngFor="let task of tasks()">
 										<mat-card
 											class="qualification-card"
-											*ngIf="task.show">
+											[ngClass]="{'disappear': task.show}"
+										>
 											<mat-card-header
 												class="qualification-card-header">
 												<h3>{{ task.name }}</h3>
@@ -480,7 +481,7 @@
 									">
 									<ng-container *ngFor="let exam of exams()">
 										<mat-card
-											*ngIf="exam.show"
+										[ngClass]="{'disappear': exam.show}"
 											class="qualification-card"
 											[ngClass]="{
 												'pdlColor': exam.subject === 1,
