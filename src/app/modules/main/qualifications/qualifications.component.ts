@@ -232,6 +232,12 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('student')?.valueChanges.pipe(
+					tap(value => {
+						if (!value)
+							this.qs.cleanShow(
+								this.students as WritableSignal<Student[]>
+							);
+					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
@@ -252,6 +258,12 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('task')?.valueChanges.pipe(
+					tap(value => {
+						if (!value)
+							this.qs.cleanShow(
+								this.tasks as WritableSignal<Task[]>
+							);
+					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
@@ -273,6 +285,12 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('exam')?.valueChanges.pipe(
+					tap(value => {
+						if (!value)
+							this.qs.cleanShow(
+								this.exams as WritableSignal<Exam[]>
+							);
+					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
@@ -311,6 +329,7 @@ export class QualificationsComponent implements OnInit {
 					this.deselectedOption = option.value;
 					option.deselect();
 					this.filtersForm.get(controlName)?.patchValue('', {
+						//esto es porque al hacer el deselect se selecciona de vuelta
 						emitEvent: false,
 					});
 				}

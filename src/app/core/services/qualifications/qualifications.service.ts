@@ -144,14 +144,14 @@ export class QualificationsService {
 		value: string | null,
 		controlType: ControlType = 'Students'
 	): void {
+		if (!value) return;
+
 		const valueToFilter = value?.toLowerCase();
 		let signalToFilter: WritableSignal<Student[] | Task[] | Exam[]> = this
 			.students as WritableSignal<Student[]>;
 
 		if (controlType === 'Tasks') signalToFilter = this.tasks;
 		if (controlType === 'Exams') signalToFilter = this.exams;
-
-		if (!value) return this.cleanShow(signalToFilter);
 
 		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
