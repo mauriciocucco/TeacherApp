@@ -250,16 +250,10 @@ export class QualificationsService {
 		});
 	}
 
-	private cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
-		signal.update(
-			elements =>
-				elements.map(element => ({
-					...element,
-					show: true,
-				})) as Task[] | Exam[] | Student[]
+	public cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
+		signal.mutate(elements =>
+			elements.forEach(element => (element.show = true))
 		);
-
-		if (this.spinnerProgressOn()) this.spinnerProgressOn.set(false);
 	}
 
 	private cleanAllShow() {

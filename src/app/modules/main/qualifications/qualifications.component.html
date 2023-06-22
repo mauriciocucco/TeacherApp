@@ -66,7 +66,7 @@
 									let student of students()
 								    ">
 										<mat-option
-											*ngIf="student.show"
+											[ngClass]="{'disappear': !student.show}"
 											[value]="
 											student.name +
 											' ' +
@@ -243,7 +243,7 @@
 		[ngClass]="{'mobile-margin-top': filtersForm.get('student')?.value}"
 	>
 		<ng-container *ngFor="let student of students()">
-			<mat-card *ngIf="student.show" id="{{ student.lastname.charAt(0).toUpperCase()}}">
+			<mat-card [ngClass]="{'disappear': !student.show}" id="{{ student.lastname.charAt(0).toUpperCase()}}">
 					<mat-card-header
 						><h2 class="student-header">
 							{{ student.name }} {{ student.lastname }}

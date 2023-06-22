@@ -74,6 +74,7 @@ export class QualificationsComponent implements OnInit {
 	public courses: Signal<Course[]> = this.qs.courses;
 	public markings: Signal<Marking[]> = this.qs.markings;
 	public tasksExamsAndStudents$ = this.qs.tasksExamsAndStudents$;
+	private fb = inject(FormBuilder);
 	public filtersForm = this.fb.nonNullable.group({
 		student: [{ value: '', disabled: true }],
 		task: [{ value: '', disabled: true }],
@@ -140,7 +141,6 @@ export class QualificationsComponent implements OnInit {
 
 	constructor(
 		private qs: QualificationsService,
-		private fb: FormBuilder,
 		public dialog: MatDialog,
 		private renderer: Renderer2,
 		private vs: ViewService
@@ -232,9 +232,6 @@ export class QualificationsComponent implements OnInit {
 		this.qs
 			.processValueChanges(
 				this.filtersForm.get('student')?.valueChanges.pipe(
-					tap(value => {
-						if (!value) this.qs.spinnerProgressOn.set(true); // luego se cierra en el cleanShow del service
-					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
 					filter(value => this.filterByDeselectedOption(value)),
