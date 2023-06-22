@@ -268,7 +268,7 @@
 										>
 											<mat-card-header
 												class="qualification-card-header">
-												<h3>{{ task.name }}</h3>
+												<h3 [title]="task.name">{{ task.name }}</h3>
 												<p>
 													{{ task.date | shortDate }}
 												</p>
@@ -490,7 +490,7 @@
 											>
 											<mat-card-header
 												class="qualification-card-header">
-												<h3>{{ exam.name }}</h3>
+												<h3 [title]="exam.name">{{ exam.name }}</h3>
 												<p>
 													{{ exam.date | shortDate }}
 												</p>
