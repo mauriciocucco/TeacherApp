@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatMenuModule } from '@angular/material/menu';
 
 @NgModule({
 	declarations: [],
@@ -31,6 +32,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 		MatDialogModule,
 		MatSnackBarModule,
 		MatProgressBarModule,
+		MatMenuModule,
 	],
 	providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
 })

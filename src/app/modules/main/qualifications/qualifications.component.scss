@@ -261,3 +261,11 @@
 		margin-top: calc(180px + 3rem);
 	}
 }
+
+.menu-option-wrapper {
+	@include flex-center;
+	text-wrap: nowrap;
+	p {
+		margin-bottom: unset;
+	}
+}

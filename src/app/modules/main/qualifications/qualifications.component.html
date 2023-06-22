@@ -717,9 +717,25 @@
 		color="accent"
 		aria-label="Crear una nueva tarea o exámen"
 		*ngIf="students() ? students()!.length > 0 : false"
-		(click)="openCreateDialog()">
+		[matMenuTriggerFor]="menu"
+		>
 		<mat-icon>add</mat-icon>
 	</button>
+
+	<mat-menu #menu="matMenu">
+		<button mat-menu-item (click)="openCreateDialog()">
+			<div class="menu-option-wrapper">
+				<p>Crear una tarea / exámen</p>
+				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / exámen" fontIcon="note_add"></mat-icon>
+			</div>
+		</button>
+		<button mat-menu-item>
+			<div class="menu-option-wrapper">
+				<p>Asignar múltiples calificaciones</p>
+				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / exámen" fontIcon="grading"></mat-icon>
+			</div>
+		</button>
+	  </mat-menu>
 
 	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>
