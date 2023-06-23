@@ -6,5 +6,5 @@ export interface UpdateExam {
 	date?: string;
 	subject?: number;
 	course?: number;
-	studentToExam?: StudentToExam;
+	studentToExam?: StudentToExam[];
 }

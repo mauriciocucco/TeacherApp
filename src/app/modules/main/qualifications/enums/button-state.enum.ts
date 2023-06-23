@@ -5,4 +5,5 @@ export enum ButtonState {
 	CREATE = 'Crear',
 	DELETE = 'Eliminar',
 	DELETING = 'Eliminando',
+	RATE = 'Calificar',
 }

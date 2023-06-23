@@ -1,0 +1,75 @@
+@import '../../../../../../variables.scss';
+
+#container {
+	padding: 2rem 3rem;
+	h1 {
+		text-align: center;
+	}
+	@include mq-mobile {
+		padding: 1rem 2rem;
+	}
+}
+
+#selectors {
+	display: flex;
+	gap: 4rem;
+	max-height: 45rem;
+	#selection-list {
+		align-items: center;
+		display: flex;
+		flex-direction: column;
+		gap: 1.2rem;
+		@include mq-mobile {
+			max-height: 29rem;
+		}
+		#students-list {
+			overflow: scroll;
+			overflow-x: unset;
+			@include mq-mobile {
+				width: -webkit-fill-available;
+			}
+		}
+	}
+	@include mq-mobile {
+		flex-direction: column;
+		max-height: unset;
+		gap: 1rem;
+	}
+}
+
+#buttons-wrapper {
+	@include flex-center;
+	gap: 2rem;
+	padding-top: 2rem;
+}
+
+#options-wrapper {
+	display: flex;
+	form {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		mat-form-field {
+			width: 30rem;
+			@include mq-mobile {
+				width: -webkit-fill-available;
+			}
+		}
+		@include mq-mobile {
+			width: 100%;
+		}
+	}
+}
+
+.option-wrapper {
+	@include flex-center;
+	.work-option-name {
+		max-width: 17rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-wrap: nowrap;
+		@include mq-mobile {
+			max-width: 14rem;
+		}
+	}
+}

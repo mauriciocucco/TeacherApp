@@ -262,3 +262,10 @@
 		margin-top: calc(180px + 3rem);
 	}
 }
+
+.menu-option-wrapper {
+	@include flex-center;
+	p {
+		margin-bottom: unset;
+	}
+}

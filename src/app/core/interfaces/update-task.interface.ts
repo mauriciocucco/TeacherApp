@@ -6,5 +6,5 @@ export interface UpdateTask {
 	date?: string;
 	subject?: number;
 	course?: number;
-	studentToTask?: StudentToTask;
+	studentToTask?: StudentToTask[];
 }

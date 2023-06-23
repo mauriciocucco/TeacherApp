@@ -49,9 +49,7 @@ export class CreateDialogComponent {
 	) {}
 
 	public closeDialog(reloadData = false): void {
-		const queryParams = { courseId: this.payload.course };
-
-		reloadData ? this.dialogRef.close(queryParams) : this.dialogRef.close();
+		this.dialogRef.close(reloadData);
 	}
 
 	public sendForm() {
