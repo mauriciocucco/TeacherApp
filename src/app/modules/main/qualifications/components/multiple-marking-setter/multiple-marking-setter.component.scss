@@ -5,6 +5,9 @@
 	h1 {
 		text-align: center;
 	}
+	@include mq-mobile {
+		padding: 1rem 2rem;
+	}
 }
 
 #selectors {
@@ -16,10 +19,21 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.2rem;
+		@include mq-mobile {
+			max-height: 29rem;
+		}
 		#students-list {
 			overflow: scroll;
 			overflow-x: unset;
+			@include mq-mobile {
+				width: -webkit-fill-available;
+			}
 		}
+	}
+	@include mq-mobile {
+		flex-direction: column;
+		max-height: unset;
+		gap: 1rem;
 	}
 }
 
@@ -31,9 +45,20 @@
 
 #options-wrapper {
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	width: 30rem;
+	form {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		mat-form-field {
+			width: 30rem;
+			@include mq-mobile {
+				width: -webkit-fill-available;
+			}
+		}
+		@include mq-mobile {
+			width: 100%;
+		}
+	}
 }
 
 .option-wrapper {
@@ -43,5 +68,8 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-wrap: nowrap;
+		@include mq-mobile {
+			max-width: 14rem;
+		}
 	}
 }

@@ -32,8 +32,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { WorkBase } from '../../interfaces/work-base.interface';
 import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
-import { StudentToTask } from '../../interfaces/student-to-task.interface';
-import { StudentToExam } from '../../interfaces/student-to-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 
 @Injectable({
@@ -292,54 +290,9 @@ export class QualificationsService {
 	) {
 		const selectedWorkIndex = works.findIndex(work => work.id === workId);
 
-		if (
-			// cuando se actualiza el nombre o la fecha o la descripción de la tarea o exámen
-			!(updatedWork as UpdateTask).studentToTask &&
-			!(updatedWork as UpdateExam).studentToExam
-		) {
-			works[selectedWorkIndex] = {
-				...works[selectedWorkIndex],
-				...updatedWork,
-			} as Task | Exam;
-
-			return;
-		}
-
-		// cuando se actualiza la nota o la observación del estudiante sobre la tarea o exámen
-		if ((updatedWork as UpdateTask).studentToTask) {
-			const relationIndex = (
-				works[selectedWorkIndex] as Task
-			).studentToTask.findIndex(
-				relation =>
-					relation.studentId ===
-					(updatedWork as UpdateTask).studentToTask?.studentId // que el id del estudiante sea igual al que quiero actualizar
-			);
-			const studentToTaskArray = [
-				...(works[selectedWorkIndex] as Task).studentToTask,
-			];
-
-			studentToTaskArray[relationIndex] = (updatedWork as UpdateTask)
-				.studentToTask as StudentToTask;
-
-			(works[selectedWorkIndex] as Task).studentToTask =
-				studentToTaskArray;
-		} else {
-			const relationIndex = (
-				works[selectedWorkIndex] as Exam
-			).studentToExam.findIndex(
-				relation =>
-					relation.studentId ===
-					(updatedWork as UpdateExam).studentToExam?.studentId
-			);
-			const studentToExamArray = [
-				...(works[selectedWorkIndex] as Exam).studentToExam,
-			];
-
-			studentToExamArray[relationIndex] = (updatedWork as UpdateExam)
-				.studentToExam as StudentToExam;
-
-			(works[selectedWorkIndex] as Exam).studentToExam =
-				studentToExamArray;
-		}
+		works[selectedWorkIndex] = {
+			...works[selectedWorkIndex],
+			...updatedWork,
+		} as Task | Exam;
 	}
 }

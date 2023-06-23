@@ -407,15 +407,20 @@ export class QualificationsComponent implements OnInit {
 	}
 
 	public openCreateDialog(): void {
+		const courseId = this.filtersForm.get('course')?.value;
 		const dialogRef = this.dialog.open(CreateDialogComponent, {
-			data: { course: this.filtersForm.get('course')?.value },
+			data: { course: courseId },
 		});
 
 		dialogRef
 			.afterClosed()
 			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(queryParams => {
-				if (queryParams?.courseId) {
+			.subscribe(reloadData => {
+				if (reloadData) {
+					const queryParams = {
+						courseId,
+					};
+
 					this.changeToCorrectTab();
 					this.getNewTasksAndExams(queryParams);
 				}
@@ -447,7 +452,7 @@ export class QualificationsComponent implements OnInit {
 	}
 
 	public openMultipleMarkingSetterDialog() {
-		this.dialog.open(MultipleMarkingSetterComponent, {
+		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent, {
 			data: {
 				students: this.students(),
 				markings: this.markings(),
@@ -455,6 +460,19 @@ export class QualificationsComponent implements OnInit {
 				exams: this.exams(),
 			},
 		});
+
+		dialogRef
+			.afterClosed()
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(reloadData => {
+				if (reloadData) {
+					const queryParams = {
+						courseId: this.filtersForm.get('course')?.value,
+					};
+
+					this.getNewTasksAndExams(queryParams);
+				}
+			});
 	}
 
 	private changeToCorrectTab() {
@@ -516,6 +534,7 @@ export class QualificationsComponent implements OnInit {
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.loadingCardContent();
+
 		updateWorkInfo.workType === Work.TASK
 			? (update$ = this.ts.updateTask(
 					updatedWork as UpdateTask,
@@ -528,7 +547,6 @@ export class QualificationsComponent implements OnInit {
 
 		update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
-				this.qs.updateWorkCardInfo(updateWorkInfo.workId, updatedWork);
 				this.resetUI();
 				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 			},
@@ -578,18 +596,20 @@ export class QualificationsComponent implements OnInit {
 
 		return this.selectedWorkType() === Work.TASK
 			? {
-					studentToTask: {
-						...commonValues,
-						markingId: marking,
-						taskId: this.selectedWorkInfo()?.workId,
-					},
+					studentToTask: [
+						{
+							...commonValues,
+							markingId: marking,
+						},
+					],
 			  }
 			: {
-					studentToExam: {
-						...commonValues,
-						marking,
-						examId: this.selectedWorkInfo()?.workId,
-					},
+					studentToExam: [
+						{
+							...commonValues,
+							marking,
+						},
+					],
 			  };
 	}
 
