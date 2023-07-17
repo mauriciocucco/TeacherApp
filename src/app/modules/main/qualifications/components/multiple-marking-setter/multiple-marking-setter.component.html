@@ -70,6 +70,15 @@
 						placeholder="Nota del examen"
 						formControlName="marking" />
 				</mat-form-field>
+				<mat-form-field
+					class="observation-textarea"
+					*ngIf="workControl?.value">
+					<mat-label>Observación</mat-label>
+					<textarea
+						matInput
+						[rows]="6"
+						formControlName="observation"></textarea>
+				</mat-form-field>
 			</form>
 		</div>
 	</div>

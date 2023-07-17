@@ -48,6 +48,7 @@ export class MultipleMarkingSetterComponent {
 	public markingsForm = this.fb.group({
 		workId: ['', Validators.required],
 		marking: ['', Validators.required],
+		observation: [''],
 	});
 	@ViewChild('studentsList', { static: false })
 	studentsList?: MatSelectionList;
@@ -83,6 +84,7 @@ export class MultipleMarkingSetterComponent {
 		let markingsArray = this.studentsList?._value?.map(studentId => ({
 			studentId,
 			markingId: this.markingsForm.get('marking')?.value,
+			observation: this.markingsForm.get('observation')?.value,
 		}));
 
 		if (this.workControl.value === Work.TASK) {
