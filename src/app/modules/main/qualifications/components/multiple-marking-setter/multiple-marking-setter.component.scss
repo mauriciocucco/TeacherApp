@@ -59,6 +59,10 @@
 			width: 100%;
 		}
 	}
+	@include mq-mobile {
+		max-height: 30rem;
+		overflow-y: scroll;
+	}
 }
 
 .option-wrapper {
