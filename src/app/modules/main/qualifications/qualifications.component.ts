@@ -16,6 +16,7 @@ import {
 import { FormBuilder } from '@angular/forms';
 import {
 	Observable,
+	concatMap,
 	debounce,
 	distinctUntilChanged,
 	filter,
@@ -545,17 +546,28 @@ export class QualificationsComponent implements OnInit {
 					updateWorkInfo.workId
 			  ));
 
-		update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-			next: () => {
-				this.resetUI();
-				this.qs.handleHttpResponseMessage('La edición fue exitosa.');
-			},
-			error: () => {
-				this.returnToPreviousState();
-				this.resetUI();
-				this.qs.handleHttpResponseMessage();
-			},
-		});
+		update$
+			.pipe(
+				takeUntilDestroyed(this.destroyRef),
+				concatMap(() => this.ts.getTask(updateWorkInfo.workId))
+			)
+			.subscribe({
+				next: updatedTask => {
+					this.qs.updateWorkCardInfo(
+						updateWorkInfo.workId,
+						updatedTask
+					);
+					this.resetUI();
+					this.qs.handleHttpResponseMessage(
+						'La edición fue exitosa.'
+					);
+				},
+				error: () => {
+					this.returnToPreviousState();
+					this.resetUI();
+					this.qs.handleHttpResponseMessage();
+				},
+			});
 	}
 
 	private resetUI() {

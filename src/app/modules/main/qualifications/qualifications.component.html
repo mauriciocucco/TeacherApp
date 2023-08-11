@@ -269,6 +269,7 @@
 											<mat-card-header
 												class="qualification-card-header">
 												<h3 [title]="task.name">{{ task.name }}</h3>
+												<h4>{{students()!.length}}/{{task.totalDelivered}}</h4>
 												<p>
 													{{ task.date | shortDate }}
 												</p>
