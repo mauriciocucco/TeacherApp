@@ -31,6 +31,10 @@ export class TasksService {
 			: of([]);
 	}
 
+	public getTask(taskId: number) {
+		return this.api.get<Task>(`${Endpoints.TASKS}/${taskId}`);
+	}
+
 	public updateTask(task: UpdateTask, taskId: number) {
 		return this.api.patch<Task>(`${Endpoints.TASKS}/${taskId}`, task).pipe(
 			catchError(error => {
