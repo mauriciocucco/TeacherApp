@@ -3,6 +3,5 @@ export interface WorkBase {
 	name: string;
 	description: string;
 	date: string;
-	subject: number;
 	show: boolean;
 }

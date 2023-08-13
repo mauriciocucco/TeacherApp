@@ -237,7 +237,7 @@ export class QualificationsService {
 
 		this.tasks.mutate(tasks => {
 			tasks.forEach(task => {
-				if (task.subject !== subjectId) task.show = false;
+				if (task.subject.id !== subjectId) task.show = false;
 			});
 		});
 
