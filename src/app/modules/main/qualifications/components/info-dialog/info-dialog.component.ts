@@ -1,4 +1,11 @@
-import { Component, Inject, signal, inject, DestroyRef } from '@angular/core';
+import {
+	Component,
+	Inject,
+	signal,
+	inject,
+	DestroyRef,
+	ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ButtonState } from '../../enums/button-state.enum';
@@ -22,6 +29,7 @@ import { SharedModule } from '../../../../../shared/shared.module';
 	imports: [SharedModule],
 	templateUrl: './info-dialog.component.html',
 	styleUrls: ['./info-dialog.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InfoDialogComponent {
 	public infoForm = this.fb.nonNullable.group({

@@ -1,4 +1,11 @@
-import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	DestroyRef,
+	Inject,
+	inject,
+	signal,
+} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
@@ -20,6 +27,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 	imports: [SharedModule],
 	templateUrl: './create-dialog.component.html',
 	styleUrls: ['./create-dialog.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateDialogComponent {
 	public createForm = this.fb.nonNullable.group({

@@ -5,6 +5,7 @@ import {
 	inject,
 	DestroyRef,
 	ViewChild,
+	ChangeDetectionStrategy,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -32,6 +33,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 	imports: [SharedModule],
 	templateUrl: './multiple-marking-setter.component.html',
 	styleUrls: ['./multiple-marking-setter.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MultipleMarkingSetterComponent {
 	public students: Student[] = [];

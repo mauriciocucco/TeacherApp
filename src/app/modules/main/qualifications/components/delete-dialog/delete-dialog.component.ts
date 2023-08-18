@@ -1,4 +1,11 @@
-import { Component, DestroyRef, Inject, inject, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	DestroyRef,
+	Inject,
+	inject,
+	signal,
+} from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TasksService } from '../../../../../core/services/tasks/tasks.service';
@@ -18,6 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 	imports: [SharedModule],
 	templateUrl: './delete-dialog.component.html',
 	styleUrls: ['./delete-dialog.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeleteDialogComponent {
 	public deleteButtonMessage = signal(ButtonState.DELETE);

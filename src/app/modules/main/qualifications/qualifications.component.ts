@@ -1,4 +1,5 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
 	HostListener,
@@ -67,6 +68,7 @@ import { MultipleMarkingSetterComponent } from './components/multiple-marking-se
 	selector: 'app-qualifications',
 	templateUrl: './qualifications.component.html',
 	styleUrls: ['./qualifications.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QualificationsComponent implements OnInit {
 	public tasks: Signal<Task[]> = this.qs.tasks;
@@ -686,5 +688,9 @@ export class QualificationsComponent implements OnInit {
 
 	public onScrollToTop(): void {
 		this.viewport.scrollToPosition([0, 0]);
+	}
+
+	public trackItems(index: number, item: any): number {
+		return item.id;
 	}
 }
