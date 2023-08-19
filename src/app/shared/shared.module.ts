@@ -7,9 +7,10 @@ import { AngularMaterialModule } from '../angular-material/angular-material.modu
 import { ShortDatePipe } from './pipes/short-date.pipe';
 import { ScrollComponent } from './components/scroll/scroll.component';
 import { HeaderComponent } from './layout/header/header.component';
+import { ShiftPipe } from './pipes/shift.pipe';
 
 @NgModule({
-	declarations: [ShortDatePipe, ScrollComponent, HeaderComponent],
+	declarations: [ShortDatePipe, ScrollComponent, HeaderComponent, ShiftPipe],
 	imports: [
 		CommonModule,
 		FormsModule,
@@ -26,6 +27,7 @@ import { HeaderComponent } from './layout/header/header.component';
 		ShortDatePipe,
 		ScrollComponent,
 		HeaderComponent,
+		ShiftPipe,
 	],
 })
 export class SharedModule {}

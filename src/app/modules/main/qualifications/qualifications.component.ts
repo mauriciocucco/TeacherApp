@@ -152,7 +152,7 @@ export class QualificationsComponent implements OnInit {
 		this.enableFormWhenCourseIsSelected();
 	}
 
-	ngOnInit() {
+	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.vs.setScreenType();
 	}

@@ -1,1 +1,27 @@
-<p>performance works!</p>
+<div id="container">
+	<mat-card>
+		<mat-card-header>
+			<div class="header-wrapper">
+				<h1>Progreso</h1>
+				<mat-form-field appearance="fill">
+					<mat-label>Curso</mat-label>
+					<mat-select placeholder="Seleccionar un curso">
+						<mat-option
+							*ngFor="let course of courses()"
+							[value]="course.id">
+							{{ course.year }}° -
+							{{ course.shift | shift }}
+						</mat-option>
+					</mat-select>
+				</mat-form-field>
+			</div>
+		</mat-card-header>
+		<mat-card-content>
+			<mat-card id="warning-card">
+				<mat-card-content>
+					<h2>Por favor, seleccione un curso</h2>
+				</mat-card-content>
+			</mat-card>
+		</mat-card-content>
+	</mat-card>
+</div>

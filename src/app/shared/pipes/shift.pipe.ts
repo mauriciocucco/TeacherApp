@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Shift } from '../../../../core/interfaces/course.interface';
+import { Shift } from '../../core/interfaces/course.interface';
 
 const shifts = {
 	MORNING: 'Mañana',
