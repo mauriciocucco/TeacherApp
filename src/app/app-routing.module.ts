@@ -26,6 +26,7 @@ const routes: Routes = [
 		RouterModule.forRoot(routes, {
 			anchorScrolling: 'enabled',
 			scrollOffset: [0, 60],
+			bindToComponentInputs: true,
 		}),
 	],
 	exports: [RouterModule],

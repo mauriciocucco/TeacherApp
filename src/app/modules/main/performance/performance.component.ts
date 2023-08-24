@@ -1,4 +1,5 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
 	OnInit,
@@ -23,11 +24,13 @@ import {
 	timer,
 } from 'rxjs';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-performance',
 	templateUrl: './performance.component.html',
 	styleUrls: ['./performance.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PerformanceComponent implements OnInit {
 	public courses: Signal<Course[]> = this.qs.courses;
@@ -35,10 +38,10 @@ export class PerformanceComponent implements OnInit {
 	public studentControl: FormControl<string | null> = new FormControl(null);
 	public students: Student[] = [];
 	public filteredStudents: Observable<Student[]> = of([]);
-	// public spinnerProgressOn = signal(false);
 	public step = signal(0);
 	private destroyRef = inject(DestroyRef);
 	private ss = inject(StudentsService);
+	private router = inject(Router);
 
 	constructor(private qs: QualificationsService) {}
 
@@ -50,13 +53,12 @@ export class PerformanceComponent implements OnInit {
 		this.courseControl?.valueChanges
 			.pipe(
 				takeUntilDestroyed(this.destroyRef),
-				// tap(() => this.spinnerProgressOn.set(true)),
 				switchMap(courseId => this.ss.getStudents({ courseId }))
 			)
 			.subscribe(students => {
 				this.students = students;
 				this.listenStudentsFilterChanges();
-				// this.spinnerProgressOn.set(false);
+				this.nextStep();
 			});
 	}
 
@@ -72,14 +74,11 @@ export class PerformanceComponent implements OnInit {
 		this.step.update(previousStep => previousStep - 1);
 	}
 
-	public trackItems(index: number, item: any): number {
-		return item.id;
-	}
-
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		const selectedOption = this.filterValue(option.option.value);
+		const [selectedOption] = this.filterValue(option.option.value);
 
 		console.log('resultado', selectedOption);
+		this.router.navigate(['principal/progreso', selectedOption.id]);
 	}
 
 	private listenStudentsFilterChanges() {

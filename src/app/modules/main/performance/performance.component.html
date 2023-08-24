@@ -68,16 +68,15 @@
 							(optionSelected)="studentSelected($event)"
 							#auto="matAutocomplete">
 							<mat-option
-								*ngFor="
-									let student of filteredStudents | async;
-									trackBy: trackItems
-								"
+								*ngFor="let student of filteredStudents | async"
 								[value]="student.name + ' ' + student.lastname">
 								{{ student.name }}
 								{{ student?.lastname }}
 							</mat-option>
 						</mat-autocomplete>
 					</mat-form-field>
+
+					<router-outlet></router-outlet>
 
 					<mat-action-row>
 						<button mat-button color="warn" (click)="prevStep()">

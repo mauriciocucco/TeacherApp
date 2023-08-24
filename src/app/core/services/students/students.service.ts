@@ -15,4 +15,8 @@ export class StudentsService {
 			params: studentsQueryParams,
 		});
 	}
+
+	public getStudent(studentId: number) {
+		return this.api.get<Student>(`${Endpoints.STUDENTS}/${studentId}`);
+	}
 }
