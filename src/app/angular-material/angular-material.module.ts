@@ -16,7 +16,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @NgModule({
 	declarations: [],
@@ -38,7 +38,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 		MatMenuModule,
 		MatListModule,
 		MatToolbarModule,
-		MatSidenavModule,
+		MatExpansionModule,
 	],
 	providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
 })

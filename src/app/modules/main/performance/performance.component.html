@@ -3,25 +3,89 @@
 		<mat-card-header>
 			<div class="header-wrapper">
 				<h1>Progreso</h1>
-				<mat-form-field appearance="fill">
-					<mat-label>Curso</mat-label>
-					<mat-select placeholder="Seleccionar un curso">
-						<mat-option
-							*ngFor="let course of courses()"
-							[value]="course.id">
-							{{ course.year }}° -
-							{{ course.shift | shift }}
-						</mat-option>
-					</mat-select>
-				</mat-form-field>
 			</div>
 		</mat-card-header>
 		<mat-card-content>
-			<mat-card id="warning-card">
-				<mat-card-content>
-					<h2>Por favor, seleccione un curso</h2>
-				</mat-card-content>
-			</mat-card>
+			<mat-accordion class="performance-accordion">
+				<mat-expansion-panel
+					[expanded]="step() === 0"
+					(opened)="setStep(0)"
+					hideToggle>
+					<mat-expansion-panel-header>
+						<h3>Curso</h3>
+						<p>Por favor, seleccione un curso</p>
+						<mat-icon>rocket_launch</mat-icon>
+					</mat-expansion-panel-header>
+
+					<mat-form-field
+						appearance="fill"
+						class="mat-form-performance">
+						<mat-label>Curso</mat-label>
+						<mat-select
+							placeholder="Seleccionar un curso"
+							[formControl]="courseControl">
+							<mat-option
+								*ngFor="let course of courses()"
+								[value]="course.id">
+								{{ course.year }}° -
+								{{ course.shift | shift }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-action-row>
+						<button
+							mat-button
+							color="primary"
+							(click)="nextStep()"
+							[disabled]="!courseControl.value">
+							Siguiente
+						</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+
+				<mat-expansion-panel
+					[expanded]="step() === 1"
+					(opened)="setStep(1)"
+					[disabled]="!students.length"
+					hideToggle>
+					<mat-expansion-panel-header>
+						<h3>Alumnx</h3>
+						<p>Por favor, seleccione un alumnx</p>
+						<mat-icon>account_circle</mat-icon>
+					</mat-expansion-panel-header>
+
+					<mat-form-field class="mat-form-performance">
+						<input
+							#studentsInput
+							type="text"
+							matInput
+							placeholder="Seleccione un alumnx"
+							[matAutocomplete]="auto"
+							[formControl]="studentControl"
+							aria-label="Number" />
+						<mat-autocomplete
+							(optionSelected)="studentSelected($event)"
+							#auto="matAutocomplete">
+							<mat-option
+								*ngFor="
+									let student of filteredStudents | async;
+									trackBy: trackItems
+								"
+								[value]="student.name + ' ' + student.lastname">
+								{{ student.name }}
+								{{ student?.lastname }}
+							</mat-option>
+						</mat-autocomplete>
+					</mat-form-field>
+
+					<mat-action-row>
+						<button mat-button color="warn" (click)="prevStep()">
+							Anterior
+						</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+			</mat-accordion>
 		</mat-card-content>
 	</mat-card>
 </div>

@@ -1,3 +1,17 @@
+@import '../../../../variables.scss';
+
+h2,
+h3,
+p {
+	margin-bottom: unset;
+}
+
+#container {
+	display: flex;
+	flex-direction: column;
+	gap: 3rem;
+}
+
 .header-wrapper {
 	align-items: center;
 	display: flex;
@@ -5,6 +19,11 @@
 	width: 100%;
 }
 
-#warning-card {
-	text-align: center;
+.spinner-wrapper {
+	@include flex-center;
+	width: 100%;
+}
+
+.mat-form-performance {
+	width: 30%;
 }

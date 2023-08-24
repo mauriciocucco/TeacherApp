@@ -3,6 +3,7 @@ import {
 	Component,
 	DestroyRef,
 	HostListener,
+	OnDestroy,
 	OnInit,
 	QueryList,
 	Renderer2,
@@ -70,7 +71,7 @@ import { MultipleMarkingSetterComponent } from './components/multiple-marking-se
 	styleUrls: ['./qualifications.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QualificationsComponent implements OnInit {
+export class QualificationsComponent implements OnInit, OnDestroy {
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[] | undefined> = this.qs.students;
@@ -155,6 +156,10 @@ export class QualificationsComponent implements OnInit {
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.vs.setScreenType();
+	}
+
+	ngOnDestroy(): void {
+		this.cleanSignals();
 	}
 
 	private startToListenFiltersChanges() {
@@ -692,5 +697,12 @@ export class QualificationsComponent implements OnInit {
 
 	public trackItems(index: number, item: any): number {
 		return item.id;
+	}
+
+	private cleanSignals() {
+		this.qs.students.set(undefined);
+		this.qs.tasks.set([]);
+		this.qs.exams.set([]);
+		this.qs.tasksExamsAndStudentsSubject.next([null, null]);
 	}
 }
