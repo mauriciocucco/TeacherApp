@@ -10,6 +10,7 @@
 				<mat-expansion-panel
 					[expanded]="step() === 0"
 					(opened)="setStep(0)"
+					[disabled]="step() === 1"
 					hideToggle>
 					<mat-expansion-panel-header>
 						<h3>Curso</h3>

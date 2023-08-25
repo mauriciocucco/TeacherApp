@@ -4,6 +4,7 @@ export interface StudentPerformance {
 	studentLastname: string;
 	courseId: number;
 	markingId: number;
-	markingName: string;
+	subjectId: number;
+	markingDescription: string;
 	count: string;
 }
