@@ -1,7 +1,9 @@
 import {
+	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
 	HostListener,
+	OnDestroy,
 	OnInit,
 	QueryList,
 	Renderer2,
@@ -67,8 +69,9 @@ import { MultipleMarkingSetterComponent } from './components/multiple-marking-se
 	selector: 'app-qualifications',
 	templateUrl: './qualifications.component.html',
 	styleUrls: ['./qualifications.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QualificationsComponent implements OnInit {
+export class QualificationsComponent implements OnInit, OnDestroy {
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[] | undefined> = this.qs.students;
@@ -150,9 +153,13 @@ export class QualificationsComponent implements OnInit {
 		this.enableFormWhenCourseIsSelected();
 	}
 
-	ngOnInit() {
+	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.vs.setScreenType();
+	}
+
+	ngOnDestroy(): void {
+		this.cleanSignals();
 	}
 
 	private startToListenFiltersChanges() {
@@ -686,5 +693,16 @@ export class QualificationsComponent implements OnInit {
 
 	public onScrollToTop(): void {
 		this.viewport.scrollToPosition([0, 0]);
+	}
+
+	public trackItems(index: number, item: any): number {
+		return item.id;
+	}
+
+	private cleanSignals() {
+		this.qs.students.set(undefined);
+		this.qs.tasks.set([]);
+		this.qs.exams.set([]);
+		this.qs.tasksExamsAndStudentsSubject.next([null, null]);
 	}
 }

@@ -43,9 +43,6 @@ export class QualificationsService {
 	);
 	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
 	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
-	private tasksExamsAndStudentsSubject = new BehaviorSubject<
-		[TasksAndExamsQueryParams | null, StudentsParams | null]
-	>([null, null]);
 	public selectedSubjectIdFilter = signal(0);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
@@ -55,6 +52,9 @@ export class QualificationsService {
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
 	public spinnerProgressOn = signal(false);
+	public tasksExamsAndStudentsSubject = new BehaviorSubject<
+		[TasksAndExamsQueryParams | null, StudentsParams | null]
+	>([null, null]);
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(

@@ -63,7 +63,7 @@
 									#auto="matAutocomplete"
 								>
 									<ng-container *ngFor="
-									let student of students()
+									let student of students(); trackBy: trackItems
 								    ">
 										<mat-option
 											[ngClass]="{'disappear': !student.show}"
@@ -109,7 +109,7 @@
 											taskOrExamSelected($event)
 										"
 										#autoTask="matAutocomplete">
-										<ng-container *ngFor="let task of tasks()">
+										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
 											<mat-option
 											[ngClass]="{'disappear': !task.show}"
 											[value]="task.name">
@@ -153,7 +153,7 @@
 											)
 										"
 										#autoExam="matAutocomplete">
-										<ng-container *ngFor="let exam of exams()">
+										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
 											<mat-option
 											[ngClass]="{'disappear': !exam.show}"
 											[value]="exam.name">
@@ -242,7 +242,7 @@
 			else selectCourseWarning"
 		[ngClass]="{'mobile-margin-top': filtersForm.get('student')?.value}"
 	>
-		<ng-container *ngFor="let student of students()">
+		<ng-container *ngFor="let student of students(); trackBy: trackItems">
 			<mat-card [ngClass]="{'disappear': !student.show}" id="{{ student.lastname.charAt(0).toUpperCase()}}">
 					<mat-card-header
 						><h2 class="student-header">
@@ -261,7 +261,7 @@
 										taskMatchSomeFilter();
 										else noMatchedTasks
 									">
-									<ng-container *ngFor="let task of tasks()">
+									<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
 										<mat-card
 											class="qualification-card"
 											[ngClass]="{'disappear': !task.show}"
@@ -478,7 +478,7 @@
 										examMatchSomeFilter();
 										else noMatchedExams
 									">
-									<ng-container *ngFor="let exam of exams()">
+									<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
 										<mat-card
 										[ngClass]="{'disappear': !exam.show}"
 											class="qualification-card"

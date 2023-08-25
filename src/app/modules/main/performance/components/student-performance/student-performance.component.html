@@ -1,0 +1,28 @@
+<mat-card
+	class="performance-card"
+	*ngIf="studentPerformance$ | async as studentPerformance; else spinner">
+	<mat-card-header>
+		<div class="header-wrapper">
+			<h2>
+				{{ studentPerformance[0].studentName }}
+				{{ studentPerformance[0].studentLastname }}
+			</h2>
+		</div>
+	</mat-card-header>
+	<mat-card-content class="performance-content">
+		<mat-list>
+			<mat-list-item
+				*ngFor="let performance of studentPerformance"
+				class="performance-list-item">
+				<span matListItemTitle>{{ performance.markingName }}</span>
+				<span matListItemLine>{{
+					'Cantidad: ' + performance.count
+				}}</span>
+			</mat-list-item>
+		</mat-list>
+	</mat-card-content>
+</mat-card>
+
+<ng-template #spinner>
+	<mat-spinner></mat-spinner>
+</ng-template>

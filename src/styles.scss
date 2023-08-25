@@ -29,3 +29,22 @@
 	width: 3rem !important;
 	height: 3rem !important;
 }
+
+// ACCORDION
+.performance-accordion {
+	.mat-expansion-panel-header {
+		.mat-content {
+			align-items: center;
+			display: flex;
+			justify-content: space-between;
+		}
+	}
+
+	.mat-expansion-panel-content {
+		.mat-expansion-panel-body {
+			align-items: center;
+			display: flex;
+			flex-direction: column;
+		}
+	}
+}

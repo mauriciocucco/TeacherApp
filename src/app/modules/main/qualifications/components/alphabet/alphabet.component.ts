@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
 
 @Component({
@@ -7,6 +7,7 @@ import { SharedModule } from '../../../../../shared/shared.module';
 	imports: [SharedModule],
 	templateUrl: './alphabet.component.html',
 	styleUrls: ['./alphabet.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlphabetComponent {
 	private alpha = Array.from(Array(26)).map((e, i) => i + 65);

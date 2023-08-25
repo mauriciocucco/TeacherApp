@@ -15,6 +15,13 @@ const routes: Routes = [
 					),
 			},
 			{
+				path: 'progreso',
+				loadChildren: () =>
+					import('./performance/performance.module').then(
+						m => m.PerformanceModule
+					),
+			},
+			{
 				path: '**',
 				pathMatch: 'full',
 				redirectTo: 'calificaciones',
