@@ -10,28 +10,42 @@
 		</div>
 	</mat-card-header>
 	<mat-card-content class="performance-content">
-		<mat-accordion id="performance-accordion">
-			<mat-expansion-panel
-				*ngFor="let subject of subjects; let i = index">
-				<mat-expansion-panel-header>
-					<mat-panel-title>{{ subject.name }}</mat-panel-title>
-				</mat-expansion-panel-header>
-				<mat-list *ngIf="processedStudentPerformance">
-					<mat-list-item
-						*ngFor="
-							let performance of processedStudentPerformance[i]
-								.studentPerformance
-						"
-						class="performance-list-item">
-						<span matListItemTitle>{{
-							performance.markingDescription
-						}}</span>
-						<span matListItemLine>{{
-							'Cantidad: ' + performance.count
-						}}</span>
-					</mat-list-item>
-				</mat-list>
-			</mat-expansion-panel>
+		<mat-accordion
+			id="performance-accordion"
+			*ngIf="processedStudentPerformance">
+			<ng-container *ngFor="let subject of subjects; let i = index">
+				<mat-expansion-panel>
+					<mat-expansion-panel-header>
+						<mat-panel-title>{{ subject.name }}</mat-panel-title>
+					</mat-expansion-panel-header>
+
+					<mat-list
+						*ngIf="
+							processedStudentPerformance[i].studentPerformance
+								.length > 0;
+							else noMarkings
+						">
+						<mat-list-item
+							*ngFor="
+								let performance of processedStudentPerformance[
+									i
+								].studentPerformance
+							"
+							class="performance-list-item">
+							<span matListItemTitle>{{
+								performance.markingDescription
+							}}</span>
+							<span matListItemLine>{{
+								'Cantidad: ' + performance.count
+							}}</span>
+						</mat-list-item>
+					</mat-list>
+
+					<ng-template #noMarkings>
+						<p>No se encontraron correciones</p>
+					</ng-template>
+				</mat-expansion-panel>
+			</ng-container>
 		</mat-accordion>
 	</mat-card-content>
 </mat-card>

@@ -3,12 +3,11 @@ import {
 	Component,
 	Input,
 	OnChanges,
-	OnInit,
 	SimpleChanges,
 	inject,
 	signal,
 } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
 import { StudentsService } from '../../../../../core/services/students/students.service';
 import { StudentPerformance } from '../../interfaces/student-performance.interface';
 import { ApiService } from '../../../../../core/services/api/api.service';
@@ -22,7 +21,7 @@ import { ProcessedStudentPerformance } from '../../interfaces/processed-student-
 	styleUrls: ['./student-performance.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudentPerformanceComponent implements OnInit, OnChanges {
+export class StudentPerformanceComponent implements OnChanges {
 	public studentPerformance$!: Observable<StudentPerformance[]>;
 	public spinnerProgressOn = signal(true);
 	public subjects: SchoolSubject[] = [];
@@ -31,11 +30,6 @@ export class StudentPerformanceComponent implements OnInit, OnChanges {
 	private as = inject(ApiService);
 	@Input() id = '';
 
-	ngOnInit(): void {
-		this.getSubjects();
-		this.searchStudentPerformance();
-	}
-
 	ngOnChanges(changes: SimpleChanges) {
 		if (changes['id']?.currentValue) this.searchStudentPerformance();
 	}
@@ -43,16 +37,26 @@ export class StudentPerformanceComponent implements OnInit, OnChanges {
 	private getSubjects() {
 		this.as.get<SchoolSubject[]>(Endpoints.SUBJECTS).subscribe(subjects => {
 			this.subjects = subjects;
+			console.log('SUBJECTS ', this.subjects);
 		});
 	}
 
 	private searchStudentPerformance() {
-		this.studentPerformance$ = this.ss.getStudentPerformance(+this.id).pipe(
-			tap(rawStudentPerformance =>
-				this.processStudentPerformance(rawStudentPerformance)
-			),
-			tap(() => this.spinnerProgressOn.set(false))
-		);
+		this.studentPerformance$ = this.as
+			.get<SchoolSubject[]>(Endpoints.SUBJECTS)
+			.pipe(
+				tap(subjects => (this.subjects = subjects)),
+				switchMap(() =>
+					this.ss.getStudentPerformance(+this.id).pipe(
+						tap(rawStudentPerformance =>
+							this.processStudentPerformance(
+								rawStudentPerformance
+							)
+						),
+						tap(() => this.spinnerProgressOn.set(false))
+					)
+				)
+			);
 	}
 
 	private processStudentPerformance(
@@ -65,6 +69,7 @@ export class StudentPerformanceComponent implements OnInit, OnChanges {
 
 		rawStudentPerformance.forEach(outerElement => {
 			for (const innerElement of performancePerSubject) {
+				console.log(outerElement.subjectId);
 				if (outerElement.subjectId === innerElement.id)
 					innerElement.studentPerformance.push(outerElement);
 			}
