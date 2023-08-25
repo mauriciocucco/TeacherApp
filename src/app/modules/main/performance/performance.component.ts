@@ -2,6 +2,7 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
+	HostListener,
 	OnInit,
 	Signal,
 	inject,
@@ -25,6 +26,8 @@ import {
 } from 'rxjs';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ViewService } from '../../../core/services/view/view.service';
+import { ScreenType } from '../../../core/enums/screen-type.enum';
 
 @Component({
 	selector: 'app-performance',
@@ -40,16 +43,24 @@ export class PerformanceComponent implements OnInit {
 	public filteredStudents: Observable<Student[]> = of([]);
 	public step = signal(0);
 	public studentIsSelected = signal(false);
+	public ScreenTypeEnum = ScreenType;
 	private destroyRef = inject(DestroyRef);
 	private ss = inject(StudentsService);
 	private router = inject(Router);
 	private activatedRoute = inject(ActivatedRoute);
+	private vs = inject(ViewService);
+	public screenType = this.vs.screenType;
+	@HostListener('window:resize', ['$event'])
+	onResize(): void {
+		this.vs.setScreenType();
+	}
 
 	constructor(private qs: QualificationsService) {}
 
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.checkCourseSelected();
+		this.vs.setScreenType();
 	}
 
 	private listenCourseFilterChanges() {

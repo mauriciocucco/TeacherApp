@@ -19,6 +19,7 @@
 // $border-radius: 4px;
 // $normal-input-height: 40px;
 $viewport-padding: 3rem;
+$viewport-padding-mobile: 2rem;
 
 @mixin mq-mobile {
 	@media screen and (max-width: 1024px) {

@@ -26,4 +26,7 @@ p {
 
 .mat-form-performance {
 	width: 30%;
+	@include mq-mobile {
+		width: 100%;
+	}
 }

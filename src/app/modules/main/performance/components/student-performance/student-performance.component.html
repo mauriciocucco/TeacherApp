@@ -11,16 +11,16 @@
 	</mat-card-header>
 	<mat-card-content class="performance-content">
 		<mat-accordion id="performance-accordion">
-			<mat-expansion-panel *ngFor="let subject of subjects">
+			<mat-expansion-panel
+				*ngFor="let subject of subjects; let i = index">
 				<mat-expansion-panel-header>
 					<mat-panel-title>{{ subject.name }}</mat-panel-title>
 				</mat-expansion-panel-header>
-				<mat-list>
+				<mat-list *ngIf="processedStudentPerformance">
 					<mat-list-item
 						*ngFor="
-							let performance of selectStudentPerformance(
-								subject.id
-							)
+							let performance of processedStudentPerformance[i]
+								.studentPerformance
 						"
 						class="performance-list-item">
 						<span matListItemTitle>{{

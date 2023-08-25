@@ -221,7 +221,7 @@
 .mobile-card-state {
 	@include mq-mobile {
 		left: 50%;
-		padding: 0 3rem;
+		padding: 0 $viewport-padding-mobile;
 		position: absolute;
 		transform: translateX(-50%);
 		width: 100%;

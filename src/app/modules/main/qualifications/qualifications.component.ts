@@ -611,8 +611,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		const marking =
 			this.editHTMLElements()?.controlElement?.value ?? actualMarking;
 
-		if (!commonValues.observation) delete commonValues.observation;
-
 		return this.selectedWorkType() === Work.TASK
 			? {
 					studentToTask: [

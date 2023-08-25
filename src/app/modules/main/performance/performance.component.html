@@ -14,7 +14,11 @@
 					hideToggle>
 					<mat-expansion-panel-header>
 						<h3>Curso</h3>
-						<p *ngIf="!courseControl.value">
+						<p
+							*ngIf="
+								!courseControl.value &&
+								screenType() === ScreenTypeEnum.DESKTOP
+							">
 							Por favor, seleccione un curso
 						</p>
 						<mat-icon>rocket_launch</mat-icon>
@@ -54,7 +58,11 @@
 					hideToggle>
 					<mat-expansion-panel-header>
 						<h3>Alumnx</h3>
-						<p *ngIf="!studentIsSelected()">
+						<p
+							*ngIf="
+								!studentIsSelected() &&
+								screenType() === ScreenTypeEnum.DESKTOP
+							">
 							Por favor, seleccione un alumnx
 						</p>
 						<mat-icon>account_circle</mat-icon>

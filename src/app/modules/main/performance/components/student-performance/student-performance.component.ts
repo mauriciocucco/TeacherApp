@@ -14,6 +14,7 @@ import { StudentPerformance } from '../../interfaces/student-performance.interfa
 import { ApiService } from '../../../../../core/services/api/api.service';
 import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject.interface';
 import { Endpoints } from '../../../../../core/enums/endpoints.enum';
+import { ProcessedStudentPerformance } from '../../interfaces/processed-student-performance.interface';
 
 @Component({
 	selector: 'app-student-performance',
@@ -24,10 +25,10 @@ import { Endpoints } from '../../../../../core/enums/endpoints.enum';
 export class StudentPerformanceComponent implements OnInit, OnChanges {
 	public studentPerformance$!: Observable<StudentPerformance[]>;
 	public spinnerProgressOn = signal(true);
+	public subjects: SchoolSubject[] = [];
+	public processedStudentPerformance: ProcessedStudentPerformance[] = [];
 	private ss = inject(StudentsService);
 	private as = inject(ApiService);
-	private processedArray = [];
-	public subjects: SchoolSubject[] = [];
 	@Input() id = '';
 
 	ngOnInit(): void {
@@ -47,33 +48,28 @@ export class StudentPerformanceComponent implements OnInit, OnChanges {
 
 	private searchStudentPerformance() {
 		this.studentPerformance$ = this.ss.getStudentPerformance(+this.id).pipe(
-			tap(originalArray => {
-				const newArray = this.subjects.map(subject => ({
-					studentPerformance: [],
-					id: subject.id,
-				}));
-
-				originalArray.forEach(outerElement => {
-					for (const innerElement of newArray) {
-						if (outerElement.subjectId === innerElement.id)
-							innerElement.studentPerformance.push(
-								outerElement as unknown as never
-							);
-					}
-				});
-
-				this.processedArray = newArray as any;
-			}),
+			tap(rawStudentPerformance =>
+				this.processStudentPerformance(rawStudentPerformance)
+			),
 			tap(() => this.spinnerProgressOn.set(false))
 		);
 	}
 
-	public selectStudentPerformance(subjectId: number) {
-		console.log(this.processedArray);
-		return (
-			this.processedArray.find(
-				(array: any) => array.id === subjectId
-			) as any
-		).studentPerformance;
+	private processStudentPerformance(
+		rawStudentPerformance: StudentPerformance[]
+	) {
+		const performancePerSubject = this.subjects.map(subject => ({
+			studentPerformance: [] as StudentPerformance[],
+			id: subject.id,
+		}));
+
+		rawStudentPerformance.forEach(outerElement => {
+			for (const innerElement of performancePerSubject) {
+				if (outerElement.subjectId === innerElement.id)
+					innerElement.studentPerformance.push(outerElement);
+			}
+		});
+
+		this.processedStudentPerformance = performancePerSubject;
 	}
 }
