@@ -8,9 +8,9 @@ import {
 	inject,
 	signal,
 } from '@angular/core';
-import { Student } from '../../../../../core/interfaces/student.interface';
 import { Observable, tap } from 'rxjs';
 import { StudentsService } from '../../../../../core/services/students/students.service';
+import { StudentPerformance } from '../../interfaces/student-performance.interface';
 
 @Component({
 	selector: 'app-student-performance',
@@ -19,7 +19,7 @@ import { StudentsService } from '../../../../../core/services/students/students.
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentPerformanceComponent implements OnInit, OnChanges {
-	public student$!: Observable<Student>;
+	public studentPerformance$!: Observable<StudentPerformance[]>;
 	public spinnerProgressOn = signal(true);
 	private ss = inject(StudentsService);
 	@Input() id = '';
@@ -33,9 +33,8 @@ export class StudentPerformanceComponent implements OnInit, OnChanges {
 	}
 
 	private searchStudentPerformance() {
-		this.student$ = this.ss.getStudent(+this.id).pipe(
-			tap(value => console.log(value)),
-			tap(() => this.spinnerProgressOn.set(false))
-		);
+		this.studentPerformance$ = this.ss
+			.getStudentPerformance(+this.id)
+			.pipe(tap(() => this.spinnerProgressOn.set(false)));
 	}
 }

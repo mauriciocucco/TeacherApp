@@ -24,7 +24,7 @@ import {
 	timer,
 } from 'rxjs';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 
 @Component({
 	selector: 'app-performance',
@@ -39,14 +39,17 @@ export class PerformanceComponent implements OnInit {
 	public students: Student[] = [];
 	public filteredStudents: Observable<Student[]> = of([]);
 	public step = signal(0);
+	public studentIsSelected = signal(false);
 	private destroyRef = inject(DestroyRef);
 	private ss = inject(StudentsService);
 	private router = inject(Router);
+	private activatedRoute = inject(ActivatedRoute);
 
 	constructor(private qs: QualificationsService) {}
 
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
+		this.checkCourseSelected();
 	}
 
 	private listenCourseFilterChanges() {
@@ -58,7 +61,8 @@ export class PerformanceComponent implements OnInit {
 			.subscribe(students => {
 				this.students = students;
 				this.listenStudentsFilterChanges();
-				this.nextStep();
+				this.setStep(1);
+				this.checkIfStudentIsSelected();
 			});
 	}
 
@@ -71,14 +75,22 @@ export class PerformanceComponent implements OnInit {
 	}
 
 	public prevStep() {
-		this.step.update(previousStep => previousStep - 1);
+		this.courseControl.patchValue(null, { emitEvent: false });
+		this.studentControl.patchValue('');
+		this.students = [];
+		this.studentIsSelected.set(false);
+		this.setStep(0);
+		this.router.navigate(['principal/progreso']);
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
 		const [selectedOption] = this.filterValue(option.option.value);
+		const queryParams: Params = { courseId: this.courseControl.value };
 
-		console.log('resultado', selectedOption);
-		this.router.navigate(['principal/progreso', selectedOption.id]);
+		this.studentIsSelected.set(true);
+		this.router.navigate(['principal/progreso', selectedOption.id], {
+			queryParams,
+		});
 	}
 
 	private listenStudentsFilterChanges() {
@@ -105,5 +117,30 @@ export class PerformanceComponent implements OnInit {
 				.join('')
 				.includes(filterValue);
 		});
+	}
+
+	private checkIfStudentIsSelected() {
+		this.activatedRoute.firstChild?.params
+			?.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(value => {
+				if (value['id']) {
+					const student = this.students.find(
+						student => student.id === +value['id']
+					);
+
+					this.studentControl.patchValue(
+						`${student?.name} ${student?.lastname}`
+					);
+				}
+			});
+	}
+
+	private checkCourseSelected() {
+		this.activatedRoute.firstChild?.queryParams
+			?.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(value => {
+				if (value['courseId'])
+					this.courseControl.patchValue(+value['courseId']);
+			});
 	}
 }

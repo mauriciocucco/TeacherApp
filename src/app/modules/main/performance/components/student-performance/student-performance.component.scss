@@ -1,0 +1,18 @@
+:host {
+	display: flex;
+	justify-content: center;
+	width: -webkit-fill-available;
+}
+
+.performance-card {
+	width: 30%;
+}
+
+.performance-content {
+	display: flex;
+	justify-content: center;
+}
+
+.performance-list-item {
+	text-align: center;
+}
