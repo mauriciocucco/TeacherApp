@@ -78,7 +78,7 @@ export class MultipleMarkingSetterComponent {
 			.subscribe(value => {
 				value === Work.TASK
 					? (this.works = this.payload.tasks)
-					: this.payload.exams;
+					: (this.works = this.payload.exams as any);
 			});
 	}
 
