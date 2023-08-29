@@ -31,6 +31,10 @@ export class ExamsService {
 			: of([]);
 	}
 
+	public getExam(examId: number) {
+		return this.api.get<Exam>(`${Endpoints.EXAMS}/${examId}`);
+	}
+
 	public updateExam(task: UpdateExam, examId: number) {
 		return this.api.patch<Exam>(`${Endpoints.EXAMS}/${examId}`, task);
 	}

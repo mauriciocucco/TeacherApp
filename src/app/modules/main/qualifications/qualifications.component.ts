@@ -556,13 +556,17 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		update$
 			.pipe(
 				takeUntilDestroyed(this.destroyRef),
-				concatMap(() => this.ts.getTask(updateWorkInfo.workId))
+				concatMap(() => {
+					return updateWorkInfo.workType === Work.TASK
+						? this.ts.getTask(updateWorkInfo.workId)
+						: this.es.getExam(updateWorkInfo.workId);
+				})
 			)
 			.subscribe({
-				next: updatedTask => {
+				next: updatedWork => {
 					this.qs.updateWorkCardInfo(
 						updateWorkInfo.workId,
-						updatedTask
+						updatedWork
 					);
 					this.resetUI();
 					this.qs.handleHttpResponseMessage(
