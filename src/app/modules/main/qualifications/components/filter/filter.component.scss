@@ -1,0 +1,119 @@
+@import '../../../../../../variables.scss';
+
+.mobile-card-state {
+	@include mq-mobile {
+		left: 50%;
+		padding: 0 $viewport-padding-mobile;
+		position: absolute;
+		transform: translateX(-50%);
+		width: 100%;
+		z-index: 3;
+	}
+}
+
+#content-container {
+	.first-row {
+		@include mq-mobile {
+			text-align: center;
+		}
+	}
+	.second-row {
+		display: flex;
+		gap: 2rem;
+		justify-content: space-around;
+		padding-top: 1rem;
+		width: 100%;
+		& > mat-form-field {
+			width: 80%;
+			@include mq-mobile {
+				width: 100%;
+			}
+		}
+		@include mq-mobile {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+	}
+}
+
+.mobile-container {
+	@include mq-mobile {
+		display: flex;
+		flex-direction: column-reverse;
+	}
+}
+
+.mobile-show {
+	@include mq-mobile {
+		display: flex !important;
+	}
+}
+
+.mobile-hide {
+	@include mq-mobile {
+		display: none;
+	}
+}
+
+#filters-button {
+	display: none;
+	margin-bottom: 2.2rem;
+}
+
+.control-wrapper {
+	@include flex-center;
+	gap: 1rem;
+	position: relative;
+	width: 100%;
+	mat-form-field {
+		width: -webkit-fill-available;
+	}
+	button {
+		bottom: 3.7rem;
+		height: 2.5rem !important;
+		position: absolute;
+		right: 1rem;
+		z-index: 2;
+		width: 2.5rem !important;
+		mat-icon {
+			font-size: 1.6rem;
+			height: 1.6rem;
+			width: 1.6rem;
+		}
+	}
+	@include mq-mobile {
+		gap: 0.5rem;
+	}
+}
+
+.disappear {
+	display: none !important;
+}
+
+.range-date-wrapper {
+	@include flex-center;
+	width: 100%;
+	button {
+		bottom: 1rem;
+		height: 2.5rem !important;
+		margin-left: 0.5rem;
+		position: relative;
+		width: 2.5rem !important;
+		mat-icon {
+			font-size: 1.6rem;
+			height: 1.6rem;
+			width: 1.6rem;
+		}
+		@include mq-mobile {
+			bottom: 1.5rem;
+		}
+	}
+}
+
+#date-filter-form-field {
+	@include mq-mobile {
+		margin-bottom: 1rem;
+		width: -webkit-fill-available;
+	}
+}
