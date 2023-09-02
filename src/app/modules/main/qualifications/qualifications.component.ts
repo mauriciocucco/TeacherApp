@@ -44,8 +44,6 @@ export class QualificationsComponent implements OnDestroy {
 	public examMatchSomeFilter = computed(() =>
 		this.exams().some(exam => exam.show)
 	);
-	public editMode = signal(false);
-	public defaultRowsNumber = signal(5);
 	public selectedTab = signal(0);
 	public selectedStudent = this.qs.selectedStudent;
 	private selectedWorkType = this.qs.selectedWorkType;

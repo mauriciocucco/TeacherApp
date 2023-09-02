@@ -159,13 +159,10 @@ export class WorkCardComponent {
 		return previousState;
 	}
 
-	public openInfoDialog(
-		work: Partial<Task & Exam> | undefined,
-		workType = Work.TASK
-	) {
+	public openInfoDialog(work: Partial<Task & Exam> | undefined) {
 		if (!work) return;
 
-		this.selectedWorkType.set(workType);
+		this.selectedWorkType.set(this.workType);
 		this.dialog.open(InfoDialogComponent, {
 			data: {
 				name: work.name,
@@ -177,13 +174,10 @@ export class WorkCardComponent {
 		});
 	}
 
-	public openDeleteDialog(
-		work: Partial<Task & Exam> | undefined,
-		workType = Work.TASK
-	) {
+	public openDeleteDialog(work: Partial<Task & Exam> | undefined) {
 		if (!work) return;
 
-		this.selectedWorkType.set(workType);
+		this.selectedWorkType.set(this.workType);
 		this.dialog.open(DeleteDialogComponent, {
 			data: {
 				courseId: this.qs.selectedCourseId(),
