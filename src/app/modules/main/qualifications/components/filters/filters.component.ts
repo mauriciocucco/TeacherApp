@@ -33,12 +33,12 @@ import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject.interface';
 
 @Component({
-	selector: 'app-filter',
-	templateUrl: './filter.component.html',
-	styleUrls: ['./filter.component.scss'],
+	selector: 'app-filters',
+	templateUrl: './filters.component.html',
+	styleUrls: ['./filters.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FilterComponent implements OnInit {
+export class FiltersComponent implements OnInit {
 	public students: Signal<Student[] | undefined> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;

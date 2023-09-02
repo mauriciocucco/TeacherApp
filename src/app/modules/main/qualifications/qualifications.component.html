@@ -1,5 +1,5 @@
 <div id="container">
-	<app-filter></app-filter>
+	<app-filters></app-filters>
 
 	<app-alphabet 
 		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
@@ -42,11 +42,7 @@
 									</ng-container>
 								</div>
 								<ng-template #noMatchedTasks>
-									<mat-card id="warning-card">
-										<mat-card-content>
-											<h2>No se encontraron tareas</h2>
-										</mat-card-content>
-									</mat-card>
+									<app-warning [info]="'No se encontraron tareas'"></app-warning>
 								</ng-template>
 							</mat-tab>
 
@@ -62,11 +58,7 @@
 									</ng-container>
 								</div>
 								<ng-template #noMatchedExams>
-									<mat-card id="warning-card">
-										<mat-card-content>
-											<h2>No se encontraron exámenes</h2>
-										</mat-card-content>
-									</mat-card>
+									<app-warning [info]="'No se encontraron exámenes'"></app-warning>
 								</ng-template>
 							</mat-tab>
 						</mat-tab-group>
@@ -79,7 +71,6 @@
 		<mat-spinner></mat-spinner>
 	</div>
 
-	<!-- TODO: HACER LOS WARNING DIVS COMO COMPONENTES APARTE -->
 	<ng-template #selectCourseWarning>
 		<ng-container
 			[ngTemplateOutlet]="
@@ -88,21 +79,13 @@
 
 		<ng-template #studentsFound>
 			<div *ngIf="!spinnerProgressOn()" class="warning-container" appViewListener>
-				<mat-card id="warning-card">
-					<mat-card-content>
-						<h2>Por favor, seleccione un curso</h2>
-					</mat-card-content>
-				</mat-card>
+				<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
 			</div>
 		</ng-template>
 
 		<ng-template #noStudents>
 			<div class="warning-container" *ngIf="!spinnerProgressOn()">
-				<mat-card id="warning-card">
-					<mat-card-content>
-						<h2>No existen alumnxs cargados para este curso</h2>
-					</mat-card-content>
-				</mat-card>
+				<app-warning [info]="'No existen alumnxs cargados para este curso'"></app-warning>
 			</div>
 		</ng-template>
 	</ng-template>
@@ -133,7 +116,7 @@
 				<span>Asignar múltiples calificaciones</span>
 			</div>
 		</button>
-	  </mat-menu>
+	</mat-menu>
 
 	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>

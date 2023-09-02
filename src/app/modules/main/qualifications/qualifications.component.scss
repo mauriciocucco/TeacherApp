@@ -6,46 +6,6 @@
 	gap: 3rem;
 }
 
-.qualification-card {
-	.qualification-card-header {
-		align-items: center;
-		display: flex;
-		flex-direction: column;
-		h3 {
-			font-weight: bold;
-			margin-bottom: unset;
-			text-overflow: ellipsis;
-			overflow: hidden;
-			white-space: nowrap;
-			max-width: 20.8rem;
-		}
-		h4 {
-			color: #1cb128;
-			font-weight: bold;
-			margin-bottom: 0.5rem;
-		}
-		.edit-and-delete-settings {
-			display: flex;
-			gap: 2.5rem;
-			margin-bottom: 1.3rem;
-		}
-	}
-	.mat-mdc-card-content {
-		&:last-child {
-			padding-bottom: unset;
-		}
-		.qualification-card-content {
-			display: flex;
-			flex-direction: column;
-		}
-	}
-}
-
-.confirm-icons {
-	display: flex;
-	gap: 2.5rem;
-}
-
 #students-cards-container {
 	display: flex;
 	flex-direction: column;
@@ -70,10 +30,6 @@
 	padding: 0.5rem;
 }
 
-#warning-card {
-	text-align: center;
-}
-
 .spinner-wrapper {
 	@include flex-center;
 	height: 100vh;
@@ -90,59 +46,10 @@
 	display: none !important;
 }
 
-.mat-green {
-	color: green;
-}
-
-.mat-red {
-	color: rgba(255, 0, 0, 0.685);
-}
-
-.mat-blue {
-	color: rgb(61, 61, 236);
-}
-
-.card-loading {
-	@include flex-center;
-	width: 24.4rem;
-	min-height: 26.5rem;
-	mat-spinner {
-		height: 5rem !important;
-		width: 5rem !important;
-	}
-}
-
-.hide-menu-state {
-	@include mq-mobile {
-		max-height: 150px;
-		overflow: hidden;
-		transition: max-height 0.3s ease;
-	}
-}
-
-.open-menu-state {
-	max-height: -webkit-fill-available;
-}
-
 .warning-container {
 	@include mq-mobile {
 		margin-top: calc(140.4px + 3rem);
 	}
-}
-
-.confirm-button {
-	background-color: green;
-	color: white;
-}
-
-.cancel-button {
-	background-color: red;
-	color: white;
-}
-
-.info-button {
-	background-color: blue;
-	color: white;
 }
 
 .mobile-margin-top {

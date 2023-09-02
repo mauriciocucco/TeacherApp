@@ -8,9 +8,16 @@ import { ShortDatePipe } from './pipes/short-date.pipe';
 import { ScrollComponent } from './components/scroll/scroll.component';
 import { HeaderComponent } from './layout/header/header.component';
 import { ShiftPipe } from './pipes/shift.pipe';
+import { WarningComponent } from './components/warning/warning.component';
 
 @NgModule({
-	declarations: [ShortDatePipe, ScrollComponent, HeaderComponent, ShiftPipe],
+	declarations: [
+		ShortDatePipe,
+		ScrollComponent,
+		HeaderComponent,
+		ShiftPipe,
+		WarningComponent,
+	],
 	imports: [
 		CommonModule,
 		FormsModule,
@@ -28,6 +35,7 @@ import { ShiftPipe } from './pipes/shift.pipe';
 		ScrollComponent,
 		HeaderComponent,
 		ShiftPipe,
+		WarningComponent,
 	],
 })
 export class SharedModule {}
