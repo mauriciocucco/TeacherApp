@@ -9,6 +9,7 @@ import {
 	WritableSignal,
 	inject,
 	signal,
+	ChangeDetectionStrategy,
 } from '@angular/core';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
@@ -36,6 +37,7 @@ import { ExamsService } from '../../../../../core/services/exams/exams.service';
 	selector: 'app-work-card',
 	templateUrl: './work-card.component.html',
 	styleUrls: ['./work-card.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkCardComponent {
 	@Input() work: Partial<Task & Exam> | undefined = undefined;

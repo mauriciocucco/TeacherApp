@@ -247,24 +247,30 @@ export class QualificationsService {
 
 		if (!subjectId) return;
 
-		this.tasks.mutate(tasks => {
+		this.tasks.update(tasks => {
 			tasks.forEach(task => {
 				if ((task.subject as Subject).id !== subjectId)
 					task.show = false;
 			});
+
+			return JSON.parse(JSON.stringify(tasks));
 		});
 
-		this.exams.mutate(exams => {
+		this.exams.update(exams => {
 			exams.forEach(exam => {
 				if (exam.subject !== subjectId) exam.show = false;
 			});
+
+			return JSON.parse(JSON.stringify(exams));
 		});
 	}
 
 	public cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
-		signal.mutate(elements =>
-			elements.forEach(element => (element.show = true))
-		);
+		signal.update(elements => {
+			elements.forEach(element => (element.show = true));
+
+			return JSON.parse(JSON.stringify(elements));
+		});
 	}
 
 	private cleanAllShow() {

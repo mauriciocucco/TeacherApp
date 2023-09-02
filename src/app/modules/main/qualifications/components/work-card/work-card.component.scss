@@ -40,10 +40,6 @@
 	gap: 2.5rem;
 }
 
-.disappear {
-	display: none !important;
-}
-
 .confirm-button {
 	background-color: green;
 	color: white;
@@ -67,4 +63,8 @@
 		height: 5rem !important;
 		width: 5rem !important;
 	}
+}
+
+.disappear {
+	display: none !important;
 }

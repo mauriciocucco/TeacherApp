@@ -1,7 +1,12 @@
 <mat-card class="qualification-card" [ngClass]="{ disappear: !work?.show }">
 	<mat-card-header class="qualification-card-header">
 		<h3 [title]="work?.name">{{ work?.name }}</h3>
-		<h4 *ngIf="work?.totalDelivered">
+		<h4
+			*ngIf="
+				(work?.totalDelivered !== null ||
+					work?.totalDelivered !== undefined) &&
+				workType === workEnum.TASK
+			">
 			{{ students()!.length }}/{{ work?.totalDelivered }}
 		</h4>
 		<p>
