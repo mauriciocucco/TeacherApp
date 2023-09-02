@@ -1,6 +1,7 @@
 import {
 	Component,
 	DestroyRef,
+	HostListener,
 	OnInit,
 	Signal,
 	ViewChild,
@@ -57,6 +58,7 @@ export class FilterComponent implements OnInit {
 	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
+	public selectedStudent = this.qs.selectedStudent;
 	private studentsQueryParams: StudentsParams | null = null;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private deselectedOption = '*';
@@ -67,6 +69,10 @@ export class FilterComponent implements OnInit {
 	tasksAutocomplete?: MatAutocomplete;
 	@ViewChild('examsAutocomplete', { static: false })
 	examsAutocomplete?: MatAutocomplete;
+	@HostListener('window:resize', ['$event'])
+	onResize(): void {
+		this.vs.setScreenType();
+	}
 
 	constructor(
 		private qs: QualificationsService,
@@ -78,6 +84,7 @@ export class FilterComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
+		this.listenResetFilters();
 		this.vs.setScreenType();
 	}
 
@@ -89,12 +96,22 @@ export class FilterComponent implements OnInit {
 		this.listenStudentsFilterChanges();
 	}
 
+	private listenResetFilters() {
+		this.qs.resetFilters$
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(reset => {
+				if (reset) this.resetForm(true);
+			});
+	}
+
 	private listenSubjectFilterChanges() {
 		this.filtersForm
 			.get('subject')
 			?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(subject => {
 				this.qs.filterTasksAndExamsBySubject(subject);
+				this.qs.selectedSubjectIdFilter.set(subject); //necesito setear el filtro por materia en el servicio
+
 				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 			});
@@ -113,6 +130,7 @@ export class FilterComponent implements OnInit {
 				if (this.screenType() === ScreenType.MOBILE)
 					this.toggleFiltersMenu(false);
 
+				this.qs.selectedCourseId.set(course);
 				this.qs.selectedSubjectIdFilter.set(0);
 				this.qs.getTasksExamsAndStudents(
 					this.taskAndExamsQueryParams,
@@ -148,9 +166,6 @@ export class FilterComponent implements OnInit {
 	private getNewTasksAndExams(
 		queryParams: TasksAndExamsQueryParams | null = null
 	) {
-		const subjectId = this.filtersForm.get('subject')?.value;
-
-		this.qs.selectedSubjectIdFilter.set(subjectId as number); //necesito setear el filtro por materia en el servicio
 		this.qs.getTasksExamsAndStudents(
 			queryParams ? queryParams : this.taskAndExamsQueryParams
 		);
@@ -161,10 +176,11 @@ export class FilterComponent implements OnInit {
 			.processValueChanges(
 				this.filtersForm.get('student')?.valueChanges.pipe(
 					tap(value => {
-						if (!value)
+						if (!value) {
 							this.qs.cleanShow(
 								this.students as WritableSignal<Student[]>
 							);
+						}
 					}),
 					debounce(value => (value ? timer(500) : timer(0))),
 					distinctUntilChanged(),
@@ -285,7 +301,7 @@ export class FilterComponent implements OnInit {
 			});
 	}
 
-	private resetForm() {
+	private resetForm(emit = false) {
 		this.filtersForm.reset(
 			{
 				subject: 0,
@@ -294,8 +310,9 @@ export class FilterComponent implements OnInit {
 				exam: '',
 				course: this.filtersForm.get('course')?.value,
 			},
-			{ emitEvent: false }
+			{ emitEvent: emit }
 		);
+		this.qs.resetFilters.next(false);
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {

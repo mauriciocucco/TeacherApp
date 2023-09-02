@@ -1,4 +1,4 @@
-import { Injectable, WritableSignal, signal } from '@angular/core';
+import { Injectable, WritableSignal, computed, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import {
 	BehaviorSubject,
@@ -38,20 +38,29 @@ import { ControlType } from '../../../modules/main/qualifications/components/cre
 	providedIn: 'root',
 })
 export class QualificationsService {
+	public spinnerProgressOn = signal(false);
+	public resetFilters = new BehaviorSubject(false);
+	public resetFilters$ = this.resetFilters.asObservable();
 	private subjects$ = this.apiService.get<SchoolSubject[]>(
 		Endpoints.SUBJECTS
 	);
 	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
 	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
-	public selectedSubjectIdFilter = signal(0);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
+	public selectedCourseId: WritableSignal<number | undefined> =
+		signal(undefined);
+	public selectedStudent = computed(() =>
+		this.students()
+			? this.students()!.filter(s => s.show)?.length <= 1
+			: false
+	);
+	public selectedSubjectIdFilter = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
-	public spinnerProgressOn = signal(false);
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
 	>([null, null]);

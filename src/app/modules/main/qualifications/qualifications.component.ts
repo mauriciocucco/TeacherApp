@@ -2,7 +2,6 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
-	HostListener,
 	OnDestroy,
 	QueryList,
 	Renderer2,
@@ -63,6 +62,7 @@ export class QualificationsComponent implements OnDestroy {
 	public editMode = signal(false);
 	public defaultRowsNumber = signal(5);
 	public selectedTab = signal(0);
+	public selectedStudent = this.qs.selectedStudent;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
@@ -88,10 +88,6 @@ export class QualificationsComponent implements OnDestroy {
 		takeUntilDestroyed(this.destroyRef)
 	);
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
-	@HostListener('window:resize', ['$event'])
-	onResize(): void {
-		this.vs.setScreenType();
-	}
 
 	constructor(
 		private qs: QualificationsService,
@@ -105,22 +101,22 @@ export class QualificationsComponent implements OnDestroy {
 	}
 
 	public openCreateDialog(): void {
-		// TODO: const courseId = this.filtersForm.get('course')?.value;
+		const courseId = this.qs.selectedCourseId();
 		const dialogRef = this.dialog.open(CreateDialogComponent, {
-			// TODO: data: { course: courseId },
+			data: { course: courseId },
 		});
 
 		dialogRef
 			.afterClosed()
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reloadData => {
-				// TODO: if (reloadData) {
-				// 	const queryParams = {
-				// 		courseId,
-				// 	};
-				// 	this.changeToCorrectTab();
-				// 	this.getNewTasksAndExams(queryParams);
-				// }
+				if (reloadData) {
+					const queryParams = {
+						courseId,
+					};
+					this.changeToCorrectTab();
+					this.qs.getTasksExamsAndStudents(queryParams);
+				}
 			});
 	}
 
@@ -128,7 +124,7 @@ export class QualificationsComponent implements OnDestroy {
 		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
 		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
 
-		// TODO:  this.resetForm();
+		this.qs.resetFilters.next(true);
 	}
 
 	public openInfoDialog(work: Task | Exam, workType = Work.TASK) {
@@ -148,7 +144,7 @@ export class QualificationsComponent implements OnDestroy {
 		this.selectedWorkType.set(workType);
 		this.dialog.open(DeleteDialogComponent, {
 			data: {
-				// TODO: courseId: this.filtersForm.get('course')?.value,
+				courseId: this.qs.selectedCourseId(),
 				workId: work.id,
 				workName: work.name,
 			},
@@ -169,12 +165,12 @@ export class QualificationsComponent implements OnDestroy {
 			.afterClosed()
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reloadData => {
-				// TODO:  if (reloadData) {
-				// 	const queryParams = {
-				// 		courseId: this.filtersForm.get('course')?.value,
-				// 	};
-				// 	this.getNewTasksAndExams(queryParams);
-				// }
+				if (reloadData) {
+					const queryParams = {
+						courseId: this.qs.selectedCourseId(),
+					};
+					this.qs.getTasksExamsAndStudents(queryParams);
+				}
 			});
 	}
 

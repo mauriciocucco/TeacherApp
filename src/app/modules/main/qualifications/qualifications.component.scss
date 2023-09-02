@@ -112,10 +112,6 @@
 	}
 }
 
-.show {
-	display: flex !important;
-}
-
 .hide-menu-state {
 	@include mq-mobile {
 		max-height: 150px;
