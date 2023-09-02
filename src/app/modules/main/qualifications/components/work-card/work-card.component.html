@@ -152,7 +152,7 @@
 					#textArea
 					>{{
 						{
-							works: work?.studentToTask,
+							works: work?.studentToTask? work?.studentToTask : work?.studentToExam,
 							studentId: student?.id,
 						} | studentRelation : 'observation'
 					}}</textarea
