@@ -37,7 +37,6 @@
 										taskMatchSomeFilter();
 										else noMatchedTasks
 									">
-									<!-- TODO: CREAR CADA CARD COMO COMPONENTE -->
 									<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
 										<app-work-card [work]="task" [student]="student"></app-work-card>
 									</ng-container>
@@ -138,3 +137,4 @@
 
 	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>
+

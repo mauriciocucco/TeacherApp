@@ -16,7 +16,6 @@
 				aria-label="Icono para editar"
 				(click)="
 					toggleEditOnSelectedItem({
-						controlElement: matSelect,
 						textArea,
 						editButton,
 						confirmDiv,
@@ -32,23 +31,19 @@
 					mat-mini-fab
 					color="green"
 					aria-label="Icono para confirmar edición"
-					(click)="
-																	updateWork(
-																		{
-																		controlElement: matSelect,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton,
-																		cardContent,
-																		cardLoading,
-																		},
-																		{
-																			workId: work?.id,
-																			studentId: student?.id,
-																		}
-																	)
-																">
+					(click)="updateWork({
+										    textArea,
+											editButton,
+											confirmDiv,
+											deleteButton,
+											cardContent,
+											cardLoading,
+										},
+										{
+											workId: work?.id,
+											studentId: student?.id,
+										}
+					)">
 					<mat-icon>check</mat-icon>
 				</button>
 				<button
@@ -61,7 +56,6 @@
 					(click)="
 						toggleEditOnSelectedItem(
 							{
-								controlElement: matSelect,
 								textArea,
 								editButton,
 								confirmDiv,
@@ -90,7 +84,7 @@
 				title="Ver más información"
 				mat-mini-fab
 				color="blue"
-				aria-label="Icono para ver más detalles de la tarea"
+				aria-label="Icono para ver más detalles"
 				(click)="openInfoDialog(work)">
 				<mat-icon>info</mat-icon>
 			</button>
@@ -103,33 +97,51 @@
 		<div class="qualification-card-content">
 			<mat-form-field appearance="fill">
 				<mat-label>Nota</mat-label>
-				<mat-select
-					[value]="
-						{
-							works: work?.studentToTask,
-							studentId: student?.id
-						} | studentRelation : 'markingId'
-					"
-					(selectionChange)="updateWork(
-																{
-																controlElement: matSelect,
-																cardContent,
-																cardLoading,
-																},
-																{
-																	workId: work?.id,
-																	studentId: student?.id,
-																}
-															)"
-					#matSelect>
-					<mat-option
-						*ngFor="let marking of markings()"
-						[value]="marking.id">
-						{{ marking.name }}
-						-
-						{{ marking.description }}
-					</mat-option>
-				</mat-select>
+				<ng-container
+					*ngTemplateOutlet="
+						workType === workEnum.TASK ? taskSelect : examInput
+					"></ng-container>
+				<ng-template #taskSelect>
+					<mat-select
+						[value]="
+							{
+								works: work?.studentToTask,
+								studentId: student?.id
+							} | studentRelation : 'markingId'
+						"
+						(selectionChange)="updateWork(
+														{
+															cardContent,
+															cardLoading,
+														},
+														{
+															workId: work?.id,
+															studentId: student?.id,
+														}
+						)"
+						#matSelect>
+						<mat-option
+							*ngFor="let marking of markings()"
+							[value]="marking.id">
+							{{ marking.name }}
+							-
+							{{ marking.description }}
+						</mat-option>
+					</mat-select>
+				</ng-template>
+				<ng-template #examInput>
+					<input
+						#matInput
+						readonly
+						matInput
+						placeholder="Nota del examen"
+						[value]="
+							{
+								works: work?.studentToExam,
+								studentId: student?.id
+							} | studentRelation : 'marking'
+						" />
+				</ng-template>
 			</mat-form-field>
 			<mat-form-field class="observation-textarea">
 				<mat-label>Observación</mat-label>
@@ -139,196 +151,13 @@
 					[rows]="defaultRowsNumber()"
 					#textArea
 					>{{
-																	{
-																		works: work?.studentToTask,
-																		studentId:
-																			student?.id,
-																	} | studentRelation : 'observation'
+						{
+							works: work?.studentToTask,
+							studentId: student?.id,
+						} | studentRelation : 'observation'
 					}}</textarea
 				>
 			</mat-form-field>
 		</div>
 	</mat-card-content>
 </mat-card>
-
-<!-- <mat-card
-										[ngClass]="{'disappear': !exam.show}"
-											class="qualification-card"
-											[ngClass]="{
-												'pdlColor': exam.subject === 1,
-												'socialesColor': exam.subject === 2
-											}"
-											>
-											<mat-card-header
-												class="qualification-card-header">
-												<h3 [title]="exam.name">{{ exam.name }}</h3>
-												<p>
-													{{ exam.date | shortDate }}
-												</p>
-												<div
-													class="edit-and-delete-settings">
-													<button
-														#editButton
-														mat-mini-fab
-														color="primary"
-														title="Editar observación"
-														aria-label="Icono para editar"
-														(click)="
-															toggleEditOnSelectedItem(
-																{
-																	controlElement: matInput,
-																	textArea,
-																	editButton,
-																	confirmDiv,
-																	deleteButton
-																},
-																{
-																	workId: 0,
-																	studentId: 0,
-																	workType: WorkEnum.EXAM
-																}
-															)
-														">
-														<mat-icon
-															>edit</mat-icon
-														>
-													</button>
-													<div
-														#confirmDiv
-														class="confirm-icons disappear">
-														<button
-														    class="confirm-button"
-															title="Guardar edición"
-															mat-mini-fab
-															color="green"
-															aria-label="Icono para confirmar edición"
-															(click)="
-																updateWork(
-																	{
-																		controlElement: matInput,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton,
-																		cardContent,
-																		cardLoading,
-																	},
-																	{
-																		workId: exam.id,
-																		studentId: student.id,
-																		workType: WorkEnum.EXAM
-																	}
-																)
-															">
-															<mat-icon
-																>check</mat-icon
-															>
-														</button>
-														<button
-														    class="cancel-button"
-															#cancelEditButton
-															title="Cancelar edición"
-															mat-mini-fab
-															color="red"
-															aria-label="Icono para cancelar edición"
-															(click)="
-																toggleEditOnSelectedItem(
-																	{
-																		controlElement: matInput,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton
-																	},
-																	{
-																		workId: exam.id,
-																		studentId: student.id,
-																		workType: WorkEnum.EXAM
-																	},
-																	false
-																)
-															">
-															<mat-icon
-																>cancel</mat-icon
-															>
-														</button>
-													</div>
-													<button
-														#deleteButton
-														mat-mini-fab
-														color="warn"
-														aria-label="Icono para borrar"
-														(click)="openDeleteDialog(exam, WorkEnum.EXAM)"
-														>
-														<mat-icon
-															>delete</mat-icon
-														>
-													</button>
-													<button
-													    class="info-button"
-														title="Ver más información"
-														mat-mini-fab
-														color="blue"
-														aria-label="Icono para ver más detalles del exámen"
-														(click)="
-															openInfoDialog(
-																exam,
-																WorkEnum.EXAM
-															)
-														">
-														<mat-icon
-															>info</mat-icon
-														>
-													</button>
-												</div>
-											</mat-card-header>
-											<div
-												class="card-loading disappear"
-												#cardLoading>
-												<mat-spinner></mat-spinner>
-											</div>
-											<mat-card-content #cardContent>
-												<div
-													class="qualification-card-content">
-													<mat-form-field
-														appearance="fill">
-														<mat-label
-															>Nota</mat-label
-														>
-														<input
-															#matInput
-															readonly
-															matInput
-															placeholder="Nota del examen"
-															[value]="
-																{
-																	works: exam.studentToExam,
-																	studentId:
-																		student.id
-																}
-																	| studentRelation
-																		: 'marking'
-															" />
-													</mat-form-field>
-													<mat-form-field
-														class="observation-textarea">
-														<mat-label
-															>Observación</mat-label
-														>
-														<textarea
-															matInput
-															[readonly]="true"
-															[rows]="
-																defaultRowsNumber()
-															"
-															#textArea
-															>{{
-																	{
-																		works: exam.studentToExam,
-																		studentId: student.id,
-																	} | studentRelation:"observation"
-															}}</textarea>
-													</mat-form-field>
-												</div>
-											</mat-card-content>
-										</mat-card> -->

@@ -4,6 +4,7 @@ import {
 	Input,
 	Renderer2,
 	Signal,
+	ViewChild,
 	WritableSignal,
 	inject,
 	signal,
@@ -39,6 +40,7 @@ export class WorkCardComponent {
 	@Input() work: Partial<Task & Exam> | undefined = undefined;
 	@Input() student: Student | undefined = undefined;
 	@Input() workType: Work = Work.TASK;
+	public workEnum = Work;
 	public students: Signal<Student[] | undefined> = this.qs.students;
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
@@ -59,6 +61,10 @@ export class WorkCardComponent {
 	private selectedWorkInfo: WritableSignal<WorkInfo> = signal(
 		this.defaultWorkInfo
 	);
+	@ViewChild('matSelect', { static: false })
+	markSelect?: MatSelect;
+	@ViewChild('matInput', { static: false })
+	markInput?: HTMLInputElement;
 
 	constructor(
 		private qs: QualificationsService,
@@ -89,13 +95,11 @@ export class WorkCardComponent {
 	}
 
 	private changeEditUIStatus(allowEdit: boolean) {
-		const {
-			controlElement,
-			textArea,
-			confirmDiv,
-			editButton,
-			deleteButton,
-		} = this.editHTMLElements() as ToggleEditElements;
+		const { textArea, confirmDiv, editButton, deleteButton } =
+			this.editHTMLElements() as ToggleEditElements;
+		const controlElement = (
+			this.workType === Work.TASK ? this.markSelect : this.markInput
+		) as MatSelect | HTMLInputElement;
 
 		controlElement instanceof MatSelect
 			? null
@@ -110,9 +114,11 @@ export class WorkCardComponent {
 	}
 
 	private returnToPreviousState() {
-		const { controlElement, textArea } =
-			this.editHTMLElements() as ToggleEditElements;
+		const { textArea } = this.editHTMLElements() as ToggleEditElements;
 		const previousState = this.getOldState();
+		const controlElement = (
+			this.workType === Work.TASK ? this.markSelect : this.markInput
+		) as MatSelect | HTMLInputElement;
 
 		controlElement.value =
 			this.selectedWorkType() === Work.TASK
@@ -200,12 +206,14 @@ export class WorkCardComponent {
 		studentId: number | undefined;
 		observation?: string;
 	}) {
+		const controlElement = (
+			this.workType === Work.TASK ? this.markSelect : this.markInput
+		) as MatSelect | HTMLInputElement;
 		const actualMarking =
 			this.selectedWorkType() === Work.TASK
 				? (this.getOldState() as StudentToTask)?.markingId
 				: this.getOldState()?.marking;
-		const marking =
-			this.editHTMLElements()?.controlElement?.value ?? actualMarking;
+		const marking = controlElement?.value ?? actualMarking;
 
 		return this.selectedWorkType() === Work.TASK
 			? {

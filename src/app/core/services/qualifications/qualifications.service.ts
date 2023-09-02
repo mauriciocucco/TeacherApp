@@ -14,7 +14,10 @@ import {
 	tap,
 } from 'rxjs';
 import { Endpoints } from '../../enums/endpoints.enum';
-import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
+import {
+	Subject as SchoolSubject,
+	Subject,
+} from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
@@ -246,7 +249,8 @@ export class QualificationsService {
 
 		this.tasks.mutate(tasks => {
 			tasks.forEach(task => {
-				if (task.subject.id !== subjectId) task.show = false;
+				if ((task.subject as Subject).id !== subjectId)
+					task.show = false;
 			});
 		});
 
