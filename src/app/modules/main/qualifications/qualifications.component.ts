@@ -33,7 +33,6 @@ import { StudentToExam } from '../../../core/interfaces/student-to-exam.interfac
 import { DeleteDialogComponent } from './components/delete-dialog/delete-dialog.component';
 import { UpdateWorkElements } from './interfaces/update-work.interface';
 import { WorkInfo } from './interfaces/work-info.interface';
-import { ViewService } from '../../../core/services/view/view.service';
 import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
@@ -92,8 +91,7 @@ export class QualificationsComponent implements OnDestroy {
 	constructor(
 		private qs: QualificationsService,
 		public dialog: MatDialog,
-		private renderer: Renderer2,
-		private vs: ViewService
+		private renderer: Renderer2
 	) {}
 
 	ngOnDestroy(): void {
