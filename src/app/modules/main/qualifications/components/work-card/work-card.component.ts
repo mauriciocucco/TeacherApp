@@ -1,6 +1,7 @@
 import {
 	Component,
 	DestroyRef,
+	ElementRef,
 	Input,
 	Renderer2,
 	Signal,
@@ -64,7 +65,7 @@ export class WorkCardComponent {
 	@ViewChild('matSelect', { static: false })
 	markSelect?: MatSelect;
 	@ViewChild('matInput', { static: false })
-	markInput?: HTMLInputElement;
+	markInput?: ElementRef;
 
 	constructor(
 		private qs: QualificationsService,
@@ -98,7 +99,9 @@ export class WorkCardComponent {
 		const { textArea, confirmDiv, editButton, deleteButton } =
 			this.editHTMLElements() as ToggleEditElements;
 		const controlElement = (
-			this.workType === Work.TASK ? this.markSelect : this.markInput
+			this.workType === Work.TASK
+				? this.markSelect
+				: this.markInput?.nativeElement
 		) as MatSelect | HTMLInputElement;
 
 		controlElement instanceof MatSelect
@@ -117,7 +120,9 @@ export class WorkCardComponent {
 		const { textArea } = this.editHTMLElements() as ToggleEditElements;
 		const previousState = this.getOldState();
 		const controlElement = (
-			this.workType === Work.TASK ? this.markSelect : this.markInput
+			this.workType === Work.TASK
+				? this.markSelect
+				: this.markInput?.nativeElement
 		) as MatSelect | HTMLInputElement;
 
 		controlElement.value =
@@ -207,7 +212,9 @@ export class WorkCardComponent {
 		observation?: string;
 	}) {
 		const controlElement = (
-			this.workType === Work.TASK ? this.markSelect : this.markInput
+			this.workType === Work.TASK
+				? this.markSelect
+				: this.markInput?.nativeElement
 		) as MatSelect | HTMLInputElement;
 		const actualMarking =
 			this.selectedWorkType() === Work.TASK

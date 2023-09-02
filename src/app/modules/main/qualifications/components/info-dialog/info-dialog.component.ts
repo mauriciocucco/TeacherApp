@@ -101,8 +101,9 @@ export class InfoDialogComponent {
 	}
 
 	private findSubject() {
+		console.log('MATERIA ', this.payload.workSubject);
 		return this.qs
 			.subjects()
-			.find(subject => subject.id === this.payload.workSubject)?.name;
+			.find(subject => subject.id === this.payload.workSubject?.id)?.name;
 	}
 }
