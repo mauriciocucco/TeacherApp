@@ -9,6 +9,7 @@ import { ScrollComponent } from './components/scroll/scroll.component';
 import { HeaderComponent } from './layout/header/header.component';
 import { ShiftPipe } from './pipes/shift.pipe';
 import { WarningComponent } from './components/warning/warning.component';
+import { MenuButtonComponent } from './components/menu-button/menu-button.component';
 
 @NgModule({
 	declarations: [
@@ -17,6 +18,7 @@ import { WarningComponent } from './components/warning/warning.component';
 		HeaderComponent,
 		ShiftPipe,
 		WarningComponent,
+		MenuButtonComponent,
 	],
 	imports: [
 		CommonModule,
@@ -36,6 +38,7 @@ import { WarningComponent } from './components/warning/warning.component';
 		HeaderComponent,
 		ShiftPipe,
 		WarningComponent,
+		MenuButtonComponent,
 	],
 })
 export class SharedModule {}

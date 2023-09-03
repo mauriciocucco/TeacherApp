@@ -90,20 +90,7 @@
 		</ng-template>
 	</ng-template>
 
-	<!-- TODO: PROBAR CON NG CONTENT Y CONTENT PROJECTION -->
-	<button
-		id="createButton"
-		title="Crear una nueva tarea o exámen"
-		mat-fab
-		color="accent"
-		aria-label="Crear una nueva tarea o exámen"
-		*ngIf="students() ? students()!.length > 0 : false"
-		[matMenuTriggerFor]="menu"
-		>
-		<mat-icon>add</mat-icon>
-	</button>
-
-	<mat-menu #menu="matMenu">
+	<app-menu-button *ngIf="students() ? students()!.length > 0 : false" title="Crear una nueva tarea o exámen" icon="add">
 		<button mat-menu-item (click)="openCreateDialog()">
 			<div class="menu-option-wrapper">
 				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / examen" fontIcon="note_add"></mat-icon>
@@ -116,7 +103,7 @@
 				<span>Asignar múltiples calificaciones</span>
 			</div>
 		</button>
-	</mat-menu>
+	</app-menu-button>
 
 	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>
