@@ -1,10 +1,4 @@
-import {
-	Injectable,
-	WritableSignal,
-	computed,
-	effect,
-	signal,
-} from '@angular/core';
+import { Injectable, WritableSignal, computed, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import {
 	BehaviorSubject,
@@ -50,8 +44,6 @@ export class QualificationsService {
 	public spinnerProgressOn = signal(false);
 	public resetFilters = new BehaviorSubject(false);
 	public resetFilters$ = this.resetFilters.asObservable();
-	public showStudentsByLetter = new BehaviorSubject('');
-	public showStudentsByLetter$ = this.showStudentsByLetter.asObservable();
 	public letterSelected: WritableSignal<string | null> = signal(null);
 	public cleanAlphabet = new BehaviorSubject(false);
 	public cleanAlphabet$ = this.cleanAlphabet.asObservable();

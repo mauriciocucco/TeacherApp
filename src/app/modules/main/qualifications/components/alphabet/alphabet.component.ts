@@ -4,6 +4,7 @@ import {
 	DestroyRef,
 	ElementRef,
 	ViewChild,
+	WritableSignal,
 	inject,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
@@ -17,6 +18,7 @@ import {
 	MatButtonToggleChange,
 } from '@angular/material/button-toggle';
 import { Router } from '@angular/router';
+import { Student } from 'src/app/core/interfaces/student.interface';
 
 @Component({
 	selector: 'app-alphabet',
@@ -31,6 +33,7 @@ export class AlphabetComponent implements OnInit {
 	public alphabet = this.alpha.map(x => String.fromCharCode(x));
 	private qs = inject(QualificationsService);
 	private vs = inject(ViewService);
+	private students = this.qs.students;
 	private checkedButton: MatButtonToggle | null = null;
 	private router = inject(Router);
 	private destroyRef = inject(DestroyRef);
@@ -43,7 +46,7 @@ export class AlphabetComponent implements OnInit {
 
 	public showStudentsWithLetter(letter: string) {
 		if (this.vs.screenType() === ScreenType.MOBILE) {
-			this.qs.showStudentsByLetter.next(letter);
+			this.qs.cleanShow(this.students as WritableSignal<Student[]>);
 			this.qs.setShowByLetter(letter);
 			this.qs.letterSelected.set(letter);
 			return;

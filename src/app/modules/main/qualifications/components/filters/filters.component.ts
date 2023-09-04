@@ -86,7 +86,6 @@ export class FiltersComponent implements OnInit {
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.listenResetFilters();
-		this.listenClearStudents();
 		this.vs.setScreenType();
 	}
 
@@ -103,14 +102,6 @@ export class FiltersComponent implements OnInit {
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reset => {
 				if (reset) this.resetForm(true);
-			});
-	}
-
-	private listenClearStudents() {
-		this.qs.showStudentsByLetter$
-			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe((letter: string) => {
-				if (letter) this.clearControl('Students');
 			});
 	}
 
@@ -190,6 +181,7 @@ export class FiltersComponent implements OnInit {
 							this.qs.cleanShow(
 								this.students as WritableSignal<Student[]>
 							);
+							this.qs.cleanAlphabet.next(true);
 						}
 					}),
 					debounce(value => (value ? timer(500) : timer(0))),
@@ -383,8 +375,7 @@ export class FiltersComponent implements OnInit {
 	}
 
 	public cleanSelectedLetter() {
-		if (this.vs.screenType() !== ScreenType.MOBILE) return;
-
+		this.qs.cleanAlphabet.next(true);
 		this.qs.letterSelected.set(null);
 	}
 
