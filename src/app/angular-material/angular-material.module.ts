@@ -17,6 +17,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @NgModule({
 	declarations: [],
@@ -39,6 +40,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 		MatListModule,
 		MatToolbarModule,
 		MatExpansionModule,
+		MatButtonToggleModule,
 	],
 	providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
 })

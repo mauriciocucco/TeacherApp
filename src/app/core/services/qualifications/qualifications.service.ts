@@ -1,4 +1,10 @@
-import { Injectable, WritableSignal, computed, signal } from '@angular/core';
+import {
+	Injectable,
+	WritableSignal,
+	computed,
+	effect,
+	signal,
+} from '@angular/core';
 import { ApiService } from '../api/api.service';
 import {
 	BehaviorSubject,
@@ -44,6 +50,11 @@ export class QualificationsService {
 	public spinnerProgressOn = signal(false);
 	public resetFilters = new BehaviorSubject(false);
 	public resetFilters$ = this.resetFilters.asObservable();
+	public showStudentsByLetter = new BehaviorSubject('');
+	public showStudentsByLetter$ = this.showStudentsByLetter.asObservable();
+	public letterSelected: WritableSignal<string | null> = signal(null);
+	public cleanAlphabet = new BehaviorSubject(false);
+	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
 	private subjects$ = this.apiService.get<SchoolSubject[]>(
 		Endpoints.SUBJECTS
 	);
@@ -57,9 +68,14 @@ export class QualificationsService {
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
 	public selectedCourseId: WritableSignal<number | undefined> =
 		signal(undefined);
-	public selectedStudent = computed(() =>
+	public studentIsSelected = computed(() =>
 		this.students()
 			? this.students()!.filter(s => s.show)?.length <= 1
+			: false
+	);
+	public noStudentShowingForMobile = computed(() =>
+		this.students()
+			? this.students()!.filter(s => s.showForMobile)?.length === 0
 			: false
 	);
 	public selectedSubjectIdFilter = signal(0);
@@ -213,6 +229,9 @@ export class QualificationsService {
 				? students.forEach(student => {
 						if (student.id !== studentSelected?.id)
 							student.show = false;
+
+						if (student.id === studentSelected?.id)
+							student.showForMobile = true;
 				  })
 				: null;
 		});
@@ -267,7 +286,11 @@ export class QualificationsService {
 
 	public cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
 		signal.update(elements => {
-			elements.forEach(element => (element.show = true));
+			elements.forEach(element => {
+				element.show = true;
+
+				if ('showForMobile' in element) element.showForMobile = false;
+			});
 
 			return JSON.parse(JSON.stringify(elements));
 		});
@@ -313,5 +336,20 @@ export class QualificationsService {
 			...works[selectedWorkIndex],
 			...updatedWork,
 		} as Task | Exam;
+	}
+
+	public setShowByLetter(letter: string) {
+		this.students.mutate(students => {
+			students
+				? students.forEach(student => {
+						if (
+							student?.lastname?.charAt(0).toUpperCase() ===
+							letter.toUpperCase()
+						) {
+							student.showForMobile = true;
+						}
+				  })
+				: null;
+		});
 	}
 }

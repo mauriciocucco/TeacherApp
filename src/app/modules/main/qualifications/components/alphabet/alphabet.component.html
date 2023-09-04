@@ -1,12 +1,17 @@
-<mat-card>
-	<mat-card-content id="alphabet-content">
-		<button
-			*ngFor="let letter of alphabet"
-			mat-flat-button
-			color="accent"
-			routerLink="/"
-			fragment="{{ letter }}">
-			{{ letter }}
-		</button>
-	</mat-card-content>
-</mat-card>
+<mat-button-toggle-group
+	id="alphabet-toggle-group"
+	name="alphabet"
+	aria-label="Alphabet"
+	(change)="toggleChange($event)"
+	#alphabetToggleGroup>
+	<mat-button-toggle
+		class="toggle-button"
+		appearance="legacy"
+		*ngFor="let letter of alphabet"
+		[value]="letter"
+		routerLink="/"
+		fragment="{{ letter }}"
+		(click)="showStudentsWithLetter(letter)"
+		>{{ letter }}</mat-button-toggle
+	>
+</mat-button-toggle-group>

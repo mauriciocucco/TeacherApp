@@ -7,4 +7,5 @@ export interface Student {
 	studentToExam: StudentToExam[];
 	studentToTask: StudentToTask[];
 	show: boolean;
+	showForMobile: boolean;
 }

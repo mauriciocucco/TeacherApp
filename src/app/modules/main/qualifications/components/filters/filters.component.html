@@ -11,6 +11,7 @@
 				<div
 					id="content-container"
 					[ngClass]="{ 'mobile-container': students() }">
+					<!-- MATERIA -->
 					<div
 						class="first-row mobile-hide"
 						[ngClass]="{ 'mobile-show': students() }">
@@ -28,6 +29,7 @@
 						</mat-radio-group>
 					</div>
 					<div class="second-row">
+						<!-- CURSO -->
 						<mat-form-field appearance="fill">
 							<mat-label>Curso</mat-label>
 							<mat-select
@@ -53,6 +55,7 @@
 									: 'Mostrar más filtros'
 							}}
 						</button>
+						<!-- ALUMNX -->
 						<div class="control-wrapper">
 							<mat-form-field
 								class="mobile-hide"
@@ -107,10 +110,14 @@
 								color="primary"
 								title="Limpiar estudiante seleccionado"
 								aria-label="Botón para limpiar autocompletar de estudiantes"
-								(click)="clearControl('Students')">
+								(click)="
+									clearControl('Students');
+									cleanSelectedLetter()
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
+						<!-- TAREA -->
 						<div class="control-wrapper">
 							<mat-form-field
 								appearance="fill"
@@ -167,6 +174,7 @@
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
+						<!-- EXÁMEN -->
 						<div class="control-wrapper">
 							<mat-form-field
 								appearance="fill"
@@ -226,6 +234,7 @@
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
+						<!-- FECHAS -->
 						<div
 							class="range-date-wrapper mobile-hide"
 							[ngClass]="{ 'mobile-show': openFiltersMenu() }">

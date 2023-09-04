@@ -2,7 +2,9 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
+	HostListener,
 	OnDestroy,
+	OnInit,
 	QueryList,
 	Signal,
 	ViewChildren,
@@ -23,6 +25,8 @@ import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
 import { Marking } from '../../../core/interfaces/marking.interface';
+import { ViewService } from '../../../core/services/view/view.service';
+import { ScreenType } from '../../../core/enums/screen-type.enum';
 
 @Component({
 	selector: 'app-qualifications',
@@ -30,7 +34,9 @@ import { Marking } from '../../../core/interfaces/marking.interface';
 	styleUrls: ['./qualifications.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QualificationsComponent implements OnDestroy {
+export class QualificationsComponent implements OnInit, OnDestroy {
+	public screenType = this.vs.screenType;
+	public ScreenTypeEnum = ScreenType;
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[] | undefined> = this.qs.students;
@@ -44,8 +50,11 @@ export class QualificationsComponent implements OnDestroy {
 	public examMatchSomeFilter = computed(() =>
 		this.exams().some(exam => exam.show)
 	);
+	public noStudentShowingForMobile = this.qs.noStudentShowingForMobile;
+	public letterSelected = this.qs.letterSelected;
+	public courseIsSelected = this.qs.selectedCourseId;
 	public selectedTab = signal(0);
-	public selectedStudent = this.qs.selectedStudent;
+	public studentIsSelected = this.qs.studentIsSelected;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
 	private readonly document = inject(DOCUMENT);
@@ -58,8 +67,20 @@ export class QualificationsComponent implements OnDestroy {
 		takeUntilDestroyed(this.destroyRef)
 	);
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
+	@HostListener('window:resize', ['$event'])
+	onResize(): void {
+		this.vs.setScreenType();
+	}
 
-	constructor(private qs: QualificationsService, public dialog: MatDialog) {}
+	constructor(
+		private qs: QualificationsService,
+		public dialog: MatDialog,
+		private vs: ViewService
+	) {}
+
+	ngOnInit(): void {
+		this.vs.setScreenType();
+	}
 
 	ngOnDestroy(): void {
 		this.cleanSignals();

@@ -60,7 +60,6 @@ export class FiltersComponent implements OnInit {
 	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
-	public selectedStudent = this.qs.selectedStudent;
 	private studentsQueryParams: StudentsParams | null = null;
 	private taskAndExamsQueryParams: TasksAndExamsQueryParams | null = null;
 	private deselectedOption = '*';
@@ -87,6 +86,7 @@ export class FiltersComponent implements OnInit {
 	ngOnInit(): void {
 		this.listenCourseFilterChanges();
 		this.listenResetFilters();
+		this.listenClearStudents();
 		this.vs.setScreenType();
 	}
 
@@ -103,6 +103,14 @@ export class FiltersComponent implements OnInit {
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reset => {
 				if (reset) this.resetForm(true);
+			});
+	}
+
+	private listenClearStudents() {
+		this.qs.showStudentsByLetter$
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe((letter: string) => {
+				if (letter) this.clearControl('Students');
 			});
 	}
 
@@ -318,8 +326,10 @@ export class FiltersComponent implements OnInit {
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		if (this.screenType() === ScreenType.MOBILE)
+		if (this.screenType() === ScreenType.MOBILE) {
 			this.toggleFiltersMenu(false);
+			this.qs.cleanAlphabet.next(true);
+		}
 
 		if (this.deselectedOption === option.option.value) return; // esto es por que al hacer el deselect() llama al click
 
@@ -369,6 +379,12 @@ export class FiltersComponent implements OnInit {
 		}
 
 		this.toggleFiltersMenu(false);
+	}
+
+	public cleanSelectedLetter() {
+		if (this.vs.screenType() !== ScreenType.MOBILE) return;
+
+		this.qs.letterSelected.set(null);
 	}
 
 	public trackItems(index: number, item: any): number {

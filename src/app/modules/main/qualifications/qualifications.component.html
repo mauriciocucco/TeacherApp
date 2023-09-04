@@ -3,7 +3,7 @@
 
 	<app-alphabet 
 		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
-		[ngClass]="{'disappear': selectedStudent()}"
+		[ngClass]="{'disappear': screenType() === ScreenTypeEnum.DESKTOP && studentIsSelected()}"
 		>
 	</app-alphabet>
 
@@ -16,10 +16,16 @@
 				students()!.length > 0 &&
 				!spinnerProgressOn();
 			else selectCourseWarning"
-			[ngClass]="{'mobile-margin-top': selectedStudent()}"
-			>
+		[ngClass]="{
+			'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
+		}">
 		<ng-container *ngFor="let student of students(); trackBy: trackItems">
-			<mat-card [ngClass]="{'disappear': !student.show}" id="{{ student.lastname.charAt(0).toUpperCase()}}">
+			<mat-card 
+				[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
+										 (screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
+							}" 
+				id="{{ student.lastname.charAt(0).toUpperCase()}}"
+			>
 					<mat-card-header
 						><h2 class="student-header">
 							{{ student.name }} {{ student.lastname }}
@@ -74,11 +80,11 @@
 	<ng-template #selectCourseWarning>
 		<ng-container
 			[ngTemplateOutlet]="
-				students()?.length === 0? noStudents : studentsFound
+				students()?.length === 0? noStudents : courseNotSelected
 			"></ng-container>
 
-		<ng-template #studentsFound>
-			<div *ngIf="!spinnerProgressOn()" class="warning-container" appViewListener>
+		<ng-template #courseNotSelected>
+			<div *ngIf="!spinnerProgressOn()" class="warning-container">
 				<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
 			</div>
 		</ng-template>
@@ -89,6 +95,29 @@
 			</div>
 		</ng-template>
 	</ng-template>
+
+	<!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
+	<ng-container
+			[ngTemplateOutlet]="
+				letterSelected()? noMatch: chooseAStudent
+	"></ng-container>
+
+	<ng-template #chooseAStudent>
+		<app-warning 
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile()"
+				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
+		></app-warning>
+	</ng-template>
+
+	<ng-template #noMatch>
+		<app-warning 
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()"
+				[info]="'No se encontraron alumnxs'"
+		></app-warning>
+	</ng-template>
+	
+
+	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
 
 	<app-menu-button *ngIf="students() ? students()!.length > 0 : false" title="Crear una nueva tarea o exámen" icon="add">
 		<button mat-menu-item (click)="openCreateDialog()">
@@ -104,7 +133,6 @@
 			</div>
 		</button>
 	</app-menu-button>
-
-	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
+	
 </div>
 
