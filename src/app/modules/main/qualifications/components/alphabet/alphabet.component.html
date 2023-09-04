@@ -9,8 +9,6 @@
 		appearance="legacy"
 		*ngFor="let letter of alphabet"
 		[value]="letter"
-		routerLink="/"
-		fragment="{{ letter }}"
 		(click)="showStudentsWithLetter(letter)"
 		>{{ letter }}</mat-button-toggle
 	>

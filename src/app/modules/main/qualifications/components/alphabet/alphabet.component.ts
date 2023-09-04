@@ -16,6 +16,7 @@ import {
 	MatButtonToggle,
 	MatButtonToggleChange,
 } from '@angular/material/button-toggle';
+import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-alphabet',
@@ -30,8 +31,9 @@ export class AlphabetComponent implements OnInit {
 	public alphabet = this.alpha.map(x => String.fromCharCode(x));
 	private qs = inject(QualificationsService);
 	private vs = inject(ViewService);
-	private destroyRef = inject(DestroyRef);
 	private checkedButton: MatButtonToggle | null = null;
+	private router = inject(Router);
+	private destroyRef = inject(DestroyRef);
 	@ViewChild('alphabetToggleGroup', { static: false })
 	alphabetToggleGroup?: ElementRef;
 
@@ -44,7 +46,10 @@ export class AlphabetComponent implements OnInit {
 			this.qs.showStudentsByLetter.next(letter);
 			this.qs.setShowByLetter(letter);
 			this.qs.letterSelected.set(letter);
+			return;
 		}
+
+		this.router.navigateByUrl(`/#${letter}`);
 	}
 
 	private listenCleanAlphabet() {
