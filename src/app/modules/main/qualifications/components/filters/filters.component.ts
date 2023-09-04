@@ -328,8 +328,9 @@ export class FiltersComponent implements OnInit {
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
 		if (this.screenType() === ScreenType.MOBILE) {
 			this.toggleFiltersMenu(false);
-			this.qs.cleanAlphabet.next(true);
 		}
+
+		this.qs.cleanAlphabet.next(true);
 
 		if (this.deselectedOption === option.option.value) return; // esto es por que al hacer el deselect() llama al click
 
