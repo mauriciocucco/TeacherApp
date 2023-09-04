@@ -1,4 +1,10 @@
-import { Injectable, WritableSignal, signal } from '@angular/core';
+import {
+	Injectable,
+	WritableSignal,
+	computed,
+	effect,
+	signal,
+} from '@angular/core';
 import { ApiService } from '../api/api.service';
 import {
 	BehaviorSubject,
@@ -14,7 +20,10 @@ import {
 	tap,
 } from 'rxjs';
 import { Endpoints } from '../../enums/endpoints.enum';
-import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
+import {
+	Subject as SchoolSubject,
+	Subject,
+} from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
@@ -38,20 +47,39 @@ import { ControlType } from '../../../modules/main/qualifications/components/cre
 	providedIn: 'root',
 })
 export class QualificationsService {
+	public spinnerProgressOn = signal(false);
+	public resetFilters = new BehaviorSubject(false);
+	public resetFilters$ = this.resetFilters.asObservable();
+	public showStudentsByLetter = new BehaviorSubject('');
+	public showStudentsByLetter$ = this.showStudentsByLetter.asObservable();
+	public letterSelected: WritableSignal<string | null> = signal(null);
+	public cleanAlphabet = new BehaviorSubject(false);
+	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
 	private subjects$ = this.apiService.get<SchoolSubject[]>(
 		Endpoints.SUBJECTS
 	);
 	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
 	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
-	public selectedSubjectIdFilter = signal(0);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
+	public selectedCourseId: WritableSignal<number | undefined> =
+		signal(undefined);
+	public studentIsSelected = computed(() =>
+		this.students()
+			? this.students()!.filter(s => s.show)?.length <= 1
+			: false
+	);
+	public noStudentShowingForMobile = computed(() =>
+		this.students()
+			? this.students()!.filter(s => s.showForMobile)?.length === 0
+			: false
+	);
+	public selectedSubjectIdFilter = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
-	public spinnerProgressOn = signal(false);
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
 	>([null, null]);
@@ -201,6 +229,9 @@ export class QualificationsService {
 				? students.forEach(student => {
 						if (student.id !== studentSelected?.id)
 							student.show = false;
+
+						if (student.id === studentSelected?.id)
+							student.showForMobile = true;
 				  })
 				: null;
 		});
@@ -235,23 +266,34 @@ export class QualificationsService {
 
 		if (!subjectId) return;
 
-		this.tasks.mutate(tasks => {
+		this.tasks.update(tasks => {
 			tasks.forEach(task => {
-				if (task.subject.id !== subjectId) task.show = false;
+				if ((task.subject as Subject).id !== subjectId)
+					task.show = false;
 			});
+
+			return JSON.parse(JSON.stringify(tasks));
 		});
 
-		this.exams.mutate(exams => {
+		this.exams.update(exams => {
 			exams.forEach(exam => {
 				if (exam.subject !== subjectId) exam.show = false;
 			});
+
+			return JSON.parse(JSON.stringify(exams));
 		});
 	}
 
 	public cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
-		signal.mutate(elements =>
-			elements.forEach(element => (element.show = true))
-		);
+		signal.update(elements => {
+			elements.forEach(element => {
+				element.show = true;
+
+				if ('showForMobile' in element) element.showForMobile = false;
+			});
+
+			return JSON.parse(JSON.stringify(elements));
+		});
 	}
 
 	private cleanAllShow() {
@@ -294,5 +336,20 @@ export class QualificationsService {
 			...works[selectedWorkIndex],
 			...updatedWork,
 		} as Task | Exam;
+	}
+
+	public setShowByLetter(letter: string) {
+		this.students.mutate(students => {
+			students
+				? students.forEach(student => {
+						if (
+							student?.lastname?.charAt(0).toUpperCase() ===
+							letter.toUpperCase()
+						) {
+							student.showForMobile = true;
+						}
+				  })
+				: null;
+		});
 	}
 }

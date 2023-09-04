@@ -1,0 +1,13 @@
+<button
+	id="mainButton"
+	[title]="title"
+	mat-fab
+	color="accent"
+	aria-label="Boton con opciones"
+	[matMenuTriggerFor]="menu">
+	<mat-icon>{{ icon }}</mat-icon>
+</button>
+
+<mat-menu #menu="matMenu">
+	<ng-content #buttons></ng-content>
+</mat-menu>

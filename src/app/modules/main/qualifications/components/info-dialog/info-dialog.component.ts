@@ -101,8 +101,10 @@ export class InfoDialogComponent {
 	}
 
 	private findSubject() {
-		return this.qs
-			.subjects()
-			.find(subject => subject.id === this.payload.workSubject)?.name;
+		const subjectPayload =
+			this.payload.workSubject?.id ?? this.payload.workSubject;
+
+		return this.qs.subjects().find(subject => subject.id === subjectPayload)
+			?.name;
 	}
 }

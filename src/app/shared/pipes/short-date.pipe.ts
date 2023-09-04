@@ -4,7 +4,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 	name: 'shortDate',
 })
 export class ShortDatePipe implements PipeTransform {
-	transform(incomingValue: string | Date): string {
+	transform(incomingValue: string | Date | undefined): string {
+		if (!incomingValue) return '';
+
 		let ISOString = incomingValue;
 
 		if (typeof ISOString === 'object') {

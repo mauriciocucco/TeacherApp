@@ -1,20 +1,15 @@
 @import '../../../../../../variables.scss';
 
-#alphabet-content {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	button {
-		border-radius: 50%;
-		min-width: 36px;
-		padding: unset !important;
-	}
-	@include mq-mobile {
-		display: flex;
-		gap: 0.8rem;
-		flex-wrap: unset;
-		justify-content: unset;
-		overflow: scroll;
+#alphabet-toggle-group {
+	overflow: auto;
+	width: 100%;
+}
+
+.toggle-button {
+	font-size: 1.7rem;
+	font-weight: bold;
+	.mat-button-toggle-button {
+		width: 4rem !important;
 	}
 }
 
@@ -23,7 +18,7 @@
 	top: 0;
 	z-index: 4;
 	@include mq-mobile {
-		margin-top: calc(180px + 3rem);
+		margin-top: calc(150px + 3rem);
 		z-index: 2;
 	}
 }

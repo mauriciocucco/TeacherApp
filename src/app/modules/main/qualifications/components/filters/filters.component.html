@@ -1,0 +1,296 @@
+<div id="filters" class="mobile-card-state">
+	<mat-card>
+		<mat-card-header>Filtros</mat-card-header>
+		<mat-card-content
+			[ngClass]="{
+                'hide-menu-state': students(),
+                'open-menu-state': openFiltersMenu(),
+            }"
+			[ngStyle]="{ 'padding-bottom': 'unset' }">
+			<form [formGroup]="filtersForm">
+				<div
+					id="content-container"
+					[ngClass]="{ 'mobile-container': students() }">
+					<!-- MATERIA -->
+					<div
+						class="first-row mobile-hide"
+						[ngClass]="{ 'mobile-show': students() }">
+						<mat-radio-group
+							aria-label="Elegí una materia"
+							formControlName="subject">
+							<mat-radio-button
+								*ngFor="let subject of subjects()"
+								[value]="subject.id"
+								>{{ subject.name }}</mat-radio-button
+							>
+							<mat-radio-button [value]="0">{{
+								'Todas las materias'
+							}}</mat-radio-button>
+						</mat-radio-group>
+					</div>
+					<div class="second-row">
+						<!-- CURSO -->
+						<mat-form-field appearance="fill">
+							<mat-label>Curso</mat-label>
+							<mat-select
+								formControlName="course"
+								placeholder="Seleccionar un curso">
+								<mat-option
+									*ngFor="let course of courses()"
+									[value]="course.id">
+									{{ course.year }}° -
+									{{ course.shift | shift }}
+								</mat-option>
+							</mat-select>
+						</mat-form-field>
+						<button
+							mat-stroked-button
+							id="filters-button"
+							color="primary"
+							[ngClass]="{ 'mobile-show': students() }"
+							(click)="toggleFiltersMenu()">
+							{{
+								openFiltersMenu()
+									? 'Ocultar filtros'
+									: 'Mostrar más filtros'
+							}}
+						</button>
+						<!-- ALUMNX -->
+						<div class="control-wrapper">
+							<mat-form-field
+								class="mobile-hide"
+								[ngClass]="{
+									'mobile-show': openFiltersMenu()
+								}">
+								<mat-label>Alumnx</mat-label>
+								<input
+									#studentsInput
+									type="text"
+									matInput
+									placeholder="Seleccione un alumnx"
+									[matAutocomplete]="auto"
+									aria-label="Number"
+									formControlName="student" />
+								<mat-autocomplete
+									#studentsAutocomplete
+									(optionSelected)="studentSelected($event)"
+									#auto="matAutocomplete">
+									<ng-container
+										*ngFor="
+											let student of students();
+											trackBy: trackItems
+										">
+										<mat-option
+											[ngClass]="{
+												disappear: !student.show
+											}"
+											[value]="
+												student.name +
+												' ' +
+												student.lastname
+											">
+											{{ student.name }}
+											{{ student?.lastname }}
+										</mat-option>
+									</ng-container>
+								</mat-autocomplete>
+							</mat-form-field>
+							<button
+								class="disappear"
+								[ngClass]="{
+									'mobile-show':
+										openFiltersMenu() &&
+										filtersForm.get('student')?.value,
+									show:
+										screenType() ===
+											ScreenTypeEnum.DESKTOP &&
+										filtersForm.get('student')?.value
+								}"
+								mat-mini-fab
+								color="primary"
+								title="Limpiar estudiante seleccionado"
+								aria-label="Botón para limpiar autocompletar de estudiantes"
+								(click)="
+									clearControl('Students');
+									cleanSelectedLetter()
+								">
+								<mat-icon>clear</mat-icon>
+							</button>
+						</div>
+						<!-- TAREA -->
+						<div class="control-wrapper">
+							<mat-form-field
+								appearance="fill"
+								class="mobile-hide"
+								[ngClass]="{
+									'mobile-show': openFiltersMenu()
+								}">
+								<mat-label>Tarea</mat-label>
+								<input
+									type="text"
+									matInput
+									placeholder="Seleccione una tarea"
+									[matAutocomplete]="autoTask"
+									aria-label="Number"
+									formControlName="task" />
+								<mat-autocomplete
+									#tasksAutocomplete
+									(optionSelected)="
+										taskOrExamSelected($event)
+									"
+									#autoTask="matAutocomplete">
+									<ng-container
+										*ngFor="
+											let task of tasks();
+											trackBy: trackItems
+										">
+										<mat-option
+											[ngClass]="{
+												disappear: !task.show
+											}"
+											[value]="task.name">
+											{{ task.name }} -
+											{{ task.date | shortDate }}
+										</mat-option>
+									</ng-container>
+								</mat-autocomplete>
+							</mat-form-field>
+							<button
+								class="disappear"
+								[ngClass]="{
+									'mobile-show':
+										openFiltersMenu() &&
+										filtersForm.get('task')?.value,
+									show:
+										screenType() ===
+											ScreenTypeEnum.DESKTOP &&
+										filtersForm.get('task')?.value
+								}"
+								mat-mini-fab
+								color="primary"
+								title="Limpiar tarea seleccionada"
+								aria-label="Botón para limpiar autocompletar de tareas"
+								(click)="clearControl('Tasks')">
+								<mat-icon>clear</mat-icon>
+							</button>
+						</div>
+						<!-- EXÁMEN -->
+						<div class="control-wrapper">
+							<mat-form-field
+								appearance="fill"
+								class="mobile-hide"
+								[ngClass]="{
+									'mobile-show': openFiltersMenu()
+								}">
+								<mat-label>Exámen</mat-label>
+								<input
+									type="text"
+									matInput
+									placeholder="Seleccione un exámen"
+									[matAutocomplete]="autoExam"
+									aria-label="Number"
+									formControlName="exam" />
+								<mat-autocomplete
+									#examsAutocomplete
+									(optionSelected)="
+										taskOrExamSelected(
+											$event,
+											WorkEnum.EXAM
+										)
+									"
+									#autoExam="matAutocomplete">
+									<ng-container
+										*ngFor="
+											let exam of exams();
+											trackBy: trackItems
+										">
+										<mat-option
+											[ngClass]="{
+												disappear: !exam.show
+											}"
+											[value]="exam.name">
+											{{ exam.name }} -
+											{{ exam.date | shortDate }}
+										</mat-option>
+									</ng-container>
+								</mat-autocomplete>
+							</mat-form-field>
+							<button
+								class="disappear"
+								[ngClass]="{
+									'mobile-show':
+										openFiltersMenu() &&
+										filtersForm.get('exam')?.value,
+									show:
+										screenType() ===
+											ScreenTypeEnum.DESKTOP &&
+										filtersForm.get('exam')?.value
+								}"
+								mat-mini-fab
+								color="primary"
+								title="Limpiar exámen seleccionado"
+								aria-label="Botón para limpiar autocompletar de exámenes"
+								(click)="clearControl('Exams')">
+								<mat-icon>clear</mat-icon>
+							</button>
+						</div>
+						<!-- FECHAS -->
+						<div
+							class="range-date-wrapper mobile-hide"
+							[ngClass]="{ 'mobile-show': openFiltersMenu() }">
+							<mat-form-field
+								id="date-filter-form-field"
+								appearance="fill">
+								<mat-label>Ingrese un período</mat-label>
+								<mat-date-range-input
+									[rangePicker]="picker"
+									formGroupName="dateRange">
+									<input
+										matStartDate
+										placeholder="Desde"
+										formControlName="start" />
+									<input
+										matEndDate
+										placeholder="Hasta"
+										formControlName="end" />
+								</mat-date-range-input>
+								<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
+								<mat-datepicker-toggle
+									matIconSuffix
+									[for]="picker"></mat-datepicker-toggle>
+								<mat-date-range-picker
+									#picker></mat-date-range-picker>
+							</mat-form-field>
+							<button
+								class="disappear"
+								[ngClass]="{
+									'mobile-show':
+										openFiltersMenu() &&
+										filtersForm
+											.get('dateRange')
+											?.get('start')?.value &&
+										filtersForm.get('dateRange')?.get('end')
+											?.value,
+									show:
+										screenType() ===
+											ScreenTypeEnum.DESKTOP &&
+										filtersForm
+											.get('dateRange')
+											?.get('start')?.value &&
+										filtersForm.get('dateRange')?.get('end')
+											?.value
+								}"
+								mat-mini-fab
+								color="primary"
+								title="Limpiar período"
+								aria-label="Botón para limpiar rango de fecha"
+								(click)="resetDateRange()">
+								<mat-icon>clear</mat-icon>
+							</button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</mat-card-content>
+	</mat-card>
+</div>

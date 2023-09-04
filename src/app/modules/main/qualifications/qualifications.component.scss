@@ -6,72 +6,6 @@
 	gap: 3rem;
 }
 
-#content-container {
-	.first-row {
-		@include mq-mobile {
-			text-align: center;
-		}
-	}
-	.second-row {
-		display: flex;
-		gap: 2rem;
-		justify-content: space-around;
-		padding-top: 1rem;
-		width: 100%;
-		& > mat-form-field {
-			width: 80%;
-			@include mq-mobile {
-				width: 100%;
-			}
-		}
-		@include mq-mobile {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-	}
-}
-
-.qualification-card {
-	.qualification-card-header {
-		align-items: center;
-		display: flex;
-		flex-direction: column;
-		h3 {
-			font-weight: bold;
-			margin-bottom: unset;
-			text-overflow: ellipsis;
-			overflow: hidden;
-			white-space: nowrap;
-			max-width: 20.8rem;
-		}
-		h4 {
-			color: #1cb128;
-			font-weight: bold;
-			margin-bottom: 0.5rem;
-		}
-		.edit-and-delete-settings {
-			display: flex;
-			gap: 2.5rem;
-			margin-bottom: 1.3rem;
-		}
-	}
-	.mat-mdc-card-content {
-		&:last-child {
-			padding-bottom: unset;
-		}
-		.qualification-card-content {
-			display: flex;
-			flex-direction: column;
-		}
-	}
-}
-
-.confirm-icons {
-	display: flex;
-	gap: 2.5rem;
-}
-
 #students-cards-container {
 	display: flex;
 	flex-direction: column;
@@ -96,170 +30,20 @@
 	padding: 0.5rem;
 }
 
-#warning-card {
-	text-align: center;
-}
-.control-wrapper {
-	@include flex-center;
-	gap: 1rem;
-	position: relative;
-	width: 100%;
-	mat-form-field {
-		width: -webkit-fill-available;
-	}
-	button {
-		bottom: 3.7rem;
-		height: 2.5rem !important;
-		position: absolute;
-		right: 1rem;
-		z-index: 2;
-		width: 2.5rem !important;
-		mat-icon {
-			font-size: 1.6rem;
-			height: 1.6rem;
-			width: 1.6rem;
-		}
-	}
-	@include mq-mobile {
-		gap: 0.5rem;
-	}
-}
-
-.range-date-wrapper {
-	@include flex-center;
-	width: 100%;
-	button {
-		bottom: 1rem;
-		height: 2.5rem !important;
-		margin-left: 0.5rem;
-		position: relative;
-		width: 2.5rem !important;
-		mat-icon {
-			font-size: 1.6rem;
-			height: 1.6rem;
-			width: 1.6rem;
-		}
-		@include mq-mobile {
-			bottom: 1.5rem;
-		}
-	}
-}
-
 .spinner-wrapper {
 	@include flex-center;
 	height: 100vh;
 	width: 100%;
 }
 
-#createButton {
-	bottom: 5rem;
-	position: sticky;
-	z-index: 2;
-}
-
 .disappear {
 	display: none !important;
-}
-
-.mat-green {
-	color: green;
-}
-
-.mat-red {
-	color: rgba(255, 0, 0, 0.685);
-}
-
-.mat-blue {
-	color: rgb(61, 61, 236);
-}
-
-.card-loading {
-	@include flex-center;
-	width: 24.4rem;
-	min-height: 26.5rem;
-	mat-spinner {
-		height: 5rem !important;
-		width: 5rem !important;
-	}
-}
-
-.mobile-hide {
-	@include mq-mobile {
-		display: none;
-	}
-}
-
-.mobile-show {
-	@include mq-mobile {
-		display: flex !important;
-	}
-}
-
-.show {
-	display: flex !important;
-}
-
-.mobile-container {
-	@include mq-mobile {
-		display: flex;
-		flex-direction: column-reverse;
-	}
-}
-
-.hide-menu-state {
-	@include mq-mobile {
-		max-height: 150px;
-		overflow: hidden;
-		transition: max-height 0.3s ease;
-	}
-}
-
-.open-menu-state {
-	max-height: -webkit-fill-available;
-}
-
-.mobile-card-state {
-	@include mq-mobile {
-		left: 50%;
-		padding: 0 $viewport-padding-mobile;
-		position: absolute;
-		transform: translateX(-50%);
-		width: 100%;
-		z-index: 3;
-	}
-}
-
-#filters-button {
-	display: none;
-	margin-bottom: 2.2rem;
-}
-
-#date-filter-form-field {
-	@include mq-mobile {
-		margin-bottom: 1rem;
-		width: -webkit-fill-available;
-	}
 }
 
 .warning-container {
 	@include mq-mobile {
 		margin-top: calc(140.4px + 3rem);
 	}
-}
-
-.confirm-button {
-	background-color: green;
-	color: white;
-}
-
-.cancel-button {
-	background-color: red;
-	color: white;
-}
-
-.info-button {
-	background-color: blue;
-	color: white;
 }
 
 .mobile-margin-top {

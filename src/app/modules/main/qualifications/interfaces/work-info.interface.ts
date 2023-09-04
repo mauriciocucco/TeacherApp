@@ -1,7 +1,4 @@
-import { Work } from '../../../../core/enums/work.enum';
-
 export interface WorkInfo {
-	workId: number;
-	studentId: number;
-	workType: Work;
+	workId: number | undefined;
+	studentId: number | undefined;
 }

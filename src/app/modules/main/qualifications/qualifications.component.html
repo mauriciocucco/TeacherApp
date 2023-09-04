@@ -1,234 +1,10 @@
 <div id="container">
-	<div id="filters" class="mobile-card-state">
-		<mat-card>
-			<mat-card-header>Filtros</mat-card-header>
-			<mat-card-content 
-				[ngClass]="{
-					'hide-menu-state': students(),
-					'open-menu-state': openFiltersMenu(),
-				}"
-				[ngStyle]="{'padding-bottom': 'unset'}"
-			>
-				<form [formGroup]="filtersForm">
-					<div id="content-container" [ngClass]="{'mobile-container': students()}">
-						<div class="first-row mobile-hide" [ngClass]="{'mobile-show': students()}">
-							<mat-radio-group
-								aria-label="Elegí una materia"
-								formControlName="subject">
-								<mat-radio-button
-									*ngFor="let subject of subjects()"
-									[value]="subject.id"
-									>{{ subject.name }}</mat-radio-button
-								>
-								<mat-radio-button [value]="0">{{
-									'Todas las materias'
-								}}</mat-radio-button>
-							</mat-radio-group>
-						</div>
-						<div class="second-row">
-							<mat-form-field appearance="fill">
-								<mat-label>Curso</mat-label>
-								<mat-select
-									formControlName="course"
-									placeholder="Seleccionar un curso">
-									<mat-option
-										*ngFor="let course of courses()"
-										[value]="course.id">
-										{{ course.year }}° -
-										{{ course.shift | shift }}
-									</mat-option>
-								</mat-select>
-							</mat-form-field>
-							<button mat-stroked-button id="filters-button" color="primary" 
-								[ngClass]="{'mobile-show': students()}"
-								(click)="toggleFiltersMenu()"
-								>
-								{{ openFiltersMenu()? 'Ocultar filtros' : 'Mostrar más filtros'}}
-						    </button>
-							<div class="control-wrapper">
-								<mat-form-field class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-								<mat-label>Alumnx</mat-label>
-								<input
-								    #studentsInput
-									type="text"
-									matInput
-									placeholder="Seleccione un alumnx"
-									[matAutocomplete]="auto"
-									aria-label="Number"
-									formControlName="student" 
-								/>
-								<mat-autocomplete
-									#studentsAutocomplete
-									(optionSelected)="studentSelected($event)"
-									#auto="matAutocomplete"
-								>
-									<ng-container *ngFor="
-									let student of students(); trackBy: trackItems
-								    ">
-										<mat-option
-											[ngClass]="{'disappear': !student.show}"
-											[value]="
-											student.name +
-											' ' +
-											student.lastname
-										">
-											{{ student.name }}
-											{{ student?.lastname }}
-										</mat-option>
-									</ng-container>
-								</mat-autocomplete>
-								</mat-form-field>
-								<button
-									class="disappear"
-									[ngClass]="{
-										'mobile-show': openFiltersMenu() && filtersForm.get('student')?.value,
-										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('student')?.value
-									}"
-									mat-mini-fab
-									color="primary"
-									title="Limpiar estudiante seleccionado"
-									aria-label="Botón para limpiar autocompletar de estudiantes"
-									(click)="clearControl('Students')"
-								>
-									<mat-icon>clear</mat-icon>
-								</button>
-						    </div>
-							<div class="control-wrapper">
-								<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-									<mat-label>Tarea</mat-label>
-									<input
-										type="text"
-										matInput
-										placeholder="Seleccione una tarea"
-										[matAutocomplete]="autoTask"
-										aria-label="Number"
-										formControlName="task" />
-									<mat-autocomplete
-										#tasksAutocomplete
-										(optionSelected)="
-											taskOrExamSelected($event)
-										"
-										#autoTask="matAutocomplete">
-										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
-											<mat-option
-											[ngClass]="{'disappear': !task.show}"
-											[value]="task.name">
-												{{ task.name }} -
-												{{ task.date | shortDate }}
-											</mat-option>
-										</ng-container>
-									</mat-autocomplete>
-								</mat-form-field>
-								<button
-									class="disappear"
-									[ngClass]="{
-										'mobile-show': openFiltersMenu() && filtersForm.get('task')?.value,
-										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('task')?.value
-									}"
-									mat-mini-fab
-									color="primary"
-									title="Limpiar tarea seleccionada"
-									aria-label="Botón para limpiar autocompletar de tareas"
-									(click)="clearControl('Tasks')"
-								>
-									<mat-icon>clear</mat-icon>
-								</button>
-							</div>
-							<div class="control-wrapper">
-								<mat-form-field appearance="fill" class="mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-									<mat-label>Exámen</mat-label>
-									<input
-										type="text"
-										matInput
-										placeholder="Seleccione un exámen"
-										[matAutocomplete]="autoExam"
-										aria-label="Number"
-										formControlName="exam" />
-									<mat-autocomplete
-										#examsAutocomplete
-										(optionSelected)="
-											taskOrExamSelected(
-												$event,
-												WorkEnum.EXAM
-											)
-										"
-										#autoExam="matAutocomplete">
-										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
-											<mat-option
-											[ngClass]="{'disappear': !exam.show}"
-											[value]="exam.name">
-												{{ exam.name }} -
-												{{ exam.date | shortDate }}
-											</mat-option>
-										</ng-container>
-									</mat-autocomplete>
-								</mat-form-field>
-								<button
-									class="disappear"
-									[ngClass]="{
-										'mobile-show': openFiltersMenu() && filtersForm.get('exam')?.value,
-										'show': screenType() === ScreenTypeEnum.DESKTOP && filtersForm.get('exam')?.value
-									}"
-									mat-mini-fab
-									color="primary"
-									title="Limpiar exámen seleccionado"
-									aria-label="Botón para limpiar autocompletar de exámenes"
-									(click)="clearControl('Exams')"
-								>
-									<mat-icon>clear</mat-icon>
-								</button>
-							</div>
-							<div class="range-date-wrapper mobile-hide" [ngClass]="{'mobile-show': openFiltersMenu()}">
-								<mat-form-field id="date-filter-form-field" appearance="fill">
-									<mat-label>Ingrese un período</mat-label>
-									<mat-date-range-input
-										[rangePicker]="picker"
-										formGroupName="dateRange">
-										<input
-											matStartDate
-											placeholder="Desde"
-											formControlName="start" />
-										<input
-											matEndDate
-											placeholder="Hasta"
-											formControlName="end" />
-									</mat-date-range-input>
-									<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
-									<mat-datepicker-toggle
-										matIconSuffix
-										[for]="picker"></mat-datepicker-toggle>
-									<mat-date-range-picker
-										#picker></mat-date-range-picker>
-								</mat-form-field>
-								<button
-									class="disappear"
-									[ngClass]="{
-										'mobile-show': openFiltersMenu() && 
-													   filtersForm.get('dateRange')?.get('start')?.value &&
-													   filtersForm.get('dateRange')?.get('end')?.value,
-										'show': screenType() === ScreenTypeEnum.DESKTOP && 
-												filtersForm.get('dateRange')?.get('start')?.value &&
-												filtersForm.get('dateRange')?.get('end')?.value			   
-									}"
-									mat-mini-fab
-									color="primary"
-									title="Limpiar período"
-									aria-label="Botón para limpiar rango de fecha"
-									(click)="resetDateRange()">
-									<mat-icon>clear</mat-icon>
-								</button>
-							</div>
-						</div>
-					</div>
-				</form>
-			</mat-card-content>
-		</mat-card>
-	</div>
+	<app-filters></app-filters>
 
 	<app-alphabet 
 		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
-		[ngClass]="{'disappear': filtersForm.get('student')?.value}"
-	>
+		[ngClass]="{'disappear': screenType() === ScreenTypeEnum.DESKTOP && studentIsSelected()}"
+		>
 	</app-alphabet>
 
 	<!-- Para que se muestre el div, el tasksExamsAndStudents$ tiene que emitir algo que exista y tienen que haber alumnxs -->
@@ -240,10 +16,16 @@
 				students()!.length > 0 &&
 				!spinnerProgressOn();
 			else selectCourseWarning"
-		[ngClass]="{'mobile-margin-top': filtersForm.get('student')?.value}"
-	>
+		[ngClass]="{
+			'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
+		}">
 		<ng-container *ngFor="let student of students(); trackBy: trackItems">
-			<mat-card [ngClass]="{'disappear': !student.show}" id="{{ student.lastname.charAt(0).toUpperCase()}}">
+			<mat-card 
+				[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
+										 (screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
+							}" 
+				id="{{ student.lastname.charAt(0).toUpperCase()}}"
+			>
 					<mat-card-header
 						><h2 class="student-header">
 							{{ student.name }} {{ student.lastname }}
@@ -262,212 +44,11 @@
 										else noMatchedTasks
 									">
 									<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
-										<mat-card
-											class="qualification-card"
-											[ngClass]="{'disappear': !task.show}"
-										>
-											<mat-card-header
-												class="qualification-card-header">
-												<h3 [title]="task.name">{{ task.name }}</h3>
-												<h4>{{students()!.length}}/{{task.totalDelivered}}</h4>
-												<p>
-													{{ task.date | shortDate }}
-												</p>
-												<div
-													class="edit-and-delete-settings">
-													<button
-														#editButton
-														mat-mini-fab
-														color="primary"
-														title="Editar observación"
-														aria-label="Icono para editar"
-														(click)="
-															toggleEditOnSelectedItem(
-																{
-																	controlElement: matSelect,
-																	textArea,
-																	editButton,
-																	confirmDiv,
-																	deleteButton
-																}
-															)
-														">
-														<mat-icon
-															>edit</mat-icon
-														>
-													</button>
-													<div
-														#confirmDiv
-														class="confirm-icons disappear">
-														<button
-														    class="confirm-button"
-															title="Guardar edición"
-															mat-mini-fab
-															color="green"
-															aria-label="Icono para confirmar edición"
-															(click)="
-																	updateWork(
-																		{
-																		controlElement: matSelect,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton,
-																		cardContent,
-																		cardLoading,
-																		},
-																		{
-																			workId: task.id,
-																			studentId: student.id,
-																			workType: WorkEnum.TASK
-																		}
-																	)
-																">
-															<mat-icon
-																>check</mat-icon
-															>
-														</button>
-														<button
-														    class="cancel-button"
-															#cancelEditButton
-															title="Cancelar edición"
-															mat-mini-fab
-															color="red"
-															aria-label="Icono para cancelar edición"
-															(click)="
-																toggleEditOnSelectedItem(
-																	{
-																		controlElement: matSelect,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton
-																	},
-																	{
-																		workId: task.id,
-																	    studentId: student.id,
-																		workType: WorkEnum.TASK
-																	},
-																	false
-																)
-															">
-															<mat-icon
-																>cancel</mat-icon
-															>
-														</button>
-													</div>
-													<button
-														#deleteButton
-														mat-mini-fab
-														color="warn"
-														aria-label="Icono para borrar"
-														(click)="openDeleteDialog(task, WorkEnum.TASK)"
-														>
-														<mat-icon
-															>delete</mat-icon
-														>
-													</button>
-													<button
-													    class="info-button"
-														title="Ver más información"
-														mat-mini-fab
-														color="blue"
-														aria-label="Icono para ver más detalles de la tarea"
-														(click)="
-															openInfoDialog(task)
-														">
-														<mat-icon
-															>info</mat-icon
-														>
-													</button>
-												</div>
-											</mat-card-header>
-											<div
-												class="card-loading disappear"
-												#cardLoading>
-												<mat-spinner></mat-spinner>
-											</div>
-											<mat-card-content #cardContent>
-												<div
-													class="qualification-card-content">
-													<mat-form-field
-														appearance="fill">
-														<mat-label
-															>Nota</mat-label
-														>
-														<mat-select
-															[value]="
-																{
-																	works: task.studentToTask,
-																	studentId:
-																		student.id
-																}
-																	| studentRelation
-																		: 'markingId'
-															"
-															(selectionChange)="updateWork(
-																{
-																controlElement: matSelect,
-																cardContent,
-																cardLoading,
-																},
-																{
-																	workId: task.id,
-																	studentId: student.id,
-																	workType: WorkEnum.TASK
-																}
-															)"
-															#matSelect>
-															<mat-option
-																*ngFor="
-																	let marking of markings()
-																"
-																[value]="
-																	marking.id
-																">
-																{{
-																	marking.name
-																}}
-																-
-																{{
-																	marking.description
-																}}
-															</mat-option>
-														</mat-select>
-													</mat-form-field>
-													<mat-form-field
-														class="observation-textarea">
-														<mat-label
-															>Observación</mat-label
-														>
-														<textarea
-															matInput
-															[readonly]="
-																!editMode()
-															"
-															[rows]="
-																defaultRowsNumber()
-															"
-															#textArea
-															>{{
-																	{
-																		works: task.studentToTask,
-																		studentId:
-																			student.id,
-																	} | studentRelation : 'observation'
-															}}</textarea>
-													</mat-form-field>
-												</div>
-											</mat-card-content>
-										</mat-card>
+										<app-work-card [work]="task" [student]="student"></app-work-card>
 									</ng-container>
 								</div>
 								<ng-template #noMatchedTasks>
-									<mat-card id="warning-card">
-										<mat-card-content>
-											<h2>No se encontraron tareas</h2>
-										</mat-card-content>
-									</mat-card>
+									<app-warning [info]="'No se encontraron tareas'"></app-warning>
 								</ng-template>
 							</mat-tab>
 
@@ -479,195 +60,11 @@
 										else noMatchedExams
 									">
 									<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
-										<mat-card
-										[ngClass]="{'disappear': !exam.show}"
-											class="qualification-card"
-											[ngClass]="{
-												'pdlColor': exam.subject === 1,
-												'socialesColor': exam.subject === 2
-											}"
-											>
-											<mat-card-header
-												class="qualification-card-header">
-												<h3 [title]="exam.name">{{ exam.name }}</h3>
-												<p>
-													{{ exam.date | shortDate }}
-												</p>
-												<div
-													class="edit-and-delete-settings">
-													<button
-														#editButton
-														mat-mini-fab
-														color="primary"
-														title="Editar observación"
-														aria-label="Icono para editar"
-														(click)="
-															toggleEditOnSelectedItem(
-																{
-																	controlElement: matInput,
-																	textArea,
-																	editButton,
-																	confirmDiv,
-																	deleteButton
-																},
-																{
-																	workId: 0,
-																	studentId: 0,
-																	workType: WorkEnum.EXAM
-																}
-															)
-														">
-														<mat-icon
-															>edit</mat-icon
-														>
-													</button>
-													<div
-														#confirmDiv
-														class="confirm-icons disappear">
-														<button
-														    class="confirm-button"
-															title="Guardar edición"
-															mat-mini-fab
-															color="green"
-															aria-label="Icono para confirmar edición"
-															(click)="
-																updateWork(
-																	{
-																		controlElement: matInput,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton,
-																		cardContent,
-																		cardLoading,
-																	},
-																	{
-																		workId: exam.id,
-																		studentId: student.id,
-																		workType: WorkEnum.EXAM
-																	}
-																)
-															">
-															<mat-icon
-																>check</mat-icon
-															>
-														</button>
-														<button
-														    class="cancel-button"
-															#cancelEditButton
-															title="Cancelar edición"
-															mat-mini-fab
-															color="red"
-															aria-label="Icono para cancelar edición"
-															(click)="
-																toggleEditOnSelectedItem(
-																	{
-																		controlElement: matInput,
-																		textArea,
-																		editButton,
-																		confirmDiv,
-																		deleteButton
-																	},
-																	{
-																		workId: exam.id,
-																		studentId: student.id,
-																		workType: WorkEnum.EXAM
-																	},
-																	false
-																)
-															">
-															<mat-icon
-																>cancel</mat-icon
-															>
-														</button>
-													</div>
-													<button
-														#deleteButton
-														mat-mini-fab
-														color="warn"
-														aria-label="Icono para borrar"
-														(click)="openDeleteDialog(exam, WorkEnum.EXAM)"
-														>
-														<mat-icon
-															>delete</mat-icon
-														>
-													</button>
-													<button
-													    class="info-button"
-														title="Ver más información"
-														mat-mini-fab
-														color="blue"
-														aria-label="Icono para ver más detalles del exámen"
-														(click)="
-															openInfoDialog(
-																exam,
-																WorkEnum.EXAM
-															)
-														">
-														<mat-icon
-															>info</mat-icon
-														>
-													</button>
-												</div>
-											</mat-card-header>
-											<div
-												class="card-loading disappear"
-												#cardLoading>
-												<mat-spinner></mat-spinner>
-											</div>
-											<mat-card-content #cardContent>
-												<div
-													class="qualification-card-content">
-													<mat-form-field
-														appearance="fill">
-														<mat-label
-															>Nota</mat-label
-														>
-														<input
-															#matInput
-															readonly
-															matInput
-															placeholder="Nota del examen"
-															[value]="
-																{
-																	works: exam.studentToExam,
-																	studentId:
-																		student.id
-																}
-																	| studentRelation
-																		: 'marking'
-															" />
-													</mat-form-field>
-													<mat-form-field
-														class="observation-textarea">
-														<mat-label
-															>Observación</mat-label
-														>
-														<textarea
-															matInput
-															[readonly]="true"
-															[rows]="
-																defaultRowsNumber()
-															"
-															#textArea
-															>{{
-																	{
-																		works: exam.studentToExam,
-																		studentId: student.id,
-																	} | studentRelation:"observation"
-															}}</textarea>
-													</mat-form-field>
-												</div>
-											</mat-card-content>
-										</mat-card>
+										<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"></app-work-card>
 									</ng-container>
 								</div>
 								<ng-template #noMatchedExams>
-									<mat-card id="warning-card">
-										<mat-card-content>
-											<h2>No se encontraron exámenes</h2>
-										</mat-card-content>
-									</mat-card>
+									<app-warning [info]="'No se encontraron exámenes'"></app-warning>
 								</ng-template>
 							</mat-tab>
 						</mat-tab-group>
@@ -683,43 +80,46 @@
 	<ng-template #selectCourseWarning>
 		<ng-container
 			[ngTemplateOutlet]="
-				students()?.length === 0? noStudents : studentsFound
+				students()?.length === 0? noStudents : courseNotSelected
 			"></ng-container>
 
-		<ng-template #studentsFound>
-			<div *ngIf="!spinnerProgressOn()" class="warning-container" appViewListener>
-				<mat-card id="warning-card">
-					<mat-card-content>
-						<h2>Por favor, seleccione un curso</h2>
-					</mat-card-content>
-				</mat-card>
+		<ng-template #courseNotSelected>
+			<div *ngIf="!spinnerProgressOn()" class="warning-container">
+				<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
 			</div>
 		</ng-template>
 
 		<ng-template #noStudents>
 			<div class="warning-container" *ngIf="!spinnerProgressOn()">
-				<mat-card id="warning-card">
-					<mat-card-content>
-						<h2>No existen alumnxs cargados para este curso</h2>
-					</mat-card-content>
-				</mat-card>
+				<app-warning [info]="'No existen alumnxs cargados para este curso'"></app-warning>
 			</div>
 		</ng-template>
 	</ng-template>
 
-	<button
-		id="createButton"
-		title="Crear una nueva tarea o exámen"
-		mat-fab
-		color="accent"
-		aria-label="Crear una nueva tarea o exámen"
-		*ngIf="students() ? students()!.length > 0 : false"
-		[matMenuTriggerFor]="menu"
-		>
-		<mat-icon>add</mat-icon>
-	</button>
+	<!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
+	<ng-container
+			[ngTemplateOutlet]="
+				letterSelected()? noMatch: chooseAStudent
+	"></ng-container>
 
-	<mat-menu #menu="matMenu">
+	<ng-template #chooseAStudent>
+		<app-warning 
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile()"
+				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
+		></app-warning>
+	</ng-template>
+
+	<ng-template #noMatch>
+		<app-warning 
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()"
+				[info]="'No se encontraron alumnxs'"
+		></app-warning>
+	</ng-template>
+	
+
+	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
+
+	<app-menu-button *ngIf="students() ? students()!.length > 0 : false" title="Crear una nueva tarea o exámen" icon="add">
 		<button mat-menu-item (click)="openCreateDialog()">
 			<div class="menu-option-wrapper">
 				<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / examen" fontIcon="note_add"></mat-icon>
@@ -732,7 +132,7 @@
 				<span>Asignar múltiples calificaciones</span>
 			</div>
 		</button>
-	  </mat-menu>
-
-	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
+	</app-menu-button>
+	
 </div>
+
