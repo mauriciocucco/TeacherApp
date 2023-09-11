@@ -11,10 +11,10 @@
 				<div
 					id="content-container"
 					[ngClass]="{ 'mobile-container': students() }">
-					<!-- MATERIA -->
 					<div
 						class="first-row mobile-hide"
 						[ngClass]="{ 'mobile-show': students() }">
+						<!-- MATERIA -->
 						<mat-radio-group
 							aria-label="Elegí una materia"
 							formControlName="subject">
@@ -112,7 +112,8 @@
 								aria-label="Botón para limpiar autocompletar de estudiantes"
 								(click)="
 									clearControl('Students');
-									cleanSelectedLetter()
+									cleanSelectedLetter();
+									toggleFiltersMenu(false)
 								">
 								<mat-icon>clear</mat-icon>
 							</button>
@@ -170,7 +171,10 @@
 								color="primary"
 								title="Limpiar tarea seleccionada"
 								aria-label="Botón para limpiar autocompletar de tareas"
-								(click)="clearControl('Tasks')">
+								(click)="
+									clearControl('Tasks');
+									toggleFiltersMenu(false)
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
@@ -230,14 +234,19 @@
 								color="primary"
 								title="Limpiar exámen seleccionado"
 								aria-label="Botón para limpiar autocompletar de exámenes"
-								(click)="clearControl('Exams')">
+								(click)="
+									clearControl('Exams');
+									toggleFiltersMenu(false)
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
 						<!-- FECHAS -->
 						<div
 							class="range-date-wrapper mobile-hide"
-							[ngClass]="{ 'mobile-show': openFiltersMenu() }">
+							[ngClass]="{
+								'mobile-show': openFiltersMenu()
+							}">
 							<mat-form-field
 								id="date-filter-form-field"
 								appearance="fill">
@@ -284,7 +293,9 @@
 								color="primary"
 								title="Limpiar período"
 								aria-label="Botón para limpiar rango de fecha"
-								(click)="resetDateRange()">
+								(click)="
+									clearDateRange(); toggleFiltersMenu(false)
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>

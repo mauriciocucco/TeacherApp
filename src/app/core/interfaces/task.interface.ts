@@ -5,5 +5,5 @@ import { WorkBase } from './work-base.interface';
 export interface Task extends WorkBase {
 	studentToTask: StudentToTask[];
 	totalDelivered: number;
-	subject: Subject | number;
+	subject: Subject;
 }

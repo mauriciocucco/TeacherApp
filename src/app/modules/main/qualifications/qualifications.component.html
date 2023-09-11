@@ -1,5 +1,5 @@
 <div id="container">
-	<app-filters></app-filters>
+	<app-filters [resetFilters]="resetFilters"></app-filters>
 
 	<app-alphabet 
 		*ngIf="students() && students()!.length > 0 && !spinnerProgressOn()"
@@ -11,7 +11,7 @@
 	<div
 		id="students-cards-container"
 		*ngIf="
-			(tasksExamsAndStudents$ | async) &&
+			(filteredData$ | async) &&
 				students() &&
 				students()!.length > 0 &&
 				!spinnerProgressOn();
@@ -39,6 +39,7 @@
 							<mat-tab label="Tareas">
 								<div
 									class="cards-wrapper"
+									appInfiniteScroll
 									*ngIf="
 										taskMatchSomeFilter();
 										else noMatchedTasks

@@ -34,13 +34,6 @@ export class StudentPerformanceComponent implements OnChanges {
 		if (changes['id']?.currentValue) this.searchStudentPerformance();
 	}
 
-	private getSubjects() {
-		this.as.get<SchoolSubject[]>(Endpoints.SUBJECTS).subscribe(subjects => {
-			this.subjects = subjects;
-			console.log('SUBJECTS ', this.subjects);
-		});
-	}
-
 	private searchStudentPerformance() {
 		this.studentPerformance$ = this.as
 			.get<SchoolSubject[]>(Endpoints.SUBJECTS)

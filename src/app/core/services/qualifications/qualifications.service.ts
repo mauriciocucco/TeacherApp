@@ -5,19 +5,15 @@ import {
 	EMPTY,
 	Observable,
 	catchError,
-	filter,
+	combineLatest,
 	forkJoin,
 	map,
 	of,
-	startWith,
 	switchMap,
 	tap,
 } from 'rxjs';
 import { Endpoints } from '../../enums/endpoints.enum';
-import {
-	Subject as SchoolSubject,
-	Subject,
-} from '../../../core/interfaces/subject.interface';
+import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
@@ -36,30 +32,25 @@ import { WorkBase } from '../../interfaces/work-base.interface';
 import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
+import { DateRangeFromMaterial } from '../../../modules/main/qualifications/interfaces/range-date.interface';
 
 @Injectable({
 	providedIn: 'root',
 })
 export class QualificationsService {
 	public spinnerProgressOn = signal(false);
-	public resetFilters = new BehaviorSubject(false);
-	public resetFilters$ = this.resetFilters.asObservable();
 	public letterSelected: WritableSignal<string | null> = signal(null);
 	public cleanAlphabet = new BehaviorSubject(false);
 	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
-	private subjects$ = this.apiService.get<SchoolSubject[]>(
-		Endpoints.SUBJECTS
-	);
-	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
-	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
+	public subjects$ = this.apiService.get<SchoolSubject[]>(Endpoints.SUBJECTS);
+	public courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
+	public markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[] | undefined> = signal(undefined);
-	public selectedCourseId: WritableSignal<number | undefined> =
-		signal(undefined);
 	public studentIsSelected = computed(() =>
 		this.students()
 			? this.students()!.filter(s => s.show)?.length <= 1
@@ -70,7 +61,12 @@ export class QualificationsService {
 			? this.students()!.filter(s => s.showForMobile)?.length === 0
 			: false
 	);
-	public selectedSubjectIdFilter = signal(0);
+	public selectedCourseId: WritableSignal<number> = signal(0);
+	public selectedDateRange: WritableSignal<DateRangeFromMaterial> = signal({
+		start: null,
+		end: null,
+	});
+	public selectedSubjectId = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
@@ -78,13 +74,17 @@ export class QualificationsService {
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(
-			filter(
-				([tasksAnExamsQueryParams]) => tasksAnExamsQueryParams !== null
-			),
-			tap(() => {
-				this.spinnerProgressOn.set(true);
+			tap(([tasksAndExamsQueryParams, studentsQueryParams]) => {
+				if (tasksAndExamsQueryParams || studentsQueryParams)
+					this.spinnerProgressOn.set(true);
 			}),
 			map(([tasksAndExamsQueryParams, studentsQueryParams]) => {
+				if (
+					(!tasksAndExamsQueryParams && !studentsQueryParams) ||
+					!tasksAndExamsQueryParams?.courseId
+				)
+					return [of([]), of([]), of([])];
+
 				const students$ = studentsQueryParams
 					? this.ss.getStudents(studentsQueryParams)
 					: of(this.students());
@@ -96,29 +96,79 @@ export class QualificationsService {
 				] as Observable<Task[] | Exam[] | Student[]>[];
 			}),
 			switchMap(observablesArray => forkJoin(observablesArray)),
-			tap(result => {
-				this.setSignalsValues(
-					result[0] as Task[],
-					result[1] as Exam[],
-					result[2] as Student[]
-				);
-				this.selectedSubjectIdFilter()
-					? this.filterTasksAndExamsBySubject(
-							this.selectedSubjectIdFilter()
-					  )
-					: this.cleanAllShow();
-				this.spinnerProgressOn.set(false);
+			map(([tasks, exams, students]) => {
+				if ((tasks.length || exams.length) && students.length) {
+					this.setSignalsValues(
+						tasks as Task[],
+						exams as Exam[],
+						students as Student[]
+					);
+
+					return [tasks, exams, students];
+				}
+
+				return [null, null, null];
 			}),
 			catchError(error => {
 				console.log(
 					'Hubo un error en el stream de tasksExamsAndStudents$: ',
 					error
 				);
+
 				this.spinnerProgressOn.set(false);
 
 				return EMPTY;
 			})
 		);
+	private filtersChanges = new BehaviorSubject({
+		course: 0,
+		dateRange: { start: null, end: null },
+	});
+	private filtersChanges$ = this.filtersChanges.asObservable();
+	public filteredData$ = combineLatest([
+		this.tasksExamsAndStudents$,
+		this.filtersChanges$,
+	]).pipe(
+		tap(([[tasks, exams, students], filtersChanges]) => {
+			const { course: courseId, dateRange } = filtersChanges;
+
+			if (courseId !== this.selectedCourseId()) {
+				const queryParam = { courseId };
+
+				this.selectedCourseId.set(courseId);
+				this.getTasksExamsAndStudents(
+					queryParam,
+					queryParam as unknown as StudentsParams | null
+				);
+				return;
+			}
+
+			if (
+				JSON.stringify(dateRange ?? { start: null, end: null }) !==
+				JSON.stringify(this.selectedDateRange())
+			) {
+				const queryParams = this.checkForDateChange(dateRange);
+
+				this.selectedDateRange.set(dateRange);
+
+				if (queryParams) this.getTasksExamsAndStudents(queryParams);
+
+				return;
+			}
+
+			if (
+				tasks &&
+				exams &&
+				students &&
+				((dateRange?.start && dateRange?.end) ||
+					(!dateRange?.start && !dateRange?.end))
+			) {
+				this.filterData(filtersChanges);
+			}
+
+			this.spinnerProgressOn.set(false);
+		})
+	);
 
 	constructor(
 		private apiService: ApiService,
@@ -146,30 +196,50 @@ export class QualificationsService {
 		this.tasks.set(tasks);
 		this.exams.set(exams);
 		this.students.set(students);
+		this.cleanAllShow();
 	}
 
-	public processValueChanges(
-		valueChanges$: Observable<string | null> | undefined,
-		controlType: ControlType = 'Students'
-	) {
-		return valueChanges$?.pipe(
-			startWith(''),
-			map(value => this.filterValues(value, controlType))
-		);
+	public setFilters(changes: any) {
+		this.filtersChanges.next(changes);
 	}
 
-	private filterValues(
+	private filterData({ subject, student, task, exam }: any) {
+		this.selectedSubjectId.set(subject ?? 0);
+		if (!student) this.cleanAlphabet.next(true);
+		this.filterValues(student);
+		this.filterValues(task, 'Tasks');
+		this.filterValues(exam, 'Exams');
+	}
+
+	private checkForDateChange({ start, end }: DateRangeFromMaterial) {
+		const queryParams: TasksAndExamsQueryParams = {
+			courseId: this.selectedCourseId(),
+		};
+
+		if (start && end)
+			return {
+				...queryParams,
+				startDate: (start as unknown as Date).getTime(),
+				endDate: (end as unknown as Date).getTime(),
+			};
+
+		if (!start && !end) return queryParams;
+
+		return;
+	}
+
+	public filterValues(
 		value: string | null,
 		controlType: ControlType = 'Students'
 	): void {
-		if (!value) return;
-
 		const valueToFilter = value?.toLowerCase();
 		let signalToFilter: WritableSignal<Student[] | Task[] | Exam[]> = this
 			.students as WritableSignal<Student[]>;
 
 		if (controlType === 'Tasks') signalToFilter = this.tasks;
 		if (controlType === 'Exams') signalToFilter = this.exams;
+
+		if (!value) return this.cleanShow(signalToFilter);
 
 		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
@@ -249,30 +319,6 @@ export class QualificationsService {
 			elements.forEach(element => {
 				if (element.id !== selectedElement?.id) element.show = false;
 			});
-		});
-	}
-
-	public filterTasksAndExamsBySubject(subjectId: number) {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-
-		if (!subjectId) return;
-
-		this.tasks.update(tasks => {
-			tasks.forEach(task => {
-				if ((task.subject as Subject).id !== subjectId)
-					task.show = false;
-			});
-
-			return JSON.parse(JSON.stringify(tasks));
-		});
-
-		this.exams.update(exams => {
-			exams.forEach(exam => {
-				if (exam.subject !== subjectId) exam.show = false;
-			});
-
-			return JSON.parse(JSON.stringify(exams));
 		});
 	}
 

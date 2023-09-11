@@ -41,7 +41,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[] | undefined> = this.qs.students;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public tasksExamsAndStudents$ = this.qs.tasksExamsAndStudents$;
+	public filteredData$ = this.qs.filteredData$;
 	public WorkEnum = Work;
 	public spinnerProgressOn = this.qs.spinnerProgressOn;
 	public taskMatchSomeFilter = computed(() =>
@@ -55,6 +55,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public courseIsSelected = this.qs.selectedCourseId;
 	public selectedTab = signal(0);
 	public studentIsSelected = this.qs.studentIsSelected;
+	public resetFilters = {
+		reset: false,
+	};
 	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
 	private readonly document = inject(DOCUMENT);
@@ -110,7 +113,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
 		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
 
-		this.qs.resetFilters.next(true);
+		this.resetFilters = {
+			reset: true,
+		};
 	}
 
 	public openMultipleMarkingSetterDialog() {

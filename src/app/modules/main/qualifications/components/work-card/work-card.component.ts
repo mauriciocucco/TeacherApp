@@ -50,6 +50,7 @@ export class WorkCardComponent {
 	public markings: Signal<Marking[]> = this.qs.markings;
 	public editMode = signal(false);
 	public defaultRowsNumber = signal(5);
+	public selectedSubjectId = this.qs.selectedSubjectId;
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
 	private destroyRef = inject(DestroyRef);
