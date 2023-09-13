@@ -86,7 +86,10 @@ export class FiltersComponent implements OnInit, OnChanges {
 	}
 
 	ngOnChanges(changes: SimpleChanges): void {
-		if (changes['resetFilters']?.currentValue?.reset) this.resetForm();
+		if (changes['resetFilters']?.currentValue?.reset) {
+			this.resetForm();
+			this.qs.setFilters(this.filtersForm.value as FormFilters);
+		}
 	}
 
 	private listenForFormChanges() {

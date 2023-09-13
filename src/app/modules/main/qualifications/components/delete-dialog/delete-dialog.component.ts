@@ -60,7 +60,7 @@ export class DeleteDialogComponent {
 
 		delete$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
-				this.qs.getTasksExamsAndStudents(queryParams, null);
+				this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				this.qs.handleHttpResponseMessage(
 					`Se eliminó a "${this.payload.workName}" con éxito.`
 				);

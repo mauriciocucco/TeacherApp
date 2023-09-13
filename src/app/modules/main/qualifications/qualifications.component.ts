@@ -24,7 +24,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
-import { Marking } from '../../../core/interfaces/marking.interface';
 import { ViewService } from '../../../core/services/view/view.service';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
 
@@ -40,7 +39,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[]> = this.qs.students;
-	public markings: Signal<Marking[]> = this.qs.markings;
 	public filteredData$ = this.qs.filteredData$;
 	public WorkEnum = Work;
 	public taskMatchSomeFilter = computed(() =>
@@ -57,6 +55,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public resetFilters = {
 		reset: false,
 	};
+	public trackItems = this.qs.trackItems;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
 	private readonly document = inject(DOCUMENT);
@@ -85,7 +84,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.cleanSignals();
+		this.qs.getTasksExamsAndStudents(null, null);
 	}
 
 	public openCreateDialog(): void {
@@ -103,7 +102,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 						courseId,
 					};
 					this.changeToCorrectTab();
-					this.qs.getTasksExamsAndStudents(queryParams);
+					this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				}
 			});
 	}
@@ -118,14 +117,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public openMultipleMarkingSetterDialog() {
-		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent, {
-			data: {
-				students: this.students(),
-				markings: this.markings(),
-				tasks: this.tasks(),
-				exams: this.exams(),
-			},
-		});
+		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent, {});
 
 		dialogRef
 			.afterClosed()
@@ -135,23 +127,12 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 					const queryParams = {
 						courseId: this.qs.selectedCourseId(),
 					};
-					this.qs.getTasksExamsAndStudents(queryParams);
+					this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				}
 			});
 	}
 
 	public onScrollToTop(): void {
 		this.viewport.scrollToPosition([0, 0]);
-	}
-
-	public trackItems(index: number, item: any): number {
-		return item.id;
-	}
-
-	private cleanSignals() {
-		this.qs.students.set([]);
-		this.qs.tasks.set([]);
-		this.qs.exams.set([]);
-		this.qs.tasksExamsAndStudentsSubject.next([null, null]);
 	}
 }

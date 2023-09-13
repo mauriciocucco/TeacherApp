@@ -8,7 +8,6 @@ import {
 	combineLatest,
 	forkJoin,
 	map,
-	of,
 	switchMap,
 	tap,
 } from 'rxjs';
@@ -74,35 +73,24 @@ export class QualificationsService {
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(
-			map(([tasksAndExamsQueryParams, studentsQueryParams]) => {
-				if (
-					(!tasksAndExamsQueryParams && !studentsQueryParams) ||
-					!tasksAndExamsQueryParams?.courseId
-				)
-					return [of([]), of([]), of([])];
-
-				return [
-					this.ts.getTasks(tasksAndExamsQueryParams),
-					this.es.getExams(tasksAndExamsQueryParams),
-					this.ss.getStudents(studentsQueryParams),
-				] as Observable<Task[] | Exam[] | Student[]>[];
-			}),
+			map(
+				([tasksAndExamsQueryParams, studentsQueryParams]) =>
+					[
+						this.ts.getTasks(tasksAndExamsQueryParams),
+						this.es.getExams(tasksAndExamsQueryParams),
+						this.ss.getStudents(studentsQueryParams),
+					] as Observable<Task[] | Exam[] | Student[]>[]
+			),
 			switchMap(observablesArray => forkJoin(observablesArray)),
-			map(([tasks, exams, students]) => {
-				if ((tasks.length || exams.length) && students.length) {
-					this.setSignalsValues(
-						tasks as Task[],
-						exams as Exam[],
-						students as Student[]
-					);
-
-					return [tasks, exams, students];
-				}
-
-				return [null, null, null];
-			}),
+			tap(([tasks, exams, students]) =>
+				this.setSignalsValues(
+					tasks as Task[],
+					exams as Exam[],
+					students as Student[]
+				)
+			),
 			catchError(error => {
-				console.log(
+				console.error(
 					'Hubo un error en el stream de tasksExamsAndStudents$: ',
 					error
 				);
@@ -120,7 +108,12 @@ export class QualificationsService {
 		this.filtersChanges$,
 	]).pipe(
 		tap(([[tasks, exams, students], filtersChanges]) => {
-			const { course: courseId, dateRange } = filtersChanges;
+			const {
+				course: courseId,
+				subject,
+				student,
+				dateRange,
+			} = filtersChanges;
 
 			if (courseId !== this.selectedCourseId()) {
 				const queryParam = { courseId };
@@ -146,7 +139,10 @@ export class QualificationsService {
 				return;
 			}
 
-			if (tasks && exams && students) {
+			if (!student) this.cleanAlphabet.next(true);
+
+			if (tasks.length && exams.length && students.length) {
+				this.selectedSubjectId.set(subject ?? 0);
 				this.filterData(filtersChanges);
 			}
 		})
@@ -164,6 +160,7 @@ export class QualificationsService {
 		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
 		studentsQueryParams: StudentsParams | null = null
 	) {
+		this.resetDataSignals();
 		this.tasksExamsAndStudentsSubject.next([
 			tasksAndExamsQueryParams,
 			studentsQueryParams,
@@ -178,16 +175,13 @@ export class QualificationsService {
 		this.tasks.set(tasks);
 		this.exams.set(exams);
 		this.students.set(students);
-		this.cleanAllShow();
 	}
 
 	public setFilters(changes: FormFilters) {
 		this.filtersChanges.next(changes);
 	}
 
-	private filterData({ subject, student, task, exam }: FormFilters) {
-		this.selectedSubjectId.set(subject ?? 0);
-		if (!student) this.cleanAlphabet.next(true);
+	private filterData({ student, task, exam }: FormFilters) {
 		this.filterValues(student);
 		this.filterValues(task, 'Tasks');
 		this.filterValues(exam, 'Exams');
@@ -316,10 +310,10 @@ export class QualificationsService {
 		});
 	}
 
-	private cleanAllShow() {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-		this.cleanShow(this.students as WritableSignal<Student[]>);
+	public resetDataSignals() {
+		this.students.set([]);
+		this.tasks.set([]);
+		this.exams.set([]);
 	}
 
 	public handleHttpResponseMessage(

@@ -1,6 +1,5 @@
 import {
 	Component,
-	Inject,
 	signal,
 	inject,
 	DestroyRef,
@@ -8,14 +7,13 @@ import {
 	ChangeDetectionStrategy,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { ButtonState } from '../../enums/button-state.enum';
 import { Work } from '../../../../../core/enums/work.enum';
 import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MultipleMarkingPayload } from './interfaces/multiple-marking-payload.interface';
 import { MatSelectionList } from '@angular/material/list';
 import { TasksService } from '../../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../../core/services/exams/exams.service';
@@ -36,17 +34,19 @@ import { HttpErrorResponse } from '@angular/common/http';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MultipleMarkingSetterComponent {
-	public students: Student[] = [];
+	public students: Student[] = this.qs.students();
 	public saveButtonMessage = signal(ButtonState.RATE);
 	public workEnum = Work;
 	public works: Task[] = []; //si pongo Task[] | Exam[] falla en el html
-	public markings: Marking[] = [];
+	public markings: Marking[] = this.qs.markings();
 	public workControl: FormControl<Work | null> = new FormControl(null);
+	private tasks = this.qs.tasks();
+	private exams = this.qs.exams();
 	private destroyRef = inject(DestroyRef);
 	private fb = inject(FormBuilder);
 	private ts = inject(TasksService);
 	private es = inject(ExamsService);
-	private qs = inject(QualificationsService);
+
 	public markingsForm = this.fb.group({
 		workId: ['', Validators.required],
 		marking: ['', Validators.required],
@@ -56,10 +56,9 @@ export class MultipleMarkingSetterComponent {
 	studentsList?: MatSelectionList;
 
 	constructor(
-		public dialogRef: MatDialogRef<MultipleMarkingSetterComponent>,
-		@Inject(MAT_DIALOG_DATA) public payload: MultipleMarkingPayload
+		private qs: QualificationsService,
+		public dialogRef: MatDialogRef<MultipleMarkingSetterComponent>
 	) {
-		this.setInitialData();
 		this.listeningWorkElection();
 	}
 
@@ -67,18 +66,13 @@ export class MultipleMarkingSetterComponent {
 		this.dialogRef.close(reloadData);
 	}
 
-	private setInitialData() {
-		this.students = this.payload.students;
-		this.markings = this.payload.markings;
-	}
-
 	private listeningWorkElection() {
 		this.workControl.valueChanges
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(value => {
 				value === Work.TASK
-					? (this.works = this.payload.tasks)
-					: (this.works = this.payload.exams as any);
+					? (this.works = this.tasks)
+					: (this.works = this.exams as any);
 			});
 	}
 

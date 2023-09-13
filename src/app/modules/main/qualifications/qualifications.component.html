@@ -70,23 +70,17 @@
 			</mat-card>
 		</ng-container>
 		</div>
-	</ng-template>
 
-	<ng-template #spinner>
-		<div class="spinner-wrapper">
-			<mat-spinner></mat-spinner>
-		</div>
+		<ng-template #spinner>
+			<div class="spinner-wrapper">
+				<mat-spinner></mat-spinner>
+			</div>
+		</ng-template>
 	</ng-template>
 
 	<ng-template #courseNotSelected>
 		<div class="warning-container">
 			<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
-		</div>
-	</ng-template>
-
-	<ng-template #noStudents>
-		<div class="warning-container">
-			<app-warning [info]="'No existen alumnxs cargados para este curso'"></app-warning>
 		</div>
 	</ng-template>
 
