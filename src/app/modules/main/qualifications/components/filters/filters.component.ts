@@ -18,7 +18,7 @@ import { ControlType } from '../create-dialog/interfaces/control-type.interface'
 import { FormBuilder } from '@angular/forms';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
-import { tap } from 'rxjs';
+import { filter, tap } from 'rxjs';
 import { Task } from '../../../../../core/interfaces/task.interface';
 import { Exam } from '../../../../../core/interfaces/exam.interface';
 import {
@@ -30,6 +30,7 @@ import { Course } from '../../../../../core/interfaces/course.interface';
 import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormFilters } from '../../interfaces/form-filters.interface';
 
 @Component({
 	selector: 'app-filters',
@@ -59,7 +60,7 @@ export class FiltersComponent implements OnInit, OnChanges {
 	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
-	private emittedFormData = {};
+	public trackItems = this.qs.trackItems;
 	private destroyRef = inject(DestroyRef);
 	@Input() resetFilters = { reset: false };
 	@ViewChild('studentsAutocomplete', { static: false })
@@ -91,24 +92,22 @@ export class FiltersComponent implements OnInit, OnChanges {
 	private listenForFormChanges() {
 		this.filtersForm.valueChanges
 			.pipe(
+				filter(
+					({ dateRange }) =>
+						(dateRange?.start && dateRange?.end) ||
+						(!dateRange?.start && !dateRange?.end)
+				),
 				tap(filters => {
-					const { course } = filters;
-
 					if (
-						JSON.stringify(filters) ===
-						JSON.stringify(this.emittedFormData)
-					)
-						return; // Para que no se vuelva a emitir lo que ya se emitió previamente
-
-					this.emittedFormData = filters;
-
-					if (course && course !== this.qs.selectedCourseId()) {
+						filters.course &&
+						filters.course !== this.qs.selectedCourseId()
+					) {
 						this.resetForm();
 						filters.subject = 0; // Porque el emitEvent del reset está en false
 						this.enableControls();
 					}
 
-					this.qs.setFilters(filters);
+					this.qs.setFilters(filters as FormFilters);
 				}),
 				takeUntilDestroyed(this.destroyRef)
 			)
@@ -121,11 +120,6 @@ export class FiltersComponent implements OnInit, OnChanges {
 		this.filtersForm.enable({ emitEvent: false });
 	}
 
-	public clearDateRange() {
-		this.filtersForm.get('dateRange')?.reset();
-		this.toggleFiltersMenu(false);
-	}
-
 	public clearControl(control: ControlType) {
 		switch (control) {
 			case 'Tasks':
@@ -133,6 +127,14 @@ export class FiltersComponent implements OnInit, OnChanges {
 				break;
 			case 'Students':
 				this.filtersForm.get('student')?.setValue('');
+				break;
+			case 'Date':
+				this.filtersForm
+					.get('dateRange')
+					?.patchValue(
+						{ start: null, end: null },
+						{ onlySelf: true }
+					);
 				break;
 			default:
 				this.filtersForm.get('exam')?.setValue('');
@@ -156,17 +158,17 @@ export class FiltersComponent implements OnInit, OnChanges {
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		this.toggleFiltersMenu(false);
 		this.qs.cleanAlphabet.next(true);
 		this.qs.showSelectedStudent(option);
+		this.toggleFiltersMenu(false);
 	}
 
 	public taskOrExamSelected(
 		option: MatAutocompleteSelectedEvent,
 		type = Work.TASK
 	) {
-		this.toggleFiltersMenu(false);
 		this.qs.showSelectedTaskOrExam(option, type);
+		this.toggleFiltersMenu(false);
 	}
 
 	public toggleFiltersMenu(open: null | boolean = null) {
@@ -178,9 +180,5 @@ export class FiltersComponent implements OnInit, OnChanges {
 	public cleanSelectedLetter() {
 		this.qs.cleanAlphabet.next(true);
 		this.qs.letterSelected.set(null);
-	}
-
-	public trackItems(index: number, item: any): number {
-		return item.id;
 	}
 }

@@ -33,12 +33,12 @@ import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 import { DateRangeFromMaterial } from '../../../modules/main/qualifications/interfaces/range-date.interface';
+import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
 
 @Injectable({
 	providedIn: 'root',
 })
 export class QualificationsService {
-	public spinnerProgressOn = signal(false);
 	public letterSelected: WritableSignal<string | null> = signal(null);
 	public cleanAlphabet = new BehaviorSubject(false);
 	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
@@ -50,15 +50,15 @@ export class QualificationsService {
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
-	public students: WritableSignal<Student[] | undefined> = signal(undefined);
+	public students: WritableSignal<Student[]> = signal([]);
 	public studentIsSelected = computed(() =>
 		this.students()
-			? this.students()!.filter(s => s.show)?.length <= 1
+			? this.students().filter(s => s.show)?.length <= 1
 			: false
 	);
 	public noStudentShowingForMobile = computed(() =>
 		this.students()
-			? this.students()!.filter(s => s.showForMobile)?.length === 0
+			? this.students().filter(s => s.showForMobile)?.length === 0
 			: false
 	);
 	public selectedCourseId: WritableSignal<number> = signal(0);
@@ -74,10 +74,6 @@ export class QualificationsService {
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(
-			tap(([tasksAndExamsQueryParams, studentsQueryParams]) => {
-				if (tasksAndExamsQueryParams || studentsQueryParams)
-					this.spinnerProgressOn.set(true);
-			}),
 			map(([tasksAndExamsQueryParams, studentsQueryParams]) => {
 				if (
 					(!tasksAndExamsQueryParams && !studentsQueryParams) ||
@@ -85,14 +81,10 @@ export class QualificationsService {
 				)
 					return [of([]), of([]), of([])];
 
-				const students$ = studentsQueryParams
-					? this.ss.getStudents(studentsQueryParams)
-					: of(this.students());
-
 				return [
 					this.ts.getTasks(tasksAndExamsQueryParams),
 					this.es.getExams(tasksAndExamsQueryParams),
-					students$,
+					this.ss.getStudents(studentsQueryParams),
 				] as Observable<Task[] | Exam[] | Student[]>[];
 			}),
 			switchMap(observablesArray => forkJoin(observablesArray)),
@@ -115,15 +107,13 @@ export class QualificationsService {
 					error
 				);
 
-				this.spinnerProgressOn.set(false);
-
 				return EMPTY;
 			})
 		);
-	private filtersChanges = new BehaviorSubject({
+	private filtersChanges: BehaviorSubject<FormFilters> = new BehaviorSubject({
 		course: 0,
 		dateRange: { start: null, end: null },
-	});
+	} as FormFilters);
 	private filtersChanges$ = this.filtersChanges.asObservable();
 	public filteredData$ = combineLatest([
 		this.tasksExamsAndStudents$,
@@ -156,17 +146,9 @@ export class QualificationsService {
 				return;
 			}
 
-			if (
-				tasks &&
-				exams &&
-				students &&
-				((dateRange?.start && dateRange?.end) ||
-					(!dateRange?.start && !dateRange?.end))
-			) {
+			if (tasks && exams && students) {
 				this.filterData(filtersChanges);
 			}
-
-			this.spinnerProgressOn.set(false);
 		})
 	);
 
@@ -199,11 +181,11 @@ export class QualificationsService {
 		this.cleanAllShow();
 	}
 
-	public setFilters(changes: any) {
+	public setFilters(changes: FormFilters) {
 		this.filtersChanges.next(changes);
 	}
 
-	private filterData({ subject, student, task, exam }: any) {
+	private filterData({ subject, student, task, exam }: FormFilters) {
 		this.selectedSubjectId.set(subject ?? 0);
 		if (!student) this.cleanAlphabet.next(true);
 		this.filterValues(student);
@@ -389,5 +371,9 @@ export class QualificationsService {
 				  })
 				: null;
 		});
+	}
+
+	public trackItems(index: number, item: Student | Task | Exam): number {
+		return item.id;
 	}
 }

@@ -112,8 +112,7 @@
 								aria-label="Botón para limpiar autocompletar de estudiantes"
 								(click)="
 									clearControl('Students');
-									cleanSelectedLetter();
-									toggleFiltersMenu(false)
+									cleanSelectedLetter()
 								">
 								<mat-icon>clear</mat-icon>
 							</button>
@@ -171,10 +170,7 @@
 								color="primary"
 								title="Limpiar tarea seleccionada"
 								aria-label="Botón para limpiar autocompletar de tareas"
-								(click)="
-									clearControl('Tasks');
-									toggleFiltersMenu(false)
-								">
+								(click)="clearControl('Tasks')">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
@@ -234,10 +230,7 @@
 								color="primary"
 								title="Limpiar exámen seleccionado"
 								aria-label="Botón para limpiar autocompletar de exámenes"
-								(click)="
-									clearControl('Exams');
-									toggleFiltersMenu(false)
-								">
+								(click)="clearControl('Exams')">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
@@ -293,9 +286,7 @@
 								color="primary"
 								title="Limpiar período"
 								aria-label="Botón para limpiar rango de fecha"
-								(click)="
-									clearDateRange(); toggleFiltersMenu(false)
-								">
+								(click)="clearControl('Date')">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>

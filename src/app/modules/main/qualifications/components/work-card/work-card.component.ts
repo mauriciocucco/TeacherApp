@@ -44,7 +44,7 @@ export class WorkCardComponent {
 	@Input() student: Student | undefined = undefined;
 	@Input() workType: Work = Work.TASK;
 	public workEnum = Work;
-	public students: Signal<Student[] | undefined> = this.qs.students;
+	public students: Signal<Student[]> = this.qs.students;
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public markings: Signal<Marking[]> = this.qs.markings;

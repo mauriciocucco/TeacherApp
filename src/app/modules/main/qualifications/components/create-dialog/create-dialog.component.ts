@@ -102,9 +102,7 @@ export class CreateDialogComponent {
 	}
 
 	private setTaskOrExamToStudentAttribute() {
-		const students = this.students() ?? [];
-
-		return students.map(student => ({
+		return this.students().map(student => ({
 			studentId: student.id,
 		}));
 	}

@@ -39,11 +39,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public ScreenTypeEnum = ScreenType;
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
-	public students: Signal<Student[] | undefined> = this.qs.students;
+	public students: Signal<Student[]> = this.qs.students;
 	public markings: Signal<Marking[]> = this.qs.markings;
 	public filteredData$ = this.qs.filteredData$;
 	public WorkEnum = Work;
-	public spinnerProgressOn = this.qs.spinnerProgressOn;
 	public taskMatchSomeFilter = computed(() =>
 		this.tasks().some(task => task.show)
 	);
@@ -150,7 +149,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	private cleanSignals() {
-		this.qs.students.set(undefined);
+		this.qs.students.set([]);
 		this.qs.tasks.set([]);
 		this.qs.exams.set([]);
 		this.qs.tasksExamsAndStudentsSubject.next([null, null]);
