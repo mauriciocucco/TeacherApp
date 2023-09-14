@@ -5,11 +5,13 @@ interface StudentRelation {
 	studentId: number | undefined;
 }
 
+type Argument = 'markingId' | 'marking' | 'observation';
+
 @Pipe({
 	name: 'studentRelation',
 })
 export class StudentRelationPipe implements PipeTransform {
-	transform(studentInfo: StudentRelation, argument: any): string {
+	transform(studentInfo: StudentRelation, argument: Argument): string {
 		if (!studentInfo.studentId || !studentInfo.works) return '';
 
 		for (const work of studentInfo.works) {

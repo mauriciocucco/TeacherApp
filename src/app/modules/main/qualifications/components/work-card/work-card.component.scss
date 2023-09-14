@@ -1,6 +1,7 @@
 @import '../../../../../../variables.scss';
 
 .qualification-card {
+	width: 24.4rem;
 	.qualification-card-header {
 		align-items: center;
 		display: flex;
@@ -58,7 +59,7 @@
 .card-loading {
 	@include flex-center;
 	width: 24.4rem;
-	min-height: 26.5rem;
+	height: 25.3rem;
 	mat-spinner {
 		height: 5rem !important;
 		width: 5rem !important;
