@@ -193,10 +193,7 @@
 								<mat-autocomplete
 									#examsAutocomplete
 									(optionSelected)="
-										taskOrExamSelected(
-											$event,
-											WorkEnum.EXAM
-										)
+										taskOrExamSelected($event)
 									"
 									#autoExam="matAutocomplete">
 									<ng-container

@@ -6,6 +6,7 @@ import {
 	Observable,
 	catchError,
 	combineLatest,
+	finalize,
 	forkJoin,
 	map,
 	of,
@@ -48,6 +49,7 @@ import { MultipleMarkingSetterComponent } from '../../../modules/main/qualificat
 	providedIn: 'root',
 })
 export class QualificationsService {
+	public refreshView = signal(false);
 	public letterSelected: WritableSignal<string | null> = signal(null);
 	public cleanAlphabet = new BehaviorSubject(false);
 	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
@@ -163,24 +165,31 @@ export class QualificationsService {
 		switchMap(workId => {
 			if (!workId) return of(true);
 
-			return this.selectedWorkType() === Work.TASK
-				? this.ts.deleteTask(workId)
-				: this.es.deleteExam(workId);
+			const delete$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.deleteTask(workId)
+					: this.es.deleteExam(workId);
+
+			return delete$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de deleteWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.deleteDialogRef.close();
+				})
+			);
 		}),
 		tap(deletedWork => {
 			if (!deletedWork.name) return;
 
 			this.resetWorks();
-			this.deleteDialogRef.close();
 			this.handleHttpResponseMessage(`Se eliminó "${deletedWork.name}".`);
-		}),
-		catchError(error => {
-			console.error('Hubo un error en el stream de deleteWork$: ', error);
-
-			this.deleteDialogRef.close();
-			this.handleHttpResponseMessage();
-
-			return EMPTY;
 		})
 	);
 	private updateDialogRef!: MatDialogRef<
@@ -196,25 +205,34 @@ export class QualificationsService {
 		switchMap(({ workId, ...payload }) => {
 			if (!workId) return of(true);
 
-			return this.selectedWorkType() === Work.TASK
-				? this.ts.updateTask(payload, workId)
-				: this.es.updateExam(payload, workId);
+			const update$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.updateTask(payload, workId)
+					: this.es.updateExam(payload, workId);
+
+			return update$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de updateWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.updateDialogRef.close();
+					this.updateWork.next({ workId: 0 } as UpdatePayload);
+				})
+			);
 		}),
 		tap(updatedWork => {
 			if (!updatedWork.name) return;
 
-			this.updateWorkCardInfo(updatedWork.id, updatedWork);
-			this.updateDialogRef.close();
+			this.refreshView()
+				? this.resetWorks()
+				: this.updateWorkCardInfo(updatedWork.id, updatedWork);
 			this.handleHttpResponseMessage('La edición fue exitosa.');
-			this.updateWork.next({ workId: 0 } as UpdatePayload);
-		}),
-		catchError(error => {
-			console.error('Hubo un error en el stream de updateWork$: ', error);
-
-			this.updateDialogRef.close();
-			this.handleHttpResponseMessage();
-
-			return EMPTY;
 		})
 	);
 	private createDialogRef!: MatDialogRef<CreateDialogComponent>;
@@ -225,25 +243,32 @@ export class QualificationsService {
 		switchMap(payload => {
 			if (!payload.name) return of(true);
 
-			return this.selectedWorkType() === Work.TASK
-				? this.ts.createTask(payload as CreateTask)
-				: this.es.createExam(payload as CreateExam);
+			const create$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.createTask(payload as CreateTask)
+					: this.es.createExam(payload as CreateExam);
+
+			return create$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de createWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.createDialogRef.close();
+					this.createWork.next({ name: '' });
+				})
+			);
 		}),
 		tap(createdWork => {
 			if (!createdWork.name) return;
 
 			this.resetWorks();
-			this.createDialogRef.close();
 			this.handleHttpResponseMessage('La creación fue exitosa.');
-			this.createWork.next({ name: '' });
-		}),
-		catchError(error => {
-			console.error('Hubo un error en el stream de createWork$: ', error);
-
-			this.createDialogRef.close();
-			this.handleHttpResponseMessage();
-
-			return EMPTY;
 		})
 	);
 
@@ -315,8 +340,10 @@ export class QualificationsService {
 		payload: UpdatePayload,
 		dialogRef: MatDialogRef<
 			InfoDialogComponent | MultipleMarkingSetterComponent
-		>
+		>,
+		resetView = false
 	) {
+		this.refreshView.set(resetView);
 		this.updateDialogRef = dialogRef;
 		this.updateWork.next(payload);
 	}
@@ -344,6 +371,7 @@ export class QualificationsService {
 			.students as WritableSignal<Student[]>;
 
 		if (controlType === 'Tasks') signalToFilter = this.tasks;
+
 		if (controlType === 'Exams') signalToFilter = this.exams;
 
 		if (!value) return this.cleanShow(signalToFilter);
@@ -384,14 +412,13 @@ export class QualificationsService {
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
-		const value = option.option.value;
-		const students = this.students() ?? [];
+		const nameAndLastName = option.option.value;
+		const students = this.students();
+		const studentSelected = students.find(
+			student => `${student.name} ${student.lastname}` === nameAndLastName
+		);
 
 		this.cleanShow(this.students as WritableSignal<Student[]>);
-
-		const studentSelected = students.find(
-			student => `${student.name} ${student.lastname}` === value
-		);
 
 		this.students.mutate(students => {
 			students
@@ -406,25 +433,19 @@ export class QualificationsService {
 		});
 	}
 
-	public showSelectedTaskOrExam(
-		option: MatAutocompleteSelectedEvent,
-		type = Work.TASK
-	) {
-		const valueSelected = option.option.value;
-		let selectedSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
-			this.tasks;
-
-		if (type === Work.EXAM) selectedSignal = this.exams;
-
-		this.cleanShow(selectedSignal);
-
-		const selectedElement = (selectedSignal() as WorkBase[]).find(
-			element => element.name === valueSelected
+	public showSelectedTaskOrExam(option: MatAutocompleteSelectedEvent) {
+		const selectedValue = option.option.value;
+		const workSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
+			this.selectedWorkType() === Work.TASK ? this.tasks : this.exams;
+		const matchedWork = (workSignal() as WorkBase[]).find(
+			element => element.name === selectedValue
 		);
 
-		selectedSignal.mutate(elements => {
+		this.cleanShow(workSignal);
+
+		workSignal.mutate(elements => {
 			elements.forEach(element => {
-				if (element.id !== selectedElement?.id) element.show = false;
+				if (element.id !== matchedWork?.id) element.show = false;
 			});
 		});
 	}
@@ -448,7 +469,7 @@ export class QualificationsService {
 	}
 
 	public handleHttpResponseMessage(
-		responseMessage = 'Ocurrió un error con su pedido. Comuníquese con soporte para solucionarlo.'
+		responseMessage = 'Ocurrió un error con su pedido.'
 	) {
 		this._snackBar.open(responseMessage, '', { duration: 4000 });
 	}
@@ -457,17 +478,13 @@ export class QualificationsService {
 		workId: number,
 		updatedWork: UpdateTask | UpdateExam
 	) {
-		if (this.selectedWorkType() === Work.TASK) {
-			this.tasks.mutate(tasks =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			);
-
-			return;
-		}
-
-		this.exams.mutate(exams =>
-			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-		);
+		this.selectedWorkType() === Work.TASK
+			? this.tasks.mutate(tasks =>
+					this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
+			  )
+			: this.exams.mutate(exams =>
+					this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+			  );
 	}
 
 	private filterAndUpdateSelectedWork(

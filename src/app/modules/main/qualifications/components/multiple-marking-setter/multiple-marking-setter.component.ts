@@ -102,7 +102,8 @@ export class MultipleMarkingSetterComponent {
 		this.saveButtonMessage.set(ButtonState.SAVING);
 		this.qs.update(
 			{ workId, ...payload } as unknown as UpdatePayload,
-			this.dialogRef
+			this.dialogRef,
+			true
 		);
 	}
 }

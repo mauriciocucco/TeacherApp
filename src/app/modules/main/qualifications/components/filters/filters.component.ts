@@ -166,11 +166,8 @@ export class FiltersComponent implements OnInit, OnChanges {
 		this.toggleFiltersMenu(false);
 	}
 
-	public taskOrExamSelected(
-		option: MatAutocompleteSelectedEvent,
-		type = Work.TASK
-	) {
-		this.qs.showSelectedTaskOrExam(option, type);
+	public taskOrExamSelected(option: MatAutocompleteSelectedEvent) {
+		this.qs.showSelectedTaskOrExam(option);
 		this.toggleFiltersMenu(false);
 	}
 
