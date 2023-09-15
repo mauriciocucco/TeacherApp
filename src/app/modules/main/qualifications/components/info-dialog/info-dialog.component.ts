@@ -70,7 +70,7 @@ export class InfoDialogComponent {
 		}
 
 		const updatedWork = this.infoForm.value;
-		const workId = this.payload.workId;
+		const workId = this.payload.id;
 		let update$: Observable<Task | Exam | undefined> = of(undefined);
 
 		this.editButtonMessage.set(this.buttonStateEnum.SAVING);
@@ -101,8 +101,7 @@ export class InfoDialogComponent {
 	}
 
 	private findSubject() {
-		const subjectPayload =
-			this.payload.workSubject?.id ?? this.payload.workSubject;
+		const subjectPayload = this.payload.subject?.id ?? this.payload.subject;
 
 		return this.qs.subjects().find(subject => subject.id === subjectPayload)
 			?.name;

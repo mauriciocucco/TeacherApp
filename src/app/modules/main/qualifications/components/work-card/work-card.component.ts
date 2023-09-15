@@ -22,7 +22,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StudentRelationPipe } from '../../pipes/student-relation.pipe';
 import { UpdateControl } from '../../interfaces/update-control.type';
 import { UpdateState } from '../../interfaces/update-state.interface';
-import { debounce, map, timer, distinctUntilChanged } from 'rxjs';
+import { debounce, timer, distinctUntilChanged } from 'rxjs';
 import { TasksService } from '../../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../../core/services/exams/exams.service';
 import {
@@ -56,22 +56,30 @@ export class WorkCardComponent implements OnInit {
 		observation: '',
 	};
 	public updateForm = this.fb.nonNullable.group(this.initialState);
-	public updateWork = new BehaviorSubject({ workId: 0 });
+	private loading = new BehaviorSubject(false);
+	public loading$ = this.loading.asObservable();
+	private updateWork = new BehaviorSubject({ workId: 0 });
 	public updateWork$ = this.updateWork.asObservable().pipe(
 		filter(({ workId }) => Boolean(workId)),
+		tap(() => {
+			this.editMode.set(false);
+			this.loading.next(true);
+		}),
 		switchMap(({ workId, ...payload }) =>
 			this.workType === Work.TASK
 				? this.ts.updateTask(payload, workId)
 				: this.es.updateExam(payload, workId)
 		),
 		tap(() => {
+			this.changeInitialState();
+			this.loading.next(false);
 			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 		}),
-		map(() => ({ workId: 0 })),
 		catchError(error => {
 			console.error('Hubo un error en el stream de updateWork$: ', error);
 
-			this.setInitialState();
+			this.backToInitialState();
+			this.loading.next(false);
 			this.qs.handleHttpResponseMessage();
 
 			return EMPTY;
@@ -125,7 +133,7 @@ export class WorkCardComponent implements OnInit {
 			{ emitEvent: false }
 		);
 
-		this.initialState = this.updateForm.value as UpdateState;
+		this.changeInitialState();
 	}
 
 	private listenForChanges() {
@@ -143,21 +151,24 @@ export class WorkCardComponent implements OnInit {
 				if (markingId !== this.initialState.markingId)
 					this.update('markingId');
 
-				if (
-					examMarking !== this.initialState.examMarking ||
-					observation !== this.initialState.observation
-				)
-					this.editMode.set(true);
+				examMarking !== this.initialState.examMarking ||
+				observation !== this.initialState.observation
+					? this.editMode.set(true)
+					: this.editMode.set(false);
 			});
 	}
 
 	public cancelEdition() {
 		this.editMode.set(false);
-		this.setInitialState();
+		this.backToInitialState();
 	}
 
-	private setInitialState() {
+	private backToInitialState() {
 		this.updateForm.patchValue(this.initialState, { emitEvent: false });
+	}
+
+	private changeInitialState() {
+		this.initialState = this.updateForm.value as UpdateState;
 	}
 
 	public openInfoDialog(work: Partial<Task & Exam> | undefined) {
@@ -184,23 +195,21 @@ export class WorkCardComponent implements OnInit {
 			? this.setPayloadByControlName(controlName)
 			: this.setPayload();
 
-		this.updateWork.next({ workId: this.work?.id, ...payload });
-		this.editMode.set(false);
+		this.updateWork.next({ workId: this.work?.id as number, ...payload });
 	}
 
 	private setPayloadByControlName(controlName: UpdateControl) {
-		const payload: any = {};
 		const firstLevel =
 			this.workType === Work.TASK ? 'studentToTask' : 'studentToExam';
 
-		payload[firstLevel] = [
-			{
-				studentId: this.student?.id,
-				[controlName]: this.updateForm.get(controlName)?.value,
-			},
-		];
-
-		return payload;
+		return {
+			[firstLevel]: [
+				{
+					studentId: this.student?.id,
+					[controlName]: this.updateForm.get(controlName)?.value,
+				},
+			],
+		};
 	}
 
 	private setPayload() {
@@ -208,24 +217,19 @@ export class WorkCardComponent implements OnInit {
 			studentId: this.student?.id,
 			observation: this.updateForm.get('observation')?.value ?? '',
 		};
-		let payload;
 
-		if (this.workType === Work.TASK) {
-			payload = {
-				studentToTask: [commonProps],
-			};
-		} else {
-			payload = {
-				studentToExam: [
-					{
-						...commonProps,
-						marking:
-							this.updateForm.get('examMarking')?.value ?? '',
-					},
-				],
-			};
-		}
-
-		return payload;
+		return this.workType === Work.TASK
+			? {
+					studentToTask: [commonProps],
+			  }
+			: {
+					studentToExam: [
+						{
+							...commonProps,
+							marking:
+								this.updateForm.get('examMarking')?.value ?? '',
+						},
+					],
+			  };
 	}
 }

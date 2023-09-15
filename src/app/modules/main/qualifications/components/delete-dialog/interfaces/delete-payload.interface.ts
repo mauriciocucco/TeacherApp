@@ -1,5 +1,5 @@
 export interface DeletePayload {
-	workId: number;
-	workName: string;
+	id: number;
+	name: string;
 	courseId: number;
 }

@@ -41,7 +41,7 @@ export class DeleteDialogComponent {
 		public dialogRef: MatDialogRef<DeleteDialogComponent>,
 		@Inject(MAT_DIALOG_DATA) public payload: DeletePayload
 	) {
-		this.workName = this.payload.workName;
+		this.workName = this.payload.name;
 	}
 
 	public closeDialog(): void {
@@ -55,14 +55,14 @@ export class DeleteDialogComponent {
 		this.deleteButtonMessage.set(ButtonState.DELETING);
 
 		this.selectedWorkType() === Work.TASK
-			? (delete$ = this.ts.deleteTask(this.payload.workId))
-			: (delete$ = this.es.deleteExam(this.payload.workId));
+			? (delete$ = this.ts.deleteTask(this.payload.id))
+			: (delete$ = this.es.deleteExam(this.payload.id));
 
 		delete$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
 			next: () => {
 				this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				this.qs.handleHttpResponseMessage(
-					`Se eliminó a "${this.payload.workName}" con éxito.`
+					`Se eliminó a "${this.payload.name}" con éxito.`
 				);
 				this.closeDialog();
 			},
