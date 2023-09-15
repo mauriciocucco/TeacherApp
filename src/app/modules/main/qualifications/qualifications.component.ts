@@ -135,4 +135,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public onScrollToTop(): void {
 		this.viewport.scrollToPosition([0, 0]);
 	}
+
+	public selectWorkType(taskTab: number) {
+		taskTab
+			? this.qs.selectedWorkType.set(Work.EXAM)
+			: this.qs.selectedWorkType.set(Work.TASK);
+	}
 }

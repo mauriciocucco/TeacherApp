@@ -8,6 +8,7 @@ import {
 	combineLatest,
 	forkJoin,
 	map,
+	of,
 	switchMap,
 	tap,
 } from 'rxjs';
@@ -33,6 +34,8 @@ import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 import { DateRangeFromMaterial } from '../../../modules/main/qualifications/interfaces/range-date.interface';
 import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
+import { MatDialogRef } from '@angular/material/dialog';
+import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
 
 @Injectable({
 	providedIn: 'root',
@@ -147,6 +150,36 @@ export class QualificationsService {
 			}
 		})
 	);
+	private deleteDialogRef!: MatDialogRef<DeleteDialogComponent>;
+	private deleteWork = new BehaviorSubject(0);
+	public deleteWork$ = this.deleteWork.asObservable().pipe(
+		switchMap(workId => {
+			if (!workId) return of(true);
+
+			return this.selectedWorkType() === Work.TASK
+				? this.ts.deleteTask(workId)
+				: this.es.deleteExam(workId);
+		}),
+		tap(deletedWork => {
+			if (!deletedWork.name) return;
+
+			const queryParam = { courseId: this.selectedCourseId() };
+
+			this.getTasksExamsAndStudents(queryParam, queryParam);
+			this.deleteDialogRef.close();
+			this.handleHttpResponseMessage(
+				`Se eliminó a "${deletedWork.name}" con éxito.`
+			);
+		}),
+		catchError(error => {
+			console.error('Hubo un error en el stream de deleteWork$: ', error);
+
+			this.deleteDialogRef.close();
+			this.handleHttpResponseMessage();
+
+			return EMPTY;
+		})
+	);
 
 	constructor(
 		private apiService: ApiService,
@@ -179,6 +212,14 @@ export class QualificationsService {
 
 	public setFilters(changes: FormFilters) {
 		this.filtersChanges.next(changes);
+	}
+
+	public delete(
+		workId: number,
+		dialogRef: MatDialogRef<DeleteDialogComponent>
+	) {
+		this.deleteDialogRef = dialogRef;
+		this.deleteWork.next(workId);
 	}
 
 	private filterData({ student, task, exam }: FormFilters) {

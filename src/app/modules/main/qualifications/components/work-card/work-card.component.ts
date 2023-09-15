@@ -183,10 +183,7 @@ export class WorkCardComponent implements OnInit {
 		if (!work) return;
 
 		this.dialog.open(DeleteDialogComponent, {
-			data: {
-				courseId: this.qs.selectedCourseId(),
-				...work,
-			},
+			data: work,
 		});
 	}
 

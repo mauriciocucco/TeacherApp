@@ -31,7 +31,9 @@
 					<mat-card-content>
 						<mat-tab-group
 							#tabChildren
+							animationDuration="0"
 							[selectedIndex]="selectedTab()"
+							(selectedIndexChange)="selectWorkType($event)"
 							id="qualifications-tab-group">
 							<mat-tab label="Tareas">
 								<div
