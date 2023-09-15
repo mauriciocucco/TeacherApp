@@ -36,6 +36,8 @@ import { DateRangeFromMaterial } from '../../../modules/main/qualifications/inte
 import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
 import { MatDialogRef } from '@angular/material/dialog';
 import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
+import { InfoDialogComponent } from '../../../modules/main/qualifications/components/info-dialog/info-dialog.component';
+import { UpdatePayload } from '../../interfaces/update-payload.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -180,6 +182,39 @@ export class QualificationsService {
 			return EMPTY;
 		})
 	);
+	private updateDialogRef!: MatDialogRef<InfoDialogComponent>;
+	private updateWork = new BehaviorSubject({
+		workId: 0,
+		name: '',
+		description: '',
+		date: '',
+	});
+	public updateWork$ = this.updateWork.asObservable().pipe(
+		switchMap(({ workId, ...payload }) => {
+			console.log(workId);
+			if (!workId) return of(true);
+
+			return this.selectedWorkType() === Work.TASK
+				? this.ts.updateTask(payload, workId)
+				: this.es.updateExam(payload, workId);
+		}),
+		tap(updatedWork => {
+			if (!updatedWork.name) return;
+
+			this.updateWorkCardInfo(updatedWork.id, updatedWork);
+			this.updateDialogRef.close();
+			this.handleHttpResponseMessage('La edición fue exitosa.');
+			this.updateWork.next({ workId: 0 } as UpdatePayload);
+		}),
+		catchError(error => {
+			console.error('Hubo un error en el stream de updateWork$: ', error);
+
+			this.updateDialogRef.close();
+			this.handleHttpResponseMessage();
+
+			return EMPTY;
+		})
+	);
 
 	constructor(
 		private apiService: ApiService,
@@ -212,6 +247,14 @@ export class QualificationsService {
 
 	public setFilters(changes: FormFilters) {
 		this.filtersChanges.next(changes);
+	}
+
+	public update(
+		payload: UpdatePayload,
+		dialogRef: MatDialogRef<InfoDialogComponent>
+	) {
+		this.updateDialogRef = dialogRef;
+		this.updateWork.next(payload);
 	}
 
 	public delete(
