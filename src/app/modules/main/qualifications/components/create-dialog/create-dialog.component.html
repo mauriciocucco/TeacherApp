@@ -1,4 +1,4 @@
-<div id="form-container">
+<div id="form-container" *ngIf="createWork$ | async">
 	<h1 mat-dialog-title>¿Qué te gustaría crear?</h1>
 	<div mat-dialog-content id="form-content">
 		<form [formGroup]="createForm" id="create-form">
@@ -55,7 +55,7 @@
 			[disabled]="saveButtonMessage() === buttonStateEnum.SAVING">
 			Cancelar
 		</button>
-		<button mat-button (click)="sendForm()">
+		<button mat-button (click)="create()">
 			{{ saveButtonMessage() }}
 		</button>
 	</div>

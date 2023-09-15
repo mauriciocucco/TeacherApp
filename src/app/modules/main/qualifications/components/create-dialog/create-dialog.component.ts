@@ -1,9 +1,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
-	DestroyRef,
 	Inject,
-	inject,
 	signal,
 } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -12,14 +10,11 @@ import { QualificationsService } from '../../../../../core/services/qualificatio
 import { SharedModule } from '../../../../../shared/shared.module';
 import { CreatePayload } from '../../components/create-dialog/interfaces/create-payload.interface';
 import { Work } from '../../../../../core/enums/work.enum';
-import { TasksService } from '../../../../../core/services/tasks/tasks.service';
-import { ExamsService } from '../../../../../core/services/exams/exams.service';
-import { Observable, of } from 'rxjs';
 import { CreateTask } from '../../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../../core/interfaces/create-exam.interface';
 import { ButtonState } from '../../enums/button-state.enum';
 import { CreateForm } from '../../components/create-dialog/interfaces/create-form.interface';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CreatePayload as Payload } from '../../../../../core/interfaces/create-payload.interface';
 
 @Component({
 	selector: 'app-create-dialog',
@@ -43,11 +38,8 @@ export class CreateDialogComponent {
 	public workEnum = Work;
 	public buttonStateEnum = ButtonState;
 	public saveButtonMessage = signal(ButtonState.CREATE);
-	private ts = inject(TasksService);
-	private es = inject(ExamsService);
+	public createWork$ = this.qs.createWork$;
 	private students = this.qs.students;
-	private selectedWorkType = this.qs.selectedWorkType;
-	private destroyRef = inject(DestroyRef);
 
 	constructor(
 		public dialogRef: MatDialogRef<CreateDialogComponent>,
@@ -60,29 +52,14 @@ export class CreateDialogComponent {
 		this.dialogRef.close(reloadData);
 	}
 
-	public sendForm() {
-		const cleanedForm = this.setForm();
-		let create$: Observable<CreateTask | CreateExam | undefined> =
-			of(undefined);
+	public create() {
+		const payload = this.setPayload();
 
 		this.saveButtonMessage.set(ButtonState.SAVING);
-		this.selectedWorkType.set(this.createForm.get('type')?.value as Work);
-		this.createForm.get('type')?.value === Work.TASK
-			? (create$ = this.ts.createTask(cleanedForm as CreateTask))
-			: (create$ = this.es.createExam(cleanedForm as CreateExam));
-
-		create$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-			next: () => {
-				this.closeDialog(true);
-			},
-			error: () => {
-				this.qs.handleHttpResponseMessage();
-				this.closeDialog();
-			},
-		});
+		this.qs.create(payload as Payload, this.dialogRef);
 	}
 
-	private setForm(): CreateTask | CreateExam {
+	private setPayload(): CreateTask | CreateExam {
 		const formDeepCopy: CreateForm = JSON.parse(
 			JSON.stringify(this.createForm.value)
 		);

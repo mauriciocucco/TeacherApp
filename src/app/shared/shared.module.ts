@@ -10,7 +10,6 @@ import { HeaderComponent } from './layout/header/header.component';
 import { ShiftPipe } from './pipes/shift.pipe';
 import { WarningComponent } from './components/warning/warning.component';
 import { MenuButtonComponent } from './components/menu-button/menu-button.component';
-import { InfiniteScrollDirective } from './directives/infinite-scroll.directive';
 
 @NgModule({
 	declarations: [
@@ -20,7 +19,6 @@ import { InfiniteScrollDirective } from './directives/infinite-scroll.directive'
 		ShiftPipe,
 		WarningComponent,
 		MenuButtonComponent,
-		InfiniteScrollDirective,
 	],
 	imports: [
 		CommonModule,
@@ -41,7 +39,6 @@ import { InfiniteScrollDirective } from './directives/infinite-scroll.directive'
 		ShiftPipe,
 		WarningComponent,
 		MenuButtonComponent,
-		InfiniteScrollDirective,
 	],
 })
 export class SharedModule {}

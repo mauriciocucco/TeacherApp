@@ -38,6 +38,11 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
 import { InfoDialogComponent } from '../../../modules/main/qualifications/components/info-dialog/info-dialog.component';
 import { UpdatePayload } from '../../interfaces/update-payload.interface';
+import { CreateDialogComponent } from '../../../modules/main/qualifications/components/create-dialog/create-dialog.component';
+import { CreatePayload } from '../../interfaces/create-payload.interface';
+import { CreateTask } from '../../interfaces/create-task.interface';
+import { CreateExam } from '../../interfaces/create-exam.interface';
+import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
 
 @Injectable({
 	providedIn: 'root',
@@ -165,13 +170,9 @@ export class QualificationsService {
 		tap(deletedWork => {
 			if (!deletedWork.name) return;
 
-			const queryParam = { courseId: this.selectedCourseId() };
-
-			this.getTasksExamsAndStudents(queryParam, queryParam);
+			this.resetWorks();
 			this.deleteDialogRef.close();
-			this.handleHttpResponseMessage(
-				`Se eliminó a "${deletedWork.name}" con éxito.`
-			);
+			this.handleHttpResponseMessage(`Se eliminó "${deletedWork.name}".`);
 		}),
 		catchError(error => {
 			console.error('Hubo un error en el stream de deleteWork$: ', error);
@@ -182,7 +183,9 @@ export class QualificationsService {
 			return EMPTY;
 		})
 	);
-	private updateDialogRef!: MatDialogRef<InfoDialogComponent>;
+	private updateDialogRef!: MatDialogRef<
+		InfoDialogComponent | MultipleMarkingSetterComponent
+	>;
 	private updateWork = new BehaviorSubject({
 		workId: 0,
 		name: '',
@@ -191,7 +194,6 @@ export class QualificationsService {
 	});
 	public updateWork$ = this.updateWork.asObservable().pipe(
 		switchMap(({ workId, ...payload }) => {
-			console.log(workId);
 			if (!workId) return of(true);
 
 			return this.selectedWorkType() === Work.TASK
@@ -210,6 +212,35 @@ export class QualificationsService {
 			console.error('Hubo un error en el stream de updateWork$: ', error);
 
 			this.updateDialogRef.close();
+			this.handleHttpResponseMessage();
+
+			return EMPTY;
+		})
+	);
+	private createDialogRef!: MatDialogRef<CreateDialogComponent>;
+	private createWork = new BehaviorSubject({
+		name: '',
+	});
+	public createWork$ = this.createWork.asObservable().pipe(
+		switchMap(payload => {
+			if (!payload.name) return of(true);
+
+			return this.selectedWorkType() === Work.TASK
+				? this.ts.createTask(payload as CreateTask)
+				: this.es.createExam(payload as CreateExam);
+		}),
+		tap(createdWork => {
+			if (!createdWork.name) return;
+
+			this.resetWorks();
+			this.createDialogRef.close();
+			this.handleHttpResponseMessage('La creación fue exitosa.');
+			this.createWork.next({ name: '' });
+		}),
+		catchError(error => {
+			console.error('Hubo un error en el stream de createWork$: ', error);
+
+			this.createDialogRef.close();
 			this.handleHttpResponseMessage();
 
 			return EMPTY;
@@ -249,22 +280,6 @@ export class QualificationsService {
 		this.filtersChanges.next(changes);
 	}
 
-	public update(
-		payload: UpdatePayload,
-		dialogRef: MatDialogRef<InfoDialogComponent>
-	) {
-		this.updateDialogRef = dialogRef;
-		this.updateWork.next(payload);
-	}
-
-	public delete(
-		workId: number,
-		dialogRef: MatDialogRef<DeleteDialogComponent>
-	) {
-		this.deleteDialogRef = dialogRef;
-		this.deleteWork.next(workId);
-	}
-
 	private filterData({ student, task, exam }: FormFilters) {
 		this.filterValues(student);
 		this.filterValues(task, 'Tasks');
@@ -286,6 +301,38 @@ export class QualificationsService {
 		if (!start && !end) return queryParams;
 
 		return;
+	}
+
+	public create(
+		payload: CreatePayload,
+		dialogRef: MatDialogRef<CreateDialogComponent>
+	) {
+		this.createDialogRef = dialogRef;
+		this.createWork.next(payload);
+	}
+
+	public update(
+		payload: UpdatePayload,
+		dialogRef: MatDialogRef<
+			InfoDialogComponent | MultipleMarkingSetterComponent
+		>
+	) {
+		this.updateDialogRef = dialogRef;
+		this.updateWork.next(payload);
+	}
+
+	public delete(
+		workId: number,
+		dialogRef: MatDialogRef<DeleteDialogComponent>
+	) {
+		this.deleteDialogRef = dialogRef;
+		this.deleteWork.next(workId);
+	}
+
+	private resetWorks() {
+		const queryParam = { courseId: this.selectedCourseId() };
+
+		this.getTasksExamsAndStudents(queryParam, queryParam);
 	}
 
 	public filterValues(
