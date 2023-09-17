@@ -5,6 +5,7 @@ import {
 	ElementRef,
 	ViewChild,
 	WritableSignal,
+	computed,
 	inject,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
@@ -31,7 +32,11 @@ import { Student } from 'src/app/core/interfaces/student.interface';
 export class AlphabetComponent implements OnInit {
 	private alpha = Array.from(Array(26)).map((e, i) => i + 65);
 	public alphabet = this.alpha.map(x => String.fromCharCode(x));
-	private disabledLetters: string[] = [];
+	private enabledLetters = computed(() =>
+		this.students()
+			.map(student => student.lastname?.charAt(0).toUpperCase())
+			.filter((letter, index, self) => self.indexOf(letter) === index)
+	);
 	private qs = inject(QualificationsService);
 	private vs = inject(ViewService);
 	private students = this.qs.students;
@@ -43,18 +48,6 @@ export class AlphabetComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.listenCleanAlphabet();
-		this.setDisabledLetters();
-	}
-
-	private setDisabledLetters() {
-		const lettersFromStudents = this.students().map(student =>
-			student.lastname?.charAt(0).toLowerCase()
-		);
-
-		this.alphabet.forEach(letter => {
-			if (!lettersFromStudents.includes(letter.toLowerCase()))
-				this.disabledLetters.push(letter.toLowerCase());
-		});
 	}
 
 	private listenCleanAlphabet() {
@@ -87,6 +80,6 @@ export class AlphabetComponent implements OnInit {
 	}
 
 	public checkIfExists(letter: string) {
-		return this.disabledLetters.includes(letter.toLowerCase());
+		return this.enabledLetters().includes(letter);
 	}
 }

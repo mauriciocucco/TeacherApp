@@ -44,6 +44,9 @@ import { CreatePayload } from '../../interfaces/create-payload.interface';
 import { CreateTask } from '../../interfaces/create-task.interface';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
+import { PaginatedTasks } from '../../interfaces/paginated-tasks.interface';
+import { PaginatedExams } from '../../interfaces/paginated-exams.interface';
+import { PaginatorService } from '../paginator/paginator.service';
 
 @Injectable({
 	providedIn: 'root',
@@ -91,16 +94,22 @@ export class QualificationsService {
 						this.ts.getTasks(tasksAndExamsQueryParams),
 						this.es.getExams(tasksAndExamsQueryParams),
 						this.ss.getStudents(studentsQueryParams),
-					] as Observable<Task[] | Exam[] | Student[]>[]
+					] as Observable<
+						PaginatedTasks | PaginatedExams | Student[]
+					>[]
 			),
 			switchMap(observablesArray => forkJoin(observablesArray)),
-			tap(([tasks, exams, students]) =>
+			tap(([paginatedTasks, paginatedExams, students]) => {
 				this.setSignalsValues(
-					tasks as Task[],
-					exams as Exam[],
+					(paginatedTasks as PaginatedTasks).data as Task[],
+					(paginatedExams as PaginatedExams).data as Exam[],
 					students as Student[]
-				)
-			),
+				);
+				this.ps.setPages(
+					(paginatedTasks as PaginatedTasks).meta,
+					(paginatedExams as PaginatedExams).meta
+				);
+			}),
 			catchError(error => {
 				console.error(
 					'Hubo un error en el stream de tasksExamsAndStudents$: ',
@@ -119,7 +128,7 @@ export class QualificationsService {
 		this.tasksExamsAndStudents$,
 		this.filtersChanges$,
 	]).pipe(
-		tap(([[tasks, exams, students], filtersChanges]) => {
+		tap(([[paginatedTasks, paginatedExams, students], filtersChanges]) => {
 			const {
 				course: courseId,
 				subject,
@@ -153,7 +162,11 @@ export class QualificationsService {
 
 			if (!student) this.cleanAlphabet.next(true);
 
-			if (tasks.length && exams.length && students.length) {
+			if (
+				(paginatedTasks as PaginatedTasks).data?.length &&
+				(paginatedExams as PaginatedExams).data?.length &&
+				(students as Student[]).length
+			) {
 				this.selectedSubjectId.set(subject ?? 0);
 				this.filterData(filtersChanges);
 			}
@@ -277,7 +290,8 @@ export class QualificationsService {
 		private ts: TasksService,
 		private es: ExamsService,
 		private ss: StudentsService,
-		private _snackBar: MatSnackBar
+		private _snackBar: MatSnackBar,
+		private ps: PaginatorService
 	) {}
 
 	public getTasksExamsAndStudents(

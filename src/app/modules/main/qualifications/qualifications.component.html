@@ -16,60 +16,66 @@
 		[ngClass]="{
 			'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
 		}">
-		<ng-container *ngFor="let student of students(); trackBy: trackItems">
-			<mat-card 
-				[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
-										 (screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
-							}" 
-				id="{{ student.lastname.charAt(0).toUpperCase()}}"
-			>
-					<mat-card-header
-						><h2 class="student-header">
-							{{ student.name }} {{ student.lastname }}
-						</h2></mat-card-header
-					>
-					<mat-card-content>
-						<mat-tab-group
-							#tabChildren
-							animationDuration="0"
-							[selectedIndex]="selectedTab()"
-							(selectedIndexChange)="selectWorkType($event)"
-							id="qualifications-tab-group">
-							<mat-tab label="Tareas">
-								<div
-									class="cards-wrapper"
-									*ngIf="
-										taskMatchSomeFilter();
-										else noMatchedTasks
-									">
-									<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
-										<app-work-card [work]="task" [student]="student"></app-work-card>
-									</ng-container>
-								</div>
-								<ng-template #noMatchedTasks>
-									<app-warning [info]="'No se encontraron tareas'"></app-warning>
-								</ng-template>
-							</mat-tab>
+			<ng-container *ngFor="let student of students(); trackBy: trackItems">
+				<mat-card 
+					class="qualifications-students-card"
+					[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
+											(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
+								}" 
+					id="{{ student.lastname.charAt(0).toUpperCase()}}"
+				>
+						<mat-card-header
+							><h2 class="student-header">
+								{{ student.name }} {{ student.lastname }}
+							</h2></mat-card-header
+						>
+						<mat-card-content>
+							<mat-tab-group
+								#tabChildren
+								animationDuration="0"
+								[selectedIndex]="selectedTab()"
+								(selectedIndexChange)="selectWorkType($event)"
+								id="qualifications-tab-group">
+								<mat-tab label="Tareas">
+									<div
+										class="cards-wrapper"
+										*ngIf="
+											taskMatchSomeFilter();
+											else noMatchedTasks
+										">
+										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
+											<app-work-card [work]="task" [student]="student"></app-work-card>
+										</ng-container>
+									</div>
+									<ng-template #noMatchedTasks>
+										<app-warning [info]="'No se encontraron tareas'"></app-warning>
+									</ng-template>
 
-							<mat-tab label="Exámenes">
-								<div
-									class="cards-wrapper"
-									*ngIf="
-										examMatchSomeFilter();
-										else noMatchedExams
-									">
-									<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
-										<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"></app-work-card>
-									</ng-container>
-								</div>
-								<ng-template #noMatchedExams>
-									<app-warning [info]="'No se encontraron exámenes'"></app-warning>
-								</ng-template>
-							</mat-tab>
-						</mat-tab-group>
-					</mat-card-content>
-			</mat-card>
-		</ng-container>
+									<app-paginator [workType]="WorkEnum.TASK"></app-paginator>
+
+								</mat-tab>
+
+								<mat-tab label="Exámenes">
+									<div
+										class="cards-wrapper"
+										*ngIf="
+											examMatchSomeFilter();
+											else noMatchedExams
+										">
+										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
+											<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"></app-work-card>
+										</ng-container>
+									</div>
+									<ng-template #noMatchedExams>
+										<app-warning [info]="'No se encontraron exámenes'"></app-warning>
+									</ng-template>
+
+									<app-paginator [workType]="WorkEnum.EXAM"></app-paginator>
+								</mat-tab>
+							</mat-tab-group>
+						</mat-card-content>
+				</mat-card>
+			</ng-container>
 		</div>
 
 		<ng-template #spinner>

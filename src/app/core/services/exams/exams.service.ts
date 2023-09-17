@@ -6,6 +6,7 @@ import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/i
 import { Exam } from '../../interfaces/exam.interface';
 import { catchError, of, throwError } from 'rxjs';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
+import { PaginatedExams } from '../../interfaces/paginated-exams.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -25,7 +26,7 @@ export class ExamsService {
 
 	public getExams(tasksAndExamsQueryParams: TasksAndExamsQueryParams | null) {
 		return tasksAndExamsQueryParams
-			? this.api.get<Exam[]>(Endpoints.EXAMS, {
+			? this.api.get<PaginatedExams>(Endpoints.EXAMS, {
 					params: tasksAndExamsQueryParams,
 			  })
 			: of([]);
