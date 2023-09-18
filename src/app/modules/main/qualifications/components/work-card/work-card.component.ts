@@ -33,6 +33,8 @@ import {
 	switchMap,
 	tap,
 } from 'rxjs';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { UpdateTask } from '../../../../../core/interfaces/update-task.interface';
 
 @Component({
 	selector: 'app-work-card',
@@ -101,6 +103,31 @@ export class WorkCardComponent implements OnInit {
 	ngOnInit(): void {
 		this.setInitialFormValues();
 		this.listenForChanges();
+	}
+
+	public setDeliveredOnTime({ checked: onTime }: MatCheckboxChange) {
+		const payload = {
+			studentToTask: [
+				{
+					studentId: this.student?.id,
+					onTime,
+				},
+			],
+		};
+
+		this.ts
+			.updateTask(payload as UpdateTask, this.work!.id as number)
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe({
+				next: () => {
+					this.qs.handleHttpResponseMessage(
+						'La edición fue exitosa.'
+					);
+				},
+				error: () => {
+					this.qs.handleHttpResponseMessage();
+				},
+			});
 	}
 
 	private setInitialFormValues() {
