@@ -12,6 +12,18 @@
 		<p>
 			{{ work?.date | shortDate }}
 		</p>
+		<mat-checkbox
+			*ngIf="workType === workEnum.TASK"
+			class="example-margin"
+			[checked]="
+			{
+				works: work?.studentToTask? work?.studentToTask : work?.studentToExam,
+				studentId: student?.id,
+			} | studentRelation : 'onTime'
+			"
+			(change)="setDeliveredOnTime($event)"
+			>Entregado a tiempo</mat-checkbox
+		>
 		<div class="edit-and-delete-settings">
 			<button
 				#editButton

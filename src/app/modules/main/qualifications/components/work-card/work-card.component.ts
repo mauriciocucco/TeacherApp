@@ -32,6 +32,7 @@ import { UpdateExam } from '../../../../../core/interfaces/update-exam.interface
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TasksService } from '../../../../../core/services/tasks/tasks.service';
 import { ExamsService } from '../../../../../core/services/exams/exams.service';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
 	selector: 'app-work-card',
@@ -74,6 +75,31 @@ export class WorkCardComponent {
 		private renderer: Renderer2,
 		public dialog: MatDialog
 	) {}
+
+	public setDeliveredOnTime({ checked: onTime }: MatCheckboxChange) {
+		const payload = {
+			studentToTask: [
+				{
+					studentId: this.student?.id,
+					onTime,
+				},
+			],
+		};
+
+		this.ts
+			.updateTask(payload as UpdateTask, this.work!.id as number)
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe({
+				next: () => {
+					this.qs.handleHttpResponseMessage(
+						'La edición fue exitosa.'
+					);
+				},
+				error: () => {
+					this.qs.handleHttpResponseMessage();
+				},
+			});
+	}
 
 	public toggleEditOnSelectedItem(
 		toggleEditElements: ToggleEditElements,
