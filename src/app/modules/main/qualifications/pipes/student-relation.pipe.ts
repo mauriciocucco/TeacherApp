@@ -5,7 +5,7 @@ interface StudentRelation {
 	studentId: number | undefined;
 }
 
-type Argument = 'markingId' | 'marking' | 'observation';
+type Argument = 'markingId' | 'marking' | 'observation' | 'onTime';
 
 @Pipe({
 	name: 'studentRelation',

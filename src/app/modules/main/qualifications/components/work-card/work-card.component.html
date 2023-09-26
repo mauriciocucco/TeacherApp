@@ -108,7 +108,7 @@
 					<mat-label>Observación</mat-label>
 					<textarea
 						matInput
-						[rows]="defaultRowsNumber()"
+						[rows]="workType === workEnum.TASK ? 5 : 8"
 						formControlName="observation"></textarea>
 				</mat-form-field>
 			</form>

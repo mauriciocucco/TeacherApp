@@ -6,7 +6,6 @@ import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/i
 import { Task } from '../../interfaces/task.interface';
 import { catchError, of } from 'rxjs';
 import { UpdateTask } from '../../interfaces/update-task.interface';
-import { PaginatedTasks } from '../../interfaces/paginated-tasks.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -26,7 +25,7 @@ export class TasksService {
 
 	public getTasks(tasksAndExamsQueryParams: TasksAndExamsQueryParams | null) {
 		return tasksAndExamsQueryParams
-			? this.api.get<PaginatedTasks>(Endpoints.TASKS, {
+			? this.api.get<Task[]>(Endpoints.TASKS, {
 					params: tasksAndExamsQueryParams,
 			  })
 			: of([]);

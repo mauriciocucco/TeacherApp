@@ -44,9 +44,6 @@ import { CreatePayload } from '../../interfaces/create-payload.interface';
 import { CreateTask } from '../../interfaces/create-task.interface';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
-import { PaginatedTasks } from '../../interfaces/paginated-tasks.interface';
-import { PaginatedExams } from '../../interfaces/paginated-exams.interface';
-import { PaginatorService } from '../paginator/paginator.service';
 
 @Injectable({
 	providedIn: 'root',
@@ -94,20 +91,14 @@ export class QualificationsService {
 						this.ts.getTasks(tasksAndExamsQueryParams),
 						this.es.getExams(tasksAndExamsQueryParams),
 						this.ss.getStudents(studentsQueryParams),
-					] as Observable<
-						PaginatedTasks | PaginatedExams | Student[]
-					>[]
+					] as Observable<Task[] | Exam[] | Student[]>[]
 			),
 			switchMap(observablesArray => forkJoin(observablesArray)),
-			tap(([paginatedTasks, paginatedExams, students]) => {
+			tap(([tasks, exams, students]) => {
 				this.setSignalsValues(
-					(paginatedTasks as PaginatedTasks).data as Task[],
-					(paginatedExams as PaginatedExams).data as Exam[],
+					tasks as Task[],
+					exams as Exam[],
 					students as Student[]
-				);
-				this.ps.setPages(
-					(paginatedTasks as PaginatedTasks).meta,
-					(paginatedExams as PaginatedExams).meta
 				);
 			}),
 			catchError(error => {
@@ -128,7 +119,7 @@ export class QualificationsService {
 		this.tasksExamsAndStudents$,
 		this.filtersChanges$,
 	]).pipe(
-		tap(([[paginatedTasks, paginatedExams, students], filtersChanges]) => {
+		tap(([[tasks, exams, students], filtersChanges]) => {
 			const {
 				course: courseId,
 				subject,
@@ -163,8 +154,8 @@ export class QualificationsService {
 			if (!student) this.cleanAlphabet.next(true);
 
 			if (
-				(paginatedTasks as PaginatedTasks).data?.length &&
-				(paginatedExams as PaginatedExams).data?.length &&
+				tasks?.length &&
+				exams?.length &&
 				(students as Student[]).length
 			) {
 				this.selectedSubjectId.set(subject ?? 0);
@@ -290,8 +281,7 @@ export class QualificationsService {
 		private ts: TasksService,
 		private es: ExamsService,
 		private ss: StudentsService,
-		private _snackBar: MatSnackBar,
-		private ps: PaginatorService
+		private _snackBar: MatSnackBar
 	) {}
 
 	public getTasksExamsAndStudents(
@@ -519,8 +509,9 @@ export class QualificationsService {
 			students
 				? students.forEach(student => {
 						if (
-							student?.lastname?.charAt(0).toUpperCase() ===
-							letter.toUpperCase()
+							this.removeAccent(
+								student?.lastname?.charAt(0)
+							).toUpperCase() === letter.toUpperCase()
 						) {
 							student.showForMobile = true;
 						}
@@ -531,5 +522,9 @@ export class QualificationsService {
 
 	public trackItems(index: number, item: Student | Task | Exam): number {
 		return item.id;
+	}
+
+	private removeAccent(letter: string) {
+		return letter.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 	}
 }

@@ -50,7 +50,6 @@ export class WorkCardComponent implements OnInit {
 	public exams: Signal<Exam[]> = this.qs.exams;
 	public markings: Signal<Marking[]> = this.qs.markings;
 	public editMode = signal(false);
-	public defaultRowsNumber = signal(5);
 	public selectedSubjectId = this.qs.selectedSubjectId;
 	public initialState: UpdateState = {
 		markingId: '',

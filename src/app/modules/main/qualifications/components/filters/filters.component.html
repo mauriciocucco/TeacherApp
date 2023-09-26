@@ -30,31 +30,33 @@
 					</div>
 					<div class="second-row">
 						<!-- CURSO -->
-						<mat-form-field appearance="fill">
-							<mat-label>Curso</mat-label>
-							<mat-select
-								formControlName="course"
-								placeholder="Seleccionar un curso">
-								<mat-option
-									*ngFor="let course of courses()"
-									[value]="course.id">
-									{{ course.year }}° -
-									{{ course.shift | shift }}
-								</mat-option>
-							</mat-select>
-						</mat-form-field>
-						<button
-							mat-stroked-button
-							id="filters-button"
-							color="primary"
-							[ngClass]="{ 'mobile-show': students() }"
-							(click)="toggleFiltersMenu()">
-							{{
-								openFiltersMenu()
-									? 'Ocultar filtros'
-									: 'Mostrar más filtros'
-							}}
-						</button>
+						<div class="control-wrapper">
+							<mat-form-field appearance="fill">
+								<mat-label>Curso</mat-label>
+								<mat-select
+									formControlName="course"
+									placeholder="Seleccionar un curso">
+									<mat-option
+										*ngFor="let course of courses()"
+										[value]="course.id">
+										{{ course.year }}° -
+										{{ course.shift | shift }}
+									</mat-option>
+								</mat-select>
+							</mat-form-field>
+							<button
+								mat-stroked-button
+								id="filters-button"
+								color="primary"
+								[ngClass]="{ 'mobile-show': students() }"
+								(click)="toggleFiltersMenu()">
+								{{
+									openFiltersMenu()
+										? 'Ocultar filtros'
+										: 'Mostrar más filtros'
+								}}
+							</button>
+						</div>
 						<!-- ALUMNX -->
 						<div class="control-wrapper">
 							<mat-form-field

@@ -4,9 +4,8 @@ import { Endpoints } from '../../enums/endpoints.enum';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-query-params.interface';
 import { Exam } from '../../interfaces/exam.interface';
-import { catchError, of, throwError } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
-import { PaginatedExams } from '../../interfaces/paginated-exams.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -26,7 +25,7 @@ export class ExamsService {
 
 	public getExams(tasksAndExamsQueryParams: TasksAndExamsQueryParams | null) {
 		return tasksAndExamsQueryParams
-			? this.api.get<PaginatedExams>(Endpoints.EXAMS, {
+			? this.api.get<Exam[]>(Endpoints.EXAMS, {
 					params: tasksAndExamsQueryParams,
 			  })
 			: of([]);

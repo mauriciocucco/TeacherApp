@@ -50,9 +50,6 @@
 									<ng-template #noMatchedTasks>
 										<app-warning [info]="'No se encontraron tareas'"></app-warning>
 									</ng-template>
-
-									<app-paginator [workType]="WorkEnum.TASK"></app-paginator>
-
 								</mat-tab>
 
 								<mat-tab label="Exámenes">
@@ -69,8 +66,6 @@
 									<ng-template #noMatchedExams>
 										<app-warning [info]="'No se encontraron exámenes'"></app-warning>
 									</ng-template>
-
-									<app-paginator [workType]="WorkEnum.EXAM"></app-paginator>
 								</mat-tab>
 							</mat-tab-group>
 						</mat-card-content>
