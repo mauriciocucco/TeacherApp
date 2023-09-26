@@ -18,7 +18,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
@@ -43,7 +42,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 		MatToolbarModule,
 		MatExpansionModule,
 		MatButtonToggleModule,
-		MatPaginatorModule,
 		MatCheckboxModule,
 	],
 	providers: [{ provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
