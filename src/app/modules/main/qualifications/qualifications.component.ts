@@ -51,6 +51,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public letterSelected = this.qs.letterSelected;
 	public courseIsSelected = this.qs.selectedCourseId;
 	public selectedTab = signal(0);
+	public selectedSubjectId = this.qs.selectedSubjectId;
 	public studentIsSelected = this.qs.studentIsSelected;
 	public resetFilters = {
 		reset: false,

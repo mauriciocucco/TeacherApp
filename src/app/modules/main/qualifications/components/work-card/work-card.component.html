@@ -1,11 +1,4 @@
-<mat-card
-	class="qualification-card"
-	[ngClass]="{
-		disappear:
-			(selectedSubjectId() &&
-				work?.subject?.id !== selectedSubjectId()) ||
-			!work?.show
-	}">
+<mat-card class="qualification-card">
 	<mat-card-header class="qualification-card-header">
 		<h3 [title]="work?.name">{{ work?.name }}</h3>
 		<h4
