@@ -3,6 +3,6 @@ export interface InfoPayload {
 	name: string;
 	date: string;
 	description?: string;
-	workId: number;
-	workSubject: Subject;
+	id: number;
+	subject: Subject;
 }

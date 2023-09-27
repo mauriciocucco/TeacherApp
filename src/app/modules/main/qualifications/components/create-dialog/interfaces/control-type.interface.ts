@@ -1,1 +1,1 @@
-export type ControlType = 'Students' | 'Tasks' | 'Exams';
+export type ControlType = 'Students' | 'Tasks' | 'Exams' | 'Date';

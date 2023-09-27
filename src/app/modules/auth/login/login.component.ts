@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
 	selector: 'app-login',
@@ -9,11 +10,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 	styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
-	private previousUrl = '';
 	public loginForm: FormGroup = this.fb.group({
 		email: [null, [Validators.required, Validators.email]],
 		password: [null, Validators.required],
 	});
+	private previousUrl = '';
+	private destroyRef = inject(DestroyRef);
 
 	constructor(
 		private fb: FormBuilder,
@@ -27,9 +29,12 @@ export class LoginComponent implements OnInit {
 	}
 
 	private getPreviousUrl(): void {
-		this.activatedRoute.queryParams.subscribe(
-			params => (this.previousUrl = params['previousUrl'] || '/principal')
-		);
+		this.activatedRoute.queryParams
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(
+				params =>
+					(this.previousUrl = params['previousUrl'] || '/principal')
+			);
 	}
 
 	//TODO: ver mensajes de error
@@ -52,17 +57,20 @@ export class LoginComponent implements OnInit {
 			password,
 		};
 
-		this.authService.login(request).subscribe((resp: boolean) => {
-			if (resp) {
-				return this.router.navigateByUrl(this.previousUrl);
-			}
+		this.authService
+			.login(request)
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe((resp: boolean) => {
+				if (resp) {
+					return this.router.navigateByUrl(this.previousUrl);
+				}
 
-			// this.nmz.error('Email o contraseña inválida', { nzDuration: 5000 });
+				// this.nmz.error('Email o contraseña inválida', { nzDuration: 5000 });
 
-			// this.submit_button.loading = false;
-			// this.submit_button.text = 'Ingresar';
+				// this.submit_button.loading = false;
+				// this.submit_button.text = 'Ingresar';
 
-			return;
-		});
+				return;
+			});
 	}
 }

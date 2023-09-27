@@ -1,6 +1,6 @@
-<div id="delete-container">
+<div id="delete-container" *ngIf="deleteWork$ | async">
 	<h2>
-		¿Estás segurx que deseas eliminar <b>{{ workName }}</b
+		¿Estás segurx que deseas eliminar <b>{{ payload.name }}</b
 		>?
 	</h2>
 	<div mat-dialog-actions id="buttons-wrapper">
@@ -10,7 +10,7 @@
 			[disabled]="deleteButtonMessage() === buttonStateEnum.DELETING">
 			Cancelar
 		</button>
-		<button mat-button (click)="sendForm()">
+		<button mat-button (click)="delete()">
 			{{ deleteButtonMessage() }}
 		</button>
 	</div>

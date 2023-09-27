@@ -1,4 +1,4 @@
-<mat-card class="qualification-card" [ngClass]="{ disappear: !work?.show }">
+<mat-card class="qualification-card">
 	<mat-card-header class="qualification-card-header">
 		<h3 [title]="work?.name">{{ work?.name }}</h3>
 		<h4
@@ -7,7 +7,7 @@
 					work?.totalDelivered !== undefined) &&
 				workType === workEnum.TASK
 			">
-			{{ students()!.length }}/{{ work?.totalDelivered }}
+			{{ students().length }}/{{ work?.totalDelivered }}
 		</h4>
 		<p>
 			{{ work?.date | shortDate }}
@@ -25,42 +25,14 @@
 			>Entregado a tiempo</mat-checkbox
 		>
 		<div class="edit-and-delete-settings">
-			<button
-				#editButton
-				mat-mini-fab
-				color="primary"
-				title="Editar observación"
-				aria-label="Icono para editar"
-				(click)="
-					toggleEditOnSelectedItem({
-						textArea,
-						editButton,
-						confirmDiv,
-						deleteButton
-					})
-				">
-				<mat-icon>edit</mat-icon>
-			</button>
-			<div #confirmDiv class="confirm-icons disappear">
+			<div *ngIf="editMode()" class="confirm-icons">
 				<button
 					class="confirm-button"
 					title="Guardar edición"
 					mat-mini-fab
 					color="green"
 					aria-label="Icono para confirmar edición"
-					(click)="updateWork({
-										    textArea,
-											editButton,
-											confirmDiv,
-											deleteButton,
-											cardContent,
-											cardLoading,
-										},
-										{
-											workId: work?.id,
-											studentId: student?.id,
-										}
-					)">
+					(click)="update()">
 					<mat-icon>check</mat-icon>
 				</button>
 				<button
@@ -70,21 +42,7 @@
 					mat-mini-fab
 					color="red"
 					aria-label="Icono para cancelar edición"
-					(click)="
-						toggleEditOnSelectedItem(
-							{
-								textArea,
-								editButton,
-								confirmDiv,
-								deleteButton
-							},
-							{
-								workId: work?.id,
-								studentId: student?.id,
-							},
-							false
-						)
-					">
+					(click)="cancelEdition()">
 					<mat-icon>cancel</mat-icon>
 				</button>
 			</div>
@@ -107,74 +65,51 @@
 			</button>
 		</div>
 	</mat-card-header>
-	<div class="card-loading disappear" #cardLoading>
-		<mat-spinner></mat-spinner>
-	</div>
-	<mat-card-content #cardContent>
-		<div class="qualification-card-content">
-			<mat-form-field appearance="fill">
-				<mat-label>Nota</mat-label>
-				<ng-container
-					*ngTemplateOutlet="
-						workType === workEnum.TASK ? taskSelect : examInput
-					"></ng-container>
-				<ng-template #taskSelect>
-					<mat-select
-						[value]="
-							{
-								works: work?.studentToTask,
-								studentId: student?.id
-							} | studentRelation : 'markingId'
-						"
-						(selectionChange)="updateWork(
-														{
-															cardContent,
-															cardLoading,
-														},
-														{
-															workId: work?.id,
-															studentId: student?.id,
-														}
-						)"
-						#matSelect>
-						<mat-option
-							*ngFor="let marking of markings()"
-							[value]="marking.id">
-							{{ marking.name }}
-							-
-							{{ marking.description }}
-						</mat-option>
-					</mat-select>
-				</ng-template>
-				<ng-template #examInput>
-					<input
-						#matInput
-						readonly
+	<mat-card-content>
+		<div
+			class="qualification-card-content"
+			*ngIf="
+				!(updateWork$ | async)?.workId && (loading$ | async) === false;
+				else loading
+			">
+			<form [formGroup]="updateForm">
+				<mat-form-field appearance="fill">
+					<mat-label>Nota</mat-label>
+					<ng-container
+						*ngTemplateOutlet="
+							workType === workEnum.TASK ? taskSelect : examInput
+						"></ng-container>
+					<ng-template #taskSelect>
+						<mat-select formControlName="markingId">
+							<mat-option
+								*ngFor="let marking of markings()"
+								[value]="marking.id">
+								{{ marking.name }}
+								-
+								{{ marking.description }}
+							</mat-option>
+						</mat-select>
+					</ng-template>
+					<ng-template #examInput>
+						<input
+							matInput
+							placeholder="Nota del examen"
+							formControlName="examMarking" />
+					</ng-template>
+				</mat-form-field>
+				<mat-form-field class="observation-textarea">
+					<mat-label>Observación</mat-label>
+					<textarea
 						matInput
-						placeholder="Nota del examen"
-						[value]="
-							{
-								works: work?.studentToExam,
-								studentId: student?.id
-							} | studentRelation : 'marking'
-						" />
-				</ng-template>
-			</mat-form-field>
-			<mat-form-field class="observation-textarea">
-				<mat-label>Observación</mat-label>
-				<textarea
-					matInput
-					[readonly]="!editMode()"
-					[rows]="defaultRowsNumber()"
-					#textArea
-					>{{
-						{
-							works: work?.studentToTask? work?.studentToTask : work?.studentToExam,
-							studentId: student?.id,
-						} | studentRelation : 'observation'
-					}}</textarea
-				>
-			</mat-form-field>
+						[rows]="workType === workEnum.TASK ? 5 : 8"
+						formControlName="observation"></textarea>
+				</mat-form-field>
+			</form>
 		</div>
+		<ng-template #loading>
+			<div class="card-loading">
+				<mat-spinner></mat-spinner>
+			</div>
+		</ng-template>
 	</mat-card-content>
 </mat-card>

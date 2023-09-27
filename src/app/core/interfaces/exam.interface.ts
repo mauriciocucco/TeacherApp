@@ -4,5 +4,5 @@ import { WorkBase } from './work-base.interface';
 
 export interface Exam extends WorkBase {
 	studentToExam: StudentToExam[];
-	subject: number | Subject;
+	subject: Subject;
 }

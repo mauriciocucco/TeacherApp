@@ -2,14 +2,21 @@
 @import './bases.scss';
 @import './variables.scss';
 
-//TABS
+// CARDS
+.qualifications-students-card {
+	.mat-mdc-card-content:last-child {
+		padding-bottom: unset !important;
+	}
+}
+
+// TABS
 .mat-mdc-card-header {
 	justify-content: center;
 }
 
 #qualifications-tab-group {
 	.mat-mdc-tab-body-wrapper {
-		padding: 2rem;
+		padding: 2rem 2rem 0;
 		@include mq-mobile {
 			padding: 0.5rem;
 		}
@@ -18,13 +25,19 @@
 
 .mat-mdc-tab-body-content {
 	direction: rtl; /* Establece la dirección de derecha a izquierda */
+	overflow: unset !important;
+}
+
+.mat-mdc-tab-body.mat-mdc-tab-body-active {
+	overflow-x: none !important;
+	overflow-y: none !important;
 }
 
 .mat-mdc-card {
 	direction: ltr;
 }
 
-//BUTTONS
+// BUTTONS
 .mdc-fab--mini {
 	width: 3rem !important;
 	height: 3rem !important;
@@ -59,4 +72,10 @@
 	&.mat-button-toggle-checked {
 		background-color: orange !important;
 	}
+}
+
+// PAGINATOR
+.mat-mdc-paginator-range-actions {
+	font-size: 1.4rem !important;
+	font-weight: bold;
 }

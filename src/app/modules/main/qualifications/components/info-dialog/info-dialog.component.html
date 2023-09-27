@@ -1,11 +1,10 @@
-<div id="form-container">
+<div id="form-container" *ngIf="updateWork$ | async">
 	<div mat-dialog-content id="form-content">
 		<form [formGroup]="infoForm" id="info-form">
 			<mat-form-field class="mat-form-field">
 				<mat-label>Nombre</mat-label>
 				<input
 					matInput
-					placeholder="Nombre de la tarea"
 					[readonly]="!editMode()"
 					formControlName="name" />
 			</mat-form-field>
@@ -48,7 +47,7 @@
 			[disabled]="editButtonMessage() === buttonStateEnum.SAVING">
 			Cancelar
 		</button>
-		<button mat-button (click)="sendForm()">
+		<button mat-button (click)="update()">
 			{{ editButtonMessage() }}
 		</button>
 	</div>

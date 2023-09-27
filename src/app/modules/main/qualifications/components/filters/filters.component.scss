@@ -18,9 +18,9 @@
 		}
 	}
 	.second-row {
-		display: flex;
+		display: grid;
 		gap: 2rem;
-		justify-content: space-around;
+		grid-template-columns: repeat(5, 1fr);
 		padding-top: 1rem;
 		width: 100%;
 		& > mat-form-field {

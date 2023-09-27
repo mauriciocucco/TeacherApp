@@ -4,6 +4,7 @@ import { Endpoints } from '../../enums/endpoints.enum';
 import { Student } from '../../interfaces/student.interface';
 import { StudentsParams } from '../../../modules/main/qualifications/interfaces/students-params.interface';
 import { StudentPerformance } from '../../../modules/main/performance/interfaces/student-performance.interface';
+import { of } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root',
@@ -11,10 +12,12 @@ import { StudentPerformance } from '../../../modules/main/performance/interfaces
 export class StudentsService {
 	private api = inject(ApiService);
 
-	public getStudents(studentsQueryParams: StudentsParams) {
-		return this.api.get<Student[]>(Endpoints.STUDENTS, {
-			params: studentsQueryParams,
-		});
+	public getStudents(studentsQueryParams: StudentsParams | null) {
+		return studentsQueryParams
+			? this.api.get<Student[]>(Endpoints.STUDENTS, {
+					params: studentsQueryParams,
+			  })
+			: of([]);
 	}
 
 	public getStudent(studentId: number) {

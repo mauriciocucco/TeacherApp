@@ -5,19 +5,16 @@ import {
 	EMPTY,
 	Observable,
 	catchError,
-	filter,
+	combineLatest,
+	finalize,
 	forkJoin,
 	map,
 	of,
-	startWith,
 	switchMap,
 	tap,
 } from 'rxjs';
 import { Endpoints } from '../../enums/endpoints.enum';
-import {
-	Subject as SchoolSubject,
-	Subject,
-} from '../../../core/interfaces/subject.interface';
+import { Subject as SchoolSubject } from '../../../core/interfaces/subject.interface';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
@@ -36,41 +33,49 @@ import { WorkBase } from '../../interfaces/work-base.interface';
 import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
+import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
+import { MatDialogRef } from '@angular/material/dialog';
+import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
+import { InfoDialogComponent } from '../../../modules/main/qualifications/components/info-dialog/info-dialog.component';
+import { UpdatePayload } from '../../interfaces/update-payload.interface';
+import { CreateDialogComponent } from '../../../modules/main/qualifications/components/create-dialog/create-dialog.component';
+import { CreatePayload } from '../../interfaces/create-payload.interface';
+import { CreateTask } from '../../interfaces/create-task.interface';
+import { CreateExam } from '../../interfaces/create-exam.interface';
+import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
+import { QUARTERS } from '../../constants/quarters.constant';
 
 @Injectable({
 	providedIn: 'root',
 })
 export class QualificationsService {
-	public spinnerProgressOn = signal(false);
-	public resetFilters = new BehaviorSubject(false);
-	public resetFilters$ = this.resetFilters.asObservable();
+	public refreshView = signal(false);
 	public letterSelected: WritableSignal<string | null> = signal(null);
 	public cleanAlphabet = new BehaviorSubject(false);
 	public cleanAlphabet$ = this.cleanAlphabet.asObservable();
-	private subjects$ = this.apiService.get<SchoolSubject[]>(
-		Endpoints.SUBJECTS
-	);
-	private courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
-	private markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
+	public subjects$ = this.apiService.get<SchoolSubject[]>(Endpoints.SUBJECTS);
+	public courses$ = this.apiService.get<Course[]>(Endpoints.COURSES);
+	public markings$ = this.apiService.get<Marking[]>(Endpoints.MARKINGS);
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
-	public students: WritableSignal<Student[] | undefined> = signal(undefined);
-	public selectedCourseId: WritableSignal<number | undefined> =
-		signal(undefined);
+	public students: WritableSignal<Student[]> = signal([]);
+	public quarters = signal(QUARTERS);
 	public studentIsSelected = computed(() =>
 		this.students()
-			? this.students()!.filter(s => s.show)?.length <= 1
+			? this.students().filter(s => s.show)?.length <= 1
 			: false
 	);
 	public noStudentShowingForMobile = computed(() =>
 		this.students()
-			? this.students()!.filter(s => s.showForMobile)?.length === 0
+			? this.students().filter(s => s.showForMobile)?.length === 0
 			: false
 	);
-	public selectedSubjectIdFilter = signal(0);
+	public selectedCourseId: WritableSignal<number> = signal(0);
+	public selectedSubjectId = signal(0);
+	public selectedQuarterId = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
@@ -78,47 +83,194 @@ export class QualificationsService {
 	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
 		.asObservable()
 		.pipe(
-			filter(
-				([tasksAnExamsQueryParams]) => tasksAnExamsQueryParams !== null
+			map(
+				([tasksAndExamsQueryParams, studentsQueryParams]) =>
+					[
+						this.ts.getTasks(tasksAndExamsQueryParams),
+						this.es.getExams(tasksAndExamsQueryParams),
+						this.ss.getStudents(studentsQueryParams),
+					] as Observable<Task[] | Exam[] | Student[]>[]
 			),
-			tap(() => {
-				this.spinnerProgressOn.set(true);
-			}),
-			map(([tasksAndExamsQueryParams, studentsQueryParams]) => {
-				const students$ = studentsQueryParams
-					? this.ss.getStudents(studentsQueryParams)
-					: of(this.students());
-
-				return [
-					this.ts.getTasks(tasksAndExamsQueryParams),
-					this.es.getExams(tasksAndExamsQueryParams),
-					students$,
-				] as Observable<Task[] | Exam[] | Student[]>[];
-			}),
 			switchMap(observablesArray => forkJoin(observablesArray)),
-			tap(result => {
+			tap(([tasks, exams, students]) => {
 				this.setSignalsValues(
-					result[0] as Task[],
-					result[1] as Exam[],
-					result[2] as Student[]
+					tasks as Task[],
+					exams as Exam[],
+					students as Student[]
 				);
-				this.selectedSubjectIdFilter()
-					? this.filterTasksAndExamsBySubject(
-							this.selectedSubjectIdFilter()
-					  )
-					: this.cleanAllShow();
-				this.spinnerProgressOn.set(false);
 			}),
 			catchError(error => {
-				console.log(
+				console.error(
 					'Hubo un error en el stream de tasksExamsAndStudents$: ',
 					error
 				);
-				this.spinnerProgressOn.set(false);
 
 				return EMPTY;
 			})
 		);
+	private filtersChanges: BehaviorSubject<FormFilters> = new BehaviorSubject({
+		course: 0,
+		quarter: 0,
+	} as FormFilters);
+	private filtersChanges$ = this.filtersChanges.asObservable();
+	public filteredData$ = combineLatest([
+		this.tasksExamsAndStudents$,
+		this.filtersChanges$,
+	]).pipe(
+		tap(([[tasks, exams, students], filtersChanges]) => {
+			const {
+				course: courseId,
+				subject,
+				student,
+				quarter: selectedQuarterFromForm,
+			} = filtersChanges;
+			const queryParams = { courseId };
+			const selectedQuarter = this.quarters().find(
+				quarter => quarter.id === selectedQuarterFromForm
+			);
+			const queryParamsWithQuarter = {
+				...queryParams,
+				startDate: selectedQuarter?.start.getTime(),
+				endDate: selectedQuarter?.end.getTime(),
+			};
+
+			if (
+				courseId !== this.selectedCourseId() ||
+				selectedQuarterFromForm !== this.selectedQuarterId()
+			) {
+				this.selectedCourseId.set(courseId);
+				this.selectedQuarterId.set(selectedQuarterFromForm);
+
+				return this.getTasksExamsAndStudents(
+					queryParamsWithQuarter,
+					queryParams
+				);
+			}
+
+			if (!student) this.cleanAlphabet.next(true);
+
+			if (
+				tasks?.length ||
+				exams?.length ||
+				(students as Student[]).length
+			) {
+				this.selectedSubjectId.set(subject ?? 0);
+				this.filterData(filtersChanges);
+			}
+		})
+	);
+	private deleteDialogRef!: MatDialogRef<DeleteDialogComponent>;
+	private deleteWork = new BehaviorSubject(0);
+	public deleteWork$ = this.deleteWork.asObservable().pipe(
+		switchMap(workId => {
+			if (!workId) return of(true);
+
+			const delete$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.deleteTask(workId)
+					: this.es.deleteExam(workId);
+
+			return delete$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de deleteWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.deleteDialogRef.close();
+				})
+			);
+		}),
+		tap(deletedWork => {
+			if (!deletedWork.name) return;
+
+			this.resetWorks();
+			this.handleHttpResponseMessage(`Se eliminó "${deletedWork.name}".`);
+		})
+	);
+	private updateDialogRef!: MatDialogRef<
+		InfoDialogComponent | MultipleMarkingSetterComponent
+	>;
+	private updateWork = new BehaviorSubject({
+		workId: 0,
+		name: '',
+		description: '',
+		date: '',
+	});
+	public updateWork$ = this.updateWork.asObservable().pipe(
+		switchMap(({ workId, ...payload }) => {
+			if (!workId) return of(true);
+
+			const update$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.updateTask(payload, workId)
+					: this.es.updateExam(payload, workId);
+
+			return update$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de updateWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.updateDialogRef.close();
+					this.updateWork.next({ workId: 0 } as UpdatePayload);
+				})
+			);
+		}),
+		tap(updatedWork => {
+			if (!updatedWork.name) return;
+
+			this.refreshView()
+				? this.resetWorks()
+				: this.updateWorkCardInfo(updatedWork.id, updatedWork);
+			this.handleHttpResponseMessage('La edición fue exitosa.');
+		})
+	);
+	private createDialogRef!: MatDialogRef<CreateDialogComponent>;
+	private createWork = new BehaviorSubject({
+		name: '',
+	});
+	public createWork$ = this.createWork.asObservable().pipe(
+		switchMap(payload => {
+			if (!payload.name) return of(true);
+
+			const create$ =
+				this.selectedWorkType() === Work.TASK
+					? this.ts.createTask(payload as CreateTask)
+					: this.es.createExam(payload as CreateExam);
+
+			return create$.pipe(
+				catchError(error => {
+					console.error(
+						'Hubo un error en el stream de createWork$: ',
+						error
+					);
+					this.handleHttpResponseMessage();
+
+					return EMPTY;
+				}),
+				finalize(() => {
+					this.createDialogRef.close();
+					this.createWork.next({ name: '' });
+				})
+			);
+		}),
+		tap(createdWork => {
+			if (!createdWork.name) return;
+
+			this.resetWorks();
+			this.handleHttpResponseMessage('La creación fue exitosa.');
+		})
+	);
 
 	constructor(
 		private apiService: ApiService,
@@ -132,6 +284,7 @@ export class QualificationsService {
 		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
 		studentsQueryParams: StudentsParams | null = null
 	) {
+		this.resetDataSignals();
 		this.tasksExamsAndStudentsSubject.next([
 			tasksAndExamsQueryParams,
 			studentsQueryParams,
@@ -148,28 +301,63 @@ export class QualificationsService {
 		this.students.set(students);
 	}
 
-	public processValueChanges(
-		valueChanges$: Observable<string | null> | undefined,
-		controlType: ControlType = 'Students'
-	) {
-		return valueChanges$?.pipe(
-			startWith(''),
-			map(value => this.filterValues(value, controlType))
-		);
+	public setFilters(changes: FormFilters) {
+		this.filtersChanges.next(changes);
 	}
 
-	private filterValues(
+	private filterData({ student, task, exam }: FormFilters) {
+		this.filterValues(student);
+		this.filterValues(task, 'Tasks');
+		this.filterValues(exam, 'Exams');
+	}
+
+	public create(
+		payload: CreatePayload,
+		dialogRef: MatDialogRef<CreateDialogComponent>
+	) {
+		this.createDialogRef = dialogRef;
+		this.createWork.next(payload);
+	}
+
+	public update(
+		payload: UpdatePayload,
+		dialogRef: MatDialogRef<
+			InfoDialogComponent | MultipleMarkingSetterComponent
+		>,
+		resetView = false
+	) {
+		this.refreshView.set(resetView);
+		this.updateDialogRef = dialogRef;
+		this.updateWork.next(payload);
+	}
+
+	public delete(
+		workId: number,
+		dialogRef: MatDialogRef<DeleteDialogComponent>
+	) {
+		this.deleteDialogRef = dialogRef;
+		this.deleteWork.next(workId);
+	}
+
+	private resetWorks() {
+		const queryParam = { courseId: this.selectedCourseId() };
+
+		this.getTasksExamsAndStudents(queryParam, queryParam);
+	}
+
+	public filterValues(
 		value: string | null,
 		controlType: ControlType = 'Students'
 	): void {
-		if (!value) return;
-
 		const valueToFilter = value?.toLowerCase();
 		let signalToFilter: WritableSignal<Student[] | Task[] | Exam[]> = this
 			.students as WritableSignal<Student[]>;
 
 		if (controlType === 'Tasks') signalToFilter = this.tasks;
+
 		if (controlType === 'Exams') signalToFilter = this.exams;
+
+		if (!value) return this.cleanShow(signalToFilter);
 
 		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
@@ -207,14 +395,13 @@ export class QualificationsService {
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
-		const value = option.option.value;
-		const students = this.students() ?? [];
+		const nameAndLastName = option.option.value;
+		const students = this.students();
+		const studentSelected = students.find(
+			student => `${student.name} ${student.lastname}` === nameAndLastName
+		);
 
 		this.cleanShow(this.students as WritableSignal<Student[]>);
-
-		const studentSelected = students.find(
-			student => `${student.name} ${student.lastname}` === value
-		);
 
 		this.students.mutate(students => {
 			students
@@ -229,50 +416,20 @@ export class QualificationsService {
 		});
 	}
 
-	public showSelectedTaskOrExam(
-		option: MatAutocompleteSelectedEvent,
-		type = Work.TASK
-	) {
-		const valueSelected = option.option.value;
-		let selectedSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
-			this.tasks;
-
-		if (type === Work.EXAM) selectedSignal = this.exams;
-
-		this.cleanShow(selectedSignal);
-
-		const selectedElement = (selectedSignal() as WorkBase[]).find(
-			element => element.name === valueSelected
+	public showSelectedTaskOrExam(option: MatAutocompleteSelectedEvent) {
+		const selectedValue = option.option.value;
+		const workSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
+			this.selectedWorkType() === Work.TASK ? this.tasks : this.exams;
+		const matchedWork = (workSignal() as WorkBase[]).find(
+			element => element.name === selectedValue
 		);
 
-		selectedSignal.mutate(elements => {
+		this.cleanShow(workSignal);
+
+		workSignal.mutate(elements => {
 			elements.forEach(element => {
-				if (element.id !== selectedElement?.id) element.show = false;
+				if (element.id !== matchedWork?.id) element.show = false;
 			});
-		});
-	}
-
-	public filterTasksAndExamsBySubject(subjectId: number) {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-
-		if (!subjectId) return;
-
-		this.tasks.update(tasks => {
-			tasks.forEach(task => {
-				if ((task.subject as Subject).id !== subjectId)
-					task.show = false;
-			});
-
-			return JSON.parse(JSON.stringify(tasks));
-		});
-
-		this.exams.update(exams => {
-			exams.forEach(exam => {
-				if (exam.subject !== subjectId) exam.show = false;
-			});
-
-			return JSON.parse(JSON.stringify(exams));
 		});
 	}
 
@@ -288,14 +445,14 @@ export class QualificationsService {
 		});
 	}
 
-	private cleanAllShow() {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-		this.cleanShow(this.students as WritableSignal<Student[]>);
+	public resetDataSignals() {
+		this.students.set([]);
+		this.tasks.set([]);
+		this.exams.set([]);
 	}
 
 	public handleHttpResponseMessage(
-		responseMessage = 'Ocurrió un error con su pedido. Comuníquese con soporte para solucionarlo.'
+		responseMessage = 'Ocurrió un error con su pedido.'
 	) {
 		this._snackBar.open(responseMessage, '', { duration: 4000 });
 	}
@@ -304,17 +461,13 @@ export class QualificationsService {
 		workId: number,
 		updatedWork: UpdateTask | UpdateExam
 	) {
-		if (this.selectedWorkType() === Work.TASK) {
-			this.tasks.mutate(tasks =>
-				this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			);
-
-			return;
-		}
-
-		this.exams.mutate(exams =>
-			this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-		);
+		this.selectedWorkType() === Work.TASK
+			? this.tasks.mutate(tasks =>
+					this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
+			  )
+			: this.exams.mutate(exams =>
+					this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
+			  );
 	}
 
 	private filterAndUpdateSelectedWork(
@@ -335,13 +488,22 @@ export class QualificationsService {
 			students
 				? students.forEach(student => {
 						if (
-							student?.lastname?.charAt(0).toUpperCase() ===
-							letter.toUpperCase()
+							this.removeAccent(
+								student?.lastname?.charAt(0)
+							).toUpperCase() === letter.toUpperCase()
 						) {
 							student.showForMobile = true;
 						}
 				  })
 				: null;
 		});
+	}
+
+	public trackItems(index: number, item: Student | Task | Exam): number {
+		return item.id;
+	}
+
+	private removeAccent(letter: string) {
+		return letter.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 	}
 }

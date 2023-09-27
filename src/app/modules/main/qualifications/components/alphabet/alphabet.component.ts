@@ -5,6 +5,7 @@ import {
 	ElementRef,
 	ViewChild,
 	WritableSignal,
+	computed,
 	inject,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
@@ -31,6 +32,11 @@ import { Student } from 'src/app/core/interfaces/student.interface';
 export class AlphabetComponent implements OnInit {
 	private alpha = Array.from(Array(26)).map((e, i) => i + 65);
 	public alphabet = this.alpha.map(x => String.fromCharCode(x));
+	private enabledLetters = computed(() =>
+		this.students()
+			.map(student => student.lastname?.charAt(0).toUpperCase())
+			.filter((letter, index, self) => self.indexOf(letter) === index)
+	);
 	private qs = inject(QualificationsService);
 	private vs = inject(ViewService);
 	private students = this.qs.students;
@@ -42,17 +48,6 @@ export class AlphabetComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.listenCleanAlphabet();
-	}
-
-	public showStudentsWithLetter(letter: string) {
-		if (this.vs.screenType() === ScreenType.MOBILE) {
-			this.qs.cleanShow(this.students as WritableSignal<Student[]>);
-			this.qs.setShowByLetter(letter);
-			this.qs.letterSelected.set(letter);
-			return;
-		}
-
-		this.router.navigateByUrl(`/#${letter}`);
 	}
 
 	private listenCleanAlphabet() {
@@ -69,7 +64,22 @@ export class AlphabetComponent implements OnInit {
 		this.qs.cleanAlphabet.next(false);
 	}
 
+	public showStudentsWithLetter(letter: string) {
+		if (this.vs.screenType() === ScreenType.MOBILE) {
+			this.qs.cleanShow(this.students as WritableSignal<Student[]>);
+			this.qs.setShowByLetter(letter);
+			this.qs.letterSelected.set(letter);
+			return;
+		}
+
+		this.router.navigateByUrl(`/#${letter}`);
+	}
+
 	public toggleChange(event: MatButtonToggleChange) {
 		this.checkedButton = event.source;
+	}
+
+	public checkIfExists(letter: string) {
+		return this.enabledLetters().includes(letter);
 	}
 }

@@ -1,4 +1,4 @@
-<div id="container">
+<div id="container" *ngIf="updateWork$ | async">
 	<h1 mat-dialog-title>Asignación múltiple de calificaciones</h1>
 	<div id="selectors">
 		<div id="selection-list">
@@ -90,7 +90,7 @@
 				markingsForm.invalid ||
 				studentsList.selectedOptions.selected.length === 0
 			"
-			(click)="sendForm()">
+			(click)="setMarkings()">
 			{{ saveButtonMessage() }}
 		</button>
 	</div>

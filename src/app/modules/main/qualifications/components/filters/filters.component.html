@@ -11,10 +11,10 @@
 				<div
 					id="content-container"
 					[ngClass]="{ 'mobile-container': students() }">
-					<!-- MATERIA -->
 					<div
 						class="first-row mobile-hide"
 						[ngClass]="{ 'mobile-show': students() }">
+						<!-- MATERIA -->
 						<mat-radio-group
 							aria-label="Elegí una materia"
 							formControlName="subject">
@@ -30,31 +30,33 @@
 					</div>
 					<div class="second-row">
 						<!-- CURSO -->
-						<mat-form-field appearance="fill">
-							<mat-label>Curso</mat-label>
-							<mat-select
-								formControlName="course"
-								placeholder="Seleccionar un curso">
-								<mat-option
-									*ngFor="let course of courses()"
-									[value]="course.id">
-									{{ course.year }}° -
-									{{ course.shift | shift }}
-								</mat-option>
-							</mat-select>
-						</mat-form-field>
-						<button
-							mat-stroked-button
-							id="filters-button"
-							color="primary"
-							[ngClass]="{ 'mobile-show': students() }"
-							(click)="toggleFiltersMenu()">
-							{{
-								openFiltersMenu()
-									? 'Ocultar filtros'
-									: 'Mostrar más filtros'
-							}}
-						</button>
+						<div class="control-wrapper">
+							<mat-form-field appearance="fill">
+								<mat-label>Curso</mat-label>
+								<mat-select
+									formControlName="course"
+									placeholder="Seleccionar un curso">
+									<mat-option
+										*ngFor="let course of courses()"
+										[value]="course.id">
+										{{ course.year }}° -
+										{{ course.shift | shift }}
+									</mat-option>
+								</mat-select>
+							</mat-form-field>
+							<button
+								mat-stroked-button
+								id="filters-button"
+								color="primary"
+								[ngClass]="{ 'mobile-show': students() }"
+								(click)="toggleFiltersMenu()">
+								{{
+									openFiltersMenu()
+										? 'Ocultar filtros'
+										: 'Mostrar más filtros'
+								}}
+							</button>
+						</div>
 						<!-- ALUMNX -->
 						<div class="control-wrapper">
 							<mat-form-field
@@ -193,10 +195,7 @@
 								<mat-autocomplete
 									#examsAutocomplete
 									(optionSelected)="
-										taskOrExamSelected(
-											$event,
-											WorkEnum.EXAM
-										)
+										taskOrExamSelected($event)
 									"
 									#autoExam="matAutocomplete">
 									<ng-container
@@ -235,58 +234,19 @@
 							</button>
 						</div>
 						<!-- FECHAS -->
-						<div
-							class="range-date-wrapper mobile-hide"
-							[ngClass]="{ 'mobile-show': openFiltersMenu() }">
-							<mat-form-field
-								id="date-filter-form-field"
-								appearance="fill">
-								<mat-label>Ingrese un período</mat-label>
-								<mat-date-range-input
-									[rangePicker]="picker"
-									formGroupName="dateRange">
-									<input
-										matStartDate
-										placeholder="Desde"
-										formControlName="start" />
-									<input
-										matEndDate
-										placeholder="Hasta"
-										formControlName="end" />
-								</mat-date-range-input>
-								<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
-								<mat-datepicker-toggle
-									matIconSuffix
-									[for]="picker"></mat-datepicker-toggle>
-								<mat-date-range-picker
-									#picker></mat-date-range-picker>
+						<div class="control-wrapper">
+							<mat-form-field appearance="fill">
+								<mat-label>Cuatrimestre</mat-label>
+								<mat-select formControlName="quarter">
+									<mat-option
+										*ngFor="let quarter of quarters()"
+										[value]="quarter.id">
+										{{ quarter.name }} ({{
+											quarter.description
+										}})
+									</mat-option>
+								</mat-select>
 							</mat-form-field>
-							<button
-								class="disappear"
-								[ngClass]="{
-									'mobile-show':
-										openFiltersMenu() &&
-										filtersForm
-											.get('dateRange')
-											?.get('start')?.value &&
-										filtersForm.get('dateRange')?.get('end')
-											?.value,
-									show:
-										screenType() ===
-											ScreenTypeEnum.DESKTOP &&
-										filtersForm
-											.get('dateRange')
-											?.get('start')?.value &&
-										filtersForm.get('dateRange')?.get('end')
-											?.value
-								}"
-								mat-mini-fab
-								color="primary"
-								title="Limpiar período"
-								aria-label="Botón para limpiar rango de fecha"
-								(click)="resetDateRange()">
-								<mat-icon>clear</mat-icon>
-							</button>
 						</div>
 					</div>
 				</div>
