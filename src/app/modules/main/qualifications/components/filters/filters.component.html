@@ -17,7 +17,11 @@
 						<!-- MATERIA -->
 						<mat-radio-group
 							aria-label="Elegí una materia"
-							formControlName="subject">
+							formControlName="subject"
+							class="mobile-hide"
+							[ngClass]="{
+								'mobile-show': openFiltersMenu()
+							}">
 							<mat-radio-button
 								*ngFor="let subject of subjects()"
 								[value]="subject.id"
@@ -30,7 +34,7 @@
 					</div>
 					<div class="second-row">
 						<!-- CURSO -->
-						<div class="control-wrapper">
+						<div id="course-wrapper" class="control-wrapper">
 							<mat-form-field appearance="fill">
 								<mat-label>Curso</mat-label>
 								<mat-select
@@ -48,7 +52,9 @@
 								mat-stroked-button
 								id="filters-button"
 								color="primary"
-								[ngClass]="{ 'mobile-show': students() }"
+								[ngClass]="{
+									'mobile-show': students().length > 0
+								}"
 								(click)="toggleFiltersMenu()">
 								{{
 									openFiltersMenu()
@@ -235,7 +241,12 @@
 						</div>
 						<!-- FECHAS -->
 						<div class="control-wrapper">
-							<mat-form-field appearance="fill">
+							<mat-form-field
+								appearance="fill"
+								class="mobile-hide"
+								[ngClass]="{
+									'mobile-show': openFiltersMenu()
+								}">
 								<mat-label>Cuatrimestre</mat-label>
 								<mat-select formControlName="quarter">
 									<mat-option

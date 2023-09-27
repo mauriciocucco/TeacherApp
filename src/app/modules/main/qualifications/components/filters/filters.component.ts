@@ -40,7 +40,7 @@ import { Quarter } from '../../../../../core/interfaces/quarter.interface';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FiltersComponent implements OnInit, OnChanges {
-	public students: Signal<Student[] | undefined> = this.qs.students;
+	public students: Signal<Student[]> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public quarters: Signal<Quarter[]> = this.qs.quarters;

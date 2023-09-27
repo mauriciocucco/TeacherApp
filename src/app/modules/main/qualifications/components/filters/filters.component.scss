@@ -13,8 +13,11 @@
 
 #content-container {
 	.first-row {
-		@include mq-mobile {
-			text-align: center;
+		mat-radio-group {
+			@include mq-mobile {
+				margin-bottom: 2rem;
+				text-align: center;
+			}
 		}
 	}
 	.second-row {
@@ -37,6 +40,12 @@
 	}
 }
 
+#course-wrapper {
+	@include mq-mobile {
+		flex-direction: column;
+	}
+}
+
 .mobile-container {
 	@include mq-mobile {
 		display: flex;
@@ -45,8 +54,13 @@
 }
 
 #filters-button {
+	bottom: unset;
 	display: none;
 	margin-bottom: 2.2rem;
+	padding: 1.8rem;
+	position: relative;
+	right: unset;
+	width: 100% !important;
 }
 
 .control-wrapper {
