@@ -33,7 +33,6 @@ import { WorkBase } from '../../interfaces/work-base.interface';
 import { UpdateTask } from '../../interfaces/update-task.interface';
 import { UpdateExam } from '../../interfaces/update-exam.interface';
 import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
-import { DateRangeFromMaterial } from '../../../modules/main/qualifications/interfaces/range-date.interface';
 import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
 import { MatDialogRef } from '@angular/material/dialog';
 import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
@@ -44,6 +43,7 @@ import { CreatePayload } from '../../interfaces/create-payload.interface';
 import { CreateTask } from '../../interfaces/create-task.interface';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
+import { QUARTERS } from '../../constants/quarters.constant';
 
 @Injectable({
 	providedIn: 'root',
@@ -62,6 +62,7 @@ export class QualificationsService {
 	public tasks: WritableSignal<Task[]> = signal([]);
 	public exams: WritableSignal<Exam[]> = signal([]);
 	public students: WritableSignal<Student[]> = signal([]);
+	public quarters = signal(QUARTERS);
 	public studentIsSelected = computed(() =>
 		this.students()
 			? this.students().filter(s => s.show)?.length <= 1
@@ -73,11 +74,8 @@ export class QualificationsService {
 			: false
 	);
 	public selectedCourseId: WritableSignal<number> = signal(0);
-	public selectedDateRange: WritableSignal<DateRangeFromMaterial> = signal({
-		start: null,
-		end: null,
-	});
 	public selectedSubjectId = signal(0);
+	public selectedQuarterId = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
@@ -112,7 +110,7 @@ export class QualificationsService {
 		);
 	private filtersChanges: BehaviorSubject<FormFilters> = new BehaviorSubject({
 		course: 0,
-		dateRange: { start: null, end: null },
+		quarter: 0,
 	} as FormFilters);
 	private filtersChanges$ = this.filtersChanges.asObservable();
 	public filteredData$ = combineLatest([
@@ -124,38 +122,36 @@ export class QualificationsService {
 				course: courseId,
 				subject,
 				student,
-				dateRange,
+				quarter: selectedQuarterFromForm,
 			} = filtersChanges;
-
-			if (courseId !== this.selectedCourseId()) {
-				const queryParam = { courseId };
-
-				this.selectedCourseId.set(courseId);
-				this.getTasksExamsAndStudents(
-					queryParam,
-					queryParam as unknown as StudentsParams | null
-				);
-				return;
-			}
+			const queryParams = { courseId };
+			const selectedQuarter = this.quarters().find(
+				quarter => quarter.id === selectedQuarterFromForm
+			);
+			const queryParamsWithQuarter = {
+				...queryParams,
+				startDate: selectedQuarter?.start.getTime(),
+				endDate: selectedQuarter?.end.getTime(),
+			};
 
 			if (
-				JSON.stringify(dateRange ?? { start: null, end: null }) !==
-				JSON.stringify(this.selectedDateRange())
+				courseId !== this.selectedCourseId() ||
+				selectedQuarterFromForm !== this.selectedQuarterId()
 			) {
-				const queryParams = this.checkForDateChange(dateRange);
+				this.selectedCourseId.set(courseId);
+				this.selectedQuarterId.set(selectedQuarterFromForm);
 
-				this.selectedDateRange.set(dateRange);
-
-				if (queryParams) this.getTasksExamsAndStudents(queryParams);
-
-				return;
+				return this.getTasksExamsAndStudents(
+					queryParamsWithQuarter,
+					queryParams
+				);
 			}
 
 			if (!student) this.cleanAlphabet.next(true);
 
 			if (
-				tasks?.length &&
-				exams?.length &&
+				tasks?.length ||
+				exams?.length ||
 				(students as Student[]).length
 			) {
 				this.selectedSubjectId.set(subject ?? 0);
@@ -313,23 +309,6 @@ export class QualificationsService {
 		this.filterValues(student);
 		this.filterValues(task, 'Tasks');
 		this.filterValues(exam, 'Exams');
-	}
-
-	private checkForDateChange({ start, end }: DateRangeFromMaterial) {
-		const queryParams: TasksAndExamsQueryParams = {
-			courseId: this.selectedCourseId(),
-		};
-
-		if (start && end)
-			return {
-				...queryParams,
-				startDate: (start as unknown as Date).getTime(),
-				endDate: (end as unknown as Date).getTime(),
-			};
-
-		if (!start && !end) return queryParams;
-
-		return;
 	}
 
 	public create(

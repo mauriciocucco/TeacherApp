@@ -18,7 +18,7 @@ import { ControlType } from '../create-dialog/interfaces/control-type.interface'
 import { FormBuilder } from '@angular/forms';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
-import { filter, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { Task } from '../../../../../core/interfaces/task.interface';
 import { Exam } from '../../../../../core/interfaces/exam.interface';
 import {
@@ -31,6 +31,7 @@ import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormFilters } from '../../interfaces/form-filters.interface';
+import { Quarter } from '../../../../../core/interfaces/quarter.interface';
 
 @Component({
 	selector: 'app-filters',
@@ -42,6 +43,7 @@ export class FiltersComponent implements OnInit, OnChanges {
 	public students: Signal<Student[] | undefined> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
+	public quarters: Signal<Quarter[]> = this.qs.quarters;
 	public markings: Signal<Marking[]> = this.qs.markings;
 	public tasks: Signal<Task[]> = this.qs.tasks;
 	public exams: Signal<Exam[]> = this.qs.exams;
@@ -52,10 +54,7 @@ export class FiltersComponent implements OnInit, OnChanges {
 		exam: [{ value: '', disabled: true }],
 		subject: [{ value: 0, disabled: true }],
 		course: 0,
-		dateRange: this.fb.group({
-			start: { value: null, disabled: true },
-			end: { value: null, disabled: true },
-		}),
+		quarter: [{ value: this.selectActualQuarter(), disabled: true }],
 	});
 	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
@@ -95,11 +94,6 @@ export class FiltersComponent implements OnInit, OnChanges {
 	private listenForFormChanges() {
 		this.filtersForm.valueChanges
 			.pipe(
-				filter(
-					({ dateRange }) =>
-						(dateRange?.start && dateRange?.end) ||
-						(!dateRange?.start && !dateRange?.end)
-				),
 				tap(filters => {
 					if (
 						filters.course &&
@@ -110,7 +104,10 @@ export class FiltersComponent implements OnInit, OnChanges {
 						this.enableControls();
 					}
 
-					this.qs.setFilters(filters as FormFilters);
+					this.qs.setFilters({
+						...filters,
+						quarter: this.filtersForm.get('quarter')?.value,
+					} as FormFilters);
 				}),
 				takeUntilDestroyed(this.destroyRef)
 			)
@@ -131,14 +128,6 @@ export class FiltersComponent implements OnInit, OnChanges {
 			case 'Students':
 				this.filtersForm.get('student')?.setValue('');
 				break;
-			case 'Date':
-				this.filtersForm
-					.get('dateRange')
-					?.patchValue(
-						{ start: null, end: null },
-						{ onlySelf: true }
-					);
-				break;
 			default:
 				this.filtersForm.get('exam')?.setValue('');
 				break;
@@ -155,6 +144,7 @@ export class FiltersComponent implements OnInit, OnChanges {
 				student: '',
 				task: '',
 				exam: '',
+				quarter: this.selectActualQuarter(),
 			},
 			{ emitEvent: false }
 		);
@@ -180,5 +170,18 @@ export class FiltersComponent implements OnInit, OnChanges {
 	public cleanSelectedLetter() {
 		this.qs.cleanAlphabet.next(true);
 		this.qs.letterSelected.set(null);
+	}
+
+	private selectActualQuarter() {
+		const currentDate = new Date();
+		let quarterId = 0;
+
+		for (const quarter of this.quarters()) {
+			if (currentDate >= quarter.start && currentDate <= quarter.end) {
+				return (quarterId = quarter.id);
+			}
+		}
+
+		return quarterId;
 	}
 }

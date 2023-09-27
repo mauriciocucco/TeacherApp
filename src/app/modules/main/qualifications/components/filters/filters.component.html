@@ -234,60 +234,19 @@
 							</button>
 						</div>
 						<!-- FECHAS -->
-						<div
-							class="range-date-wrapper mobile-hide"
-							[ngClass]="{
-								'mobile-show': openFiltersMenu()
-							}">
-							<mat-form-field
-								id="date-filter-form-field"
-								appearance="fill">
-								<mat-label>Ingrese un período</mat-label>
-								<mat-date-range-input
-									[rangePicker]="picker"
-									formGroupName="dateRange">
-									<input
-										matStartDate
-										placeholder="Desde"
-										formControlName="start" />
-									<input
-										matEndDate
-										placeholder="Hasta"
-										formControlName="end" />
-								</mat-date-range-input>
-								<mat-hint>D/M/AAAA – D/M/AAAA</mat-hint>
-								<mat-datepicker-toggle
-									matIconSuffix
-									[for]="picker"></mat-datepicker-toggle>
-								<mat-date-range-picker
-									#picker></mat-date-range-picker>
+						<div class="control-wrapper">
+							<mat-form-field appearance="fill">
+								<mat-label>Cuatrimestre</mat-label>
+								<mat-select formControlName="quarter">
+									<mat-option
+										*ngFor="let quarter of quarters()"
+										[value]="quarter.id">
+										{{ quarter.name }} ({{
+											quarter.description
+										}})
+									</mat-option>
+								</mat-select>
 							</mat-form-field>
-							<button
-								class="disappear"
-								[ngClass]="{
-									'mobile-show':
-										openFiltersMenu() &&
-										filtersForm
-											.get('dateRange')
-											?.get('start')?.value &&
-										filtersForm.get('dateRange')?.get('end')
-											?.value,
-									show:
-										screenType() ===
-											ScreenTypeEnum.DESKTOP &&
-										filtersForm
-											.get('dateRange')
-											?.get('start')?.value &&
-										filtersForm.get('dateRange')?.get('end')
-											?.value
-								}"
-								mat-mini-fab
-								color="primary"
-								title="Limpiar período"
-								aria-label="Botón para limpiar rango de fecha"
-								(click)="clearControl('Date')">
-								<mat-icon>clear</mat-icon>
-							</button>
 						</div>
 					</div>
 				</div>
