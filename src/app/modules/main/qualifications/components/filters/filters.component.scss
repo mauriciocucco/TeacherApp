@@ -16,7 +16,12 @@
 		mat-radio-group {
 			@include mq-mobile {
 				margin-bottom: 2rem;
-				text-align: center;
+			}
+			mat-radio-button {
+				@include mq-mobile {
+					text-align: center;
+					width: 33%;
+				}
 			}
 		}
 	}

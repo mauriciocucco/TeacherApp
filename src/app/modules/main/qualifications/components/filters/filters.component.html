@@ -21,7 +21,8 @@
 							class="mobile-hide"
 							[ngClass]="{
 								'mobile-show': openFiltersMenu()
-							}">
+							}"
+							(click)="toggleFiltersMenu()">
 							<mat-radio-button
 								*ngFor="let subject of subjects()"
 								[value]="subject.id"

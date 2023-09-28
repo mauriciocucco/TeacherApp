@@ -155,7 +155,7 @@ export class QualificationsService {
 				(students as Student[]).length
 			) {
 				this.selectedSubjectId.set(subject ?? 0);
-				this.filterData(filtersChanges);
+				!subject ? this.filterData(filtersChanges) : null;
 			}
 		})
 	);
