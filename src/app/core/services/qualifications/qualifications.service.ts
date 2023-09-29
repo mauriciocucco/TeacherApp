@@ -98,6 +98,7 @@ export class QualificationsService {
 					exams as Exam[],
 					students as Student[]
 				);
+				this.cleanAllShow();
 			}),
 			catchError(error => {
 				console.error(
@@ -122,28 +123,23 @@ export class QualificationsService {
 				course: courseId,
 				subject,
 				student,
-				quarter: selectedQuarterFromForm,
+				quarter: quarterId,
 			} = filtersChanges;
-			const queryParams = { courseId };
-			const selectedQuarter = this.quarters().find(
-				quarter => quarter.id === selectedQuarterFromForm
+			const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
+				courseId,
+				quarterId
 			);
-			const queryParamsWithQuarter = {
-				...queryParams,
-				startDate: selectedQuarter?.start.getTime(),
-				endDate: selectedQuarter?.end.getTime(),
-			};
 
 			if (
 				courseId !== this.selectedCourseId() ||
-				selectedQuarterFromForm !== this.selectedQuarterId()
+				quarterId !== this.selectedQuarterId()
 			) {
 				this.selectedCourseId.set(courseId);
-				this.selectedQuarterId.set(selectedQuarterFromForm);
+				this.selectedQuarterId.set(quarterId);
 
 				return this.getTasksExamsAndStudents(
 					queryParamsWithQuarter,
-					queryParams
+					courseParam
 				);
 			}
 
@@ -155,7 +151,7 @@ export class QualificationsService {
 				(students as Student[]).length
 			) {
 				this.selectedSubjectId.set(subject ?? 0);
-				!subject ? this.filterData(filtersChanges) : null;
+				!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
 			}
 		})
 	);
@@ -305,7 +301,7 @@ export class QualificationsService {
 		this.filtersChanges.next(changes);
 	}
 
-	private filterData({ student, task, exam }: FormFilters) {
+	private filterSignals({ student, task, exam }: FormFilters) {
 		this.filterValues(student);
 		this.filterValues(task, 'Tasks');
 		this.filterValues(exam, 'Exams');
@@ -340,9 +336,12 @@ export class QualificationsService {
 	}
 
 	private resetWorks() {
-		const queryParam = { courseId: this.selectedCourseId() };
+		const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
+			this.selectedCourseId(),
+			this.selectedQuarterId()
+		);
 
-		this.getTasksExamsAndStudents(queryParam, queryParam);
+		this.getTasksExamsAndStudents(queryParamsWithQuarter, courseParam);
 	}
 
 	public filterValues(
@@ -445,6 +444,12 @@ export class QualificationsService {
 		});
 	}
 
+	private cleanAllShow() {
+		this.cleanShow(this.tasks);
+		this.cleanShow(this.exams);
+		this.cleanShow(this.students);
+	}
+
 	public resetDataSignals() {
 		this.students.set([]);
 		this.tasks.set([]);
@@ -505,5 +510,19 @@ export class QualificationsService {
 
 	private removeAccent(letter: string) {
 		return letter.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+	}
+
+	private setQueryParams(courseId: number, quarterId: number) {
+		const courseParam = { courseId };
+		const selectedQuarter = this.quarters().find(
+			quarter => quarter.id === quarterId
+		);
+		const queryParamsWithQuarter = {
+			...courseParam,
+			startDate: selectedQuarter?.start.getTime(),
+			endDate: selectedQuarter?.end.getTime(),
+		};
+
+		return { courseParam, queryParamsWithQuarter };
 	}
 }
