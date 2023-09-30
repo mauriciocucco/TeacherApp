@@ -10,6 +10,7 @@ import { HeaderComponent } from './layout/header/header.component';
 import { ShiftPipe } from './pipes/shift.pipe';
 import { WarningComponent } from './components/warning/warning.component';
 import { MenuButtonComponent } from './components/menu-button/menu-button.component';
+import { NgOptimizedImage } from '@angular/common';
 
 @NgModule({
 	declarations: [
@@ -26,6 +27,7 @@ import { MenuButtonComponent } from './components/menu-button/menu-button.compon
 		RouterModule,
 		ReactiveFormsModule,
 		AngularMaterialModule,
+		NgOptimizedImage,
 	],
 	exports: [
 		CommonModule,

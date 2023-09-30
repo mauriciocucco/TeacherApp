@@ -8,4 +8,8 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 })
 export class WarningComponent {
 	@Input() info = '';
+	@Input() cardStyle = {};
+	@Input() imgSource = '';
+	@Input() imgWidth = 0;
+	@Input() imgHeight = 0;
 }

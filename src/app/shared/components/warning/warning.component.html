@@ -1,5 +1,12 @@
-<mat-card id="warning-card">
+<mat-card id="warning-card" [ngStyle]="cardStyle">
 	<mat-card-content>
 		<h2>{{ info }}</h2>
+		<ng-container *ngIf="imgSource">
+			<img
+				[ngSrc]="imgSource"
+				[width]="imgWidth"
+				[height]="imgHeight"
+				priority />
+		</ng-container>
 	</mat-card-content>
 </mat-card>
