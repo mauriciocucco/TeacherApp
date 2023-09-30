@@ -173,7 +173,6 @@ export class FiltersComponent implements OnInit, OnChanges {
 
 	public cleanSelectedLetter() {
 		this.qs.cleanAlphabet.next(true);
-		this.qs.letterSelected.set(null);
 	}
 
 	private selectActualQuarter() {

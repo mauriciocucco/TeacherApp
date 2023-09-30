@@ -61,6 +61,7 @@ export class AlphabetComponent implements OnInit {
 	private removeSelectedButton() {
 		if (this.checkedButton) this.checkedButton.checked = false;
 
+		this.qs.letterSelected.set(null);
 		this.qs.cleanAlphabet.next(false);
 	}
 
