@@ -9,6 +9,7 @@ import {
 	Signal,
 	SimpleChanges,
 	ViewChild,
+	WritableSignal,
 	inject,
 	signal,
 } from '@angular/core';
@@ -40,13 +41,13 @@ import { Quarter } from '../../../../../core/interfaces/quarter.interface';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FiltersComponent implements OnInit, OnChanges {
-	public students: Signal<Student[]> = this.qs.students;
+	public students: WritableSignal<Student[]> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public quarters: Signal<Quarter[]> = this.qs.quarters;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public tasks: Signal<Task[]> = this.qs.tasks;
-	public exams: Signal<Exam[]> = this.qs.exams;
+	public tasks: WritableSignal<Task[]> = this.qs.tasks;
+	public exams: WritableSignal<Exam[]> = this.qs.exams;
 	public openFiltersMenu = signal(false);
 	public filtersForm = this.fb.nonNullable.group({
 		student: [{ value: '', disabled: true }],
@@ -124,12 +125,15 @@ export class FiltersComponent implements OnInit, OnChanges {
 		switch (control) {
 			case 'Tasks':
 				this.filtersForm.get('task')?.setValue('');
+				this.qs.cleanShow(this.tasks);
 				break;
 			case 'Students':
 				this.filtersForm.get('student')?.setValue('');
+				this.qs.cleanShow(this.students);
 				break;
 			default:
 				this.filtersForm.get('exam')?.setValue('');
+				this.qs.cleanShow(this.exams);
 				break;
 		}
 

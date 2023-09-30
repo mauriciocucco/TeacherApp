@@ -44,6 +44,7 @@ import { CreateTask } from '../../interfaces/create-task.interface';
 import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
 import { QUARTERS } from '../../constants/quarters.constant';
+import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-markings.constant';
 
 @Injectable({
 	providedIn: 'root',
@@ -119,40 +120,11 @@ export class QualificationsService {
 		this.filtersChanges$,
 	]).pipe(
 		tap(([[tasks, exams, students], filtersChanges]) => {
-			const {
-				course: courseId,
-				subject,
-				student,
-				quarter: quarterId,
-			} = filtersChanges;
-			const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
-				courseId,
-				quarterId
+			const thereIsDataAvailable = Boolean(
+				tasks?.length || exams?.length || (students as Student[]).length
 			);
 
-			if (
-				courseId !== this.selectedCourseId() ||
-				quarterId !== this.selectedQuarterId()
-			) {
-				this.selectedCourseId.set(courseId);
-				this.selectedQuarterId.set(quarterId);
-
-				return this.getTasksExamsAndStudents(
-					queryParamsWithQuarter,
-					courseParam
-				);
-			}
-
-			if (!student) this.cleanAlphabet.next(true);
-
-			if (
-				tasks?.length ||
-				exams?.length ||
-				(students as Student[]).length
-			) {
-				this.selectedSubjectId.set(subject ?? 0);
-				!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
-			}
+			this.applyChanges(filtersChanges, thereIsDataAvailable);
 		})
 	);
 	private deleteDialogRef!: MatDialogRef<DeleteDialogComponent>;
@@ -295,6 +267,42 @@ export class QualificationsService {
 		this.tasks.set(tasks);
 		this.exams.set(exams);
 		this.students.set(students);
+	}
+
+	private applyChanges(
+		filtersChanges: FormFilters,
+		thereIsDataAvailable: boolean
+	) {
+		const {
+			course: courseId,
+			subject,
+			student,
+			quarter: quarterId,
+		} = filtersChanges;
+		const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
+			courseId,
+			quarterId
+		);
+
+		if (
+			courseId !== this.selectedCourseId() ||
+			quarterId !== this.selectedQuarterId()
+		) {
+			this.selectedCourseId.set(courseId);
+			this.selectedQuarterId.set(quarterId);
+
+			return this.getTasksExamsAndStudents(
+				queryParamsWithQuarter,
+				courseParam
+			);
+		}
+
+		if (!student) this.cleanAlphabet.next(true);
+
+		if (thereIsDataAvailable) {
+			this.selectedSubjectId.set(subject ?? 0);
+			!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
+		}
 	}
 
 	public setFilters(changes: FormFilters) {
@@ -524,5 +532,25 @@ export class QualificationsService {
 		};
 
 		return { courseParam, queryParamsWithQuarter };
+	}
+
+	public updateDeliveredValue(
+		updatedTaskId: number,
+		markingIdFormValue: number,
+		markingIdEdited: boolean
+	) {
+		if (this.selectedWorkType() !== Work.TASK || !markingIdEdited) return;
+
+		this.tasks.update(tasks => {
+			tasks.forEach(task => {
+				if (task.id === updatedTaskId) {
+					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
+						? task.totalDelivered--
+						: task.totalDelivered++;
+				}
+			});
+
+			return JSON.parse(JSON.stringify(tasks));
+		});
 	}
 }

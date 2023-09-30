@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
 	Component,
 	DestroyRef,
@@ -56,6 +57,7 @@ export class WorkCardComponent implements OnInit {
 		observation: '',
 	};
 	public updateForm = this.fb.nonNullable.group(this.initialState);
+	private markingIdEdited = false;
 	private loading = new BehaviorSubject(false);
 	public loading$ = this.loading.asObservable();
 	private updateWork = new BehaviorSubject({ workId: 0 });
@@ -70,9 +72,14 @@ export class WorkCardComponent implements OnInit {
 				? this.ts.updateTask(payload, workId)
 				: this.es.updateExam(payload, workId)
 		),
-		tap(() => {
+		tap(({ id: updatedWorkId }) => {
 			this.changeInitialState();
 			this.loading.next(false);
+			this.qs.updateDeliveredValue(
+				updatedWorkId,
+				Number(this.updateForm.get('markingId')?.value),
+				this.markingIdEdited
+			);
 			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 		}),
 		catchError(error => {
@@ -173,8 +180,12 @@ export class WorkCardComponent implements OnInit {
 				takeUntilDestroyed(this.destroyRef)
 			)
 			.subscribe(({ markingId, examMarking, observation }) => {
-				if (markingId !== this.initialState.markingId)
+				if (markingId !== this.initialState.markingId) {
 					this.update('markingId');
+					this.markingIdEdited = true;
+				} else {
+					this.markingIdEdited = false;
+				}
 
 				examMarking !== this.initialState.examMarking ||
 				observation !== this.initialState.observation
