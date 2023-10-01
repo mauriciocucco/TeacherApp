@@ -100,7 +100,7 @@
 
 	<ng-template #chooseAStudent>
 		<app-warning 
-				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile()"
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile() && students().length"
 				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
 		></app-warning>
 	</ng-template>

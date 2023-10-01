@@ -1,6 +1,7 @@
 @import '../../../variables.scss';
 
 #viewport-container {
+	height: calc(100% - $header-height);
 	padding: $viewport-padding;
 	@include mq-mobile {
 		padding: $viewport-padding-mobile;

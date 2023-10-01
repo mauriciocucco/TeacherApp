@@ -20,6 +20,7 @@
 // $normal-input-height: 40px;
 $viewport-padding: 3rem;
 $viewport-padding-mobile: 2rem;
+$header-height: 6.4rem;
 
 @mixin mq-mobile {
 	@media screen and (max-width: 1024px) {
