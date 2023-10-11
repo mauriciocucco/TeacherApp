@@ -3,7 +3,6 @@ import {
 	Component,
 	DestroyRef,
 	HostListener,
-	OnDestroy,
 	OnInit,
 	QueryList,
 	Signal,
@@ -33,7 +32,7 @@ import { ScreenType } from '../../../core/enums/screen-type.enum';
 	styleUrls: ['./qualifications.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QualificationsComponent implements OnInit, OnDestroy {
+export class QualificationsComponent implements OnInit {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
 	public tasks: Signal<Task[]> = this.qs.tasks;
@@ -53,9 +52,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public selectedTab = signal(0);
 	public selectedSubjectId = this.qs.selectedSubjectId;
 	public studentIsSelected = this.qs.studentIsSelected;
-	public resetFilters = {
-		reset: false,
-	};
 	public trackItems = this.qs.trackItems;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
@@ -84,15 +80,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.vs.setScreenType();
 	}
 
-	ngOnDestroy(): void {
-		this.qs.getTasksExamsAndStudents(null, null);
-	}
-
 	public openCreateDialog(): void {
-		const courseId = this.qs.selectedCourseId();
-		const dialogRef = this.dialog.open(CreateDialogComponent, {
-			data: { course: courseId },
-		});
+		const dialogRef = this.dialog.open(CreateDialogComponent);
 
 		dialogRef
 			.afterClosed()
@@ -100,9 +89,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.subscribe(reloadData => {
 				if (reloadData) {
 					const queryParams = {
-						courseId,
+						courseId: this.qs.selectedCourseId(),
 					};
+
 					this.changeToCorrectTab();
+					this.resetFilters();
 					this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				}
 			});
@@ -111,14 +102,14 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	private changeToCorrectTab() {
 		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
 		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
+	}
 
-		this.resetFilters = {
-			reset: true,
-		};
+	private resetFilters(reset = true) {
+		this.qs.resetFilters.next(reset);
 	}
 
 	public openMultipleMarkingSetterDialog() {
-		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent, {});
+		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent);
 
 		dialogRef
 			.afterClosed()

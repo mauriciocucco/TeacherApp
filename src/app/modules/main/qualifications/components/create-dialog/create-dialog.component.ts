@@ -1,14 +1,8 @@
-import {
-	ChangeDetectionStrategy,
-	Component,
-	Inject,
-	signal,
-} from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { SharedModule } from '../../../../../shared/shared.module';
-import { CreatePayload } from '../../components/create-dialog/interfaces/create-payload.interface';
 import { Work } from '../../../../../core/enums/work.enum';
 import { CreateTask } from '../../../../../core/interfaces/create-task.interface';
 import { CreateExam } from '../../../../../core/interfaces/create-exam.interface';
@@ -43,7 +37,6 @@ export class CreateDialogComponent {
 
 	constructor(
 		public dialogRef: MatDialogRef<CreateDialogComponent>,
-		@Inject(MAT_DIALOG_DATA) public payload: CreatePayload,
 		private fb: FormBuilder,
 		private qs: QualificationsService
 	) {}
@@ -72,7 +65,7 @@ export class CreateDialogComponent {
 
 		delete formDeepCopy.type;
 
-		formDeepCopy.course = this.payload.course;
+		formDeepCopy.course = this.qs.selectedCourseId();
 		formDeepCopy.description = formDeepCopy.description?.trimEnd();
 
 		return formDeepCopy as unknown as CreateTask | CreateExam;

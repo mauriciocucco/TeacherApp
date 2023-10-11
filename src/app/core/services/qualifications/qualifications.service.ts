@@ -78,6 +78,8 @@ export class QualificationsService {
 	public selectedSubjectId = signal(0);
 	public selectedQuarterId = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
+	public resetFilters = new BehaviorSubject(false);
+	public resetFilters$ = this.resetFilters.asObservable();
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]
 	>([null, null]);
@@ -149,7 +151,7 @@ export class QualificationsService {
 					return EMPTY;
 				}),
 				finalize(() => {
-					this.deleteDialogRef.close();
+					this.deleteDialogRef.close(true);
 				})
 			);
 		}),
@@ -189,7 +191,7 @@ export class QualificationsService {
 					return EMPTY;
 				}),
 				finalize(() => {
-					this.updateDialogRef.close();
+					this.updateDialogRef.close(this.refreshView());
 					this.updateWork.next({ workId: 0 } as UpdatePayload);
 				})
 			);
@@ -227,7 +229,7 @@ export class QualificationsService {
 					return EMPTY;
 				}),
 				finalize(() => {
-					this.createDialogRef.close();
+					this.createDialogRef.close(true);
 					this.createWork.next({ name: '' });
 				})
 			);

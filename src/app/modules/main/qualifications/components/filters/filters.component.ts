@@ -3,11 +3,8 @@ import {
 	Component,
 	DestroyRef,
 	HostListener,
-	Input,
-	OnChanges,
 	OnInit,
 	Signal,
-	SimpleChanges,
 	ViewChild,
 	WritableSignal,
 	inject,
@@ -40,7 +37,7 @@ import { Quarter } from '../../../../../core/interfaces/quarter.interface';
 	styleUrls: ['./filters.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FiltersComponent implements OnInit, OnChanges {
+export class FiltersComponent implements OnInit {
 	public students: WritableSignal<Student[]> = this.qs.students;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
@@ -62,7 +59,6 @@ export class FiltersComponent implements OnInit, OnChanges {
 	public ScreenTypeEnum = ScreenType;
 	public trackItems = this.qs.trackItems;
 	private destroyRef = inject(DestroyRef);
-	@Input() resetFilters = { reset: false };
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;
 	@ViewChild('tasksAutocomplete', { static: false })
@@ -83,13 +79,19 @@ export class FiltersComponent implements OnInit, OnChanges {
 	ngOnInit(): void {
 		this.vs.setScreenType();
 		this.listenForFormChanges();
+		this.listenForResetFilters();
 	}
 
-	ngOnChanges(changes: SimpleChanges): void {
-		if (changes['resetFilters']?.currentValue?.reset) {
-			this.resetForm();
-			this.qs.setFilters(this.filtersForm.value as FormFilters);
-		}
+	private listenForResetFilters() {
+		this.qs.resetFilters$
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(reset => {
+				if (!reset) return;
+
+				this.resetForm();
+				this.qs.setFilters(this.filtersForm.value as FormFilters);
+				this.qs.resetFilters.next(false);
+			});
 	}
 
 	private listenForFormChanges() {
