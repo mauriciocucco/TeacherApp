@@ -19,9 +19,8 @@
 			<ng-container *ngFor="let student of students(); trackBy: trackItems">
 				<mat-card 
 					class="qualifications-students-card"
-					[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
-											(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
-								}" 
+					*ngIf="(screenType() === ScreenTypeEnum.DESKTOP && student.show) || 
+					(screenType() === ScreenTypeEnum.MOBILE && student.showForMobile)"
 					id="{{ student.lastname.charAt(0).toUpperCase()}}"
 				>
 						<mat-card-header
@@ -45,8 +44,8 @@
 										">
 										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
 											<app-work-card [work]="task" [student]="student" 
-												[ngClass]="{disappear:
-													(selectedSubjectId() && task?.subject?.id !== selectedSubjectId()) ||!task?.show}">
+												*ngIf="task?.show"
+											>
 											</app-work-card>
 										</ng-container>
 									</div>
@@ -64,8 +63,8 @@
 										">
 										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
 											<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"
-											[ngClass]="{disappear:
-												(selectedSubjectId() && exam?.subject?.id !== selectedSubjectId()) ||!exam?.show}">
+												*ngIf="exam?.show"
+											>
 											</app-work-card>
 										</ng-container>
 									</div>
