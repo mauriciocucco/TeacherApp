@@ -44,7 +44,10 @@
 			</mat-form-field>
 			<mat-form-field class="mat-form-field description-textarea">
 				<mat-label>Descripción</mat-label>
-				<textarea matInput formControlName="description"></textarea>
+				<textarea
+					[rows]="10"
+					matInput
+					formControlName="description"></textarea>
 			</mat-form-field>
 		</form>
 	</div>

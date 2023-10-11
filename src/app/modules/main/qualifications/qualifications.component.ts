@@ -93,7 +93,11 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public openCreateDialog(): void {
-		const dialogRef = this.dialog.open(CreateDialogComponent);
+		const matConfig =
+			this.vs.screenType() === ScreenType.MOBILE
+				? { width: '100vw', height: '100vh', maxWidth: '100vw' }
+				: {};
+		const dialogRef = this.dialog.open(CreateDialogComponent, matConfig);
 
 		dialogRef
 			.afterClosed()
@@ -121,7 +125,14 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	public openMultipleMarkingSetterDialog() {
-		const dialogRef = this.dialog.open(MultipleMarkingSetterComponent);
+		const matConfig =
+			this.vs.screenType() === ScreenType.MOBILE
+				? { width: '100vw', height: '100vh', maxWidth: '100vw' }
+				: {};
+		const dialogRef = this.dialog.open(
+			MultipleMarkingSetterComponent,
+			matConfig
+		);
 
 		dialogRef
 			.afterClosed()

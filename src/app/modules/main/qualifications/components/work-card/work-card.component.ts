@@ -36,6 +36,8 @@ import {
 } from 'rxjs';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { UpdateTask } from '../../../../../core/interfaces/update-task.interface';
+import { ViewService } from '../../../../../core/services/view/view.service';
+import { ScreenType } from '../../../../../core/enums/screen-type.enum';
 
 @Component({
 	selector: 'app-work-card',
@@ -102,7 +104,8 @@ export class WorkCardComponent implements OnInit {
 		public dialog: MatDialog,
 		private fb: FormBuilder,
 		private ts: TasksService,
-		private es: ExamsService
+		private es: ExamsService,
+		private vs: ViewService
 	) {}
 
 	ngOnInit(): void {
@@ -209,8 +212,14 @@ export class WorkCardComponent implements OnInit {
 	public openInfoDialog(work: Partial<Task & Exam> | undefined) {
 		if (!work) return;
 
+		const matConfig =
+			this.vs.screenType() === ScreenType.MOBILE
+				? { width: '100vw', height: '100vh', maxWidth: '100vw' }
+				: {};
+
 		this.dialog.open(InfoDialogComponent, {
 			data: work,
+			...matConfig,
 		});
 	}
 
