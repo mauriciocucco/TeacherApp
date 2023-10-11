@@ -303,11 +303,8 @@ export class QualificationsService {
 		if (!student) this.cleanAlphabet.next(true);
 
 		if (thereIsDataAvailable) {
-			subject !== this.selectedSubjectId()
-				? this.filterBySubject(subject)
-				: null;
-			!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
 			this.selectedSubjectId.set(subject ?? 0);
+			!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
 		}
 	}
 
@@ -319,24 +316,6 @@ export class QualificationsService {
 		this.filterValues(student);
 		this.filterValues(task, 'Tasks');
 		this.filterValues(exam, 'Exams');
-	}
-
-	private filterBySubject(subjectId: number) {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-
-		this.tasks.mutate(tasks =>
-			tasks.forEach(task => {
-				if (subjectId && task.subject.id !== subjectId)
-					task.show = false;
-			})
-		);
-		this.exams.mutate(exams =>
-			exams.forEach(exam => {
-				if (subjectId && exam.subject.id !== subjectId)
-					exam.show = false;
-			})
-		);
 	}
 
 	public create(
