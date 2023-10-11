@@ -3,6 +3,7 @@ import {
 	Component,
 	DestroyRef,
 	HostListener,
+	OnDestroy,
 	OnInit,
 	QueryList,
 	Signal,
@@ -33,7 +34,7 @@ import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
 	styleUrls: ['./qualifications.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QualificationsComponent implements OnInit {
+export class QualificationsComponent implements OnInit, OnDestroy {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
 	public tasks: Signal<Task[]> = this.qs.tasks;
@@ -79,6 +80,10 @@ export class QualificationsComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.vs.setScreenType();
+	}
+
+	ngOnDestroy(): void {
+		this.qs.getTasksExamsAndStudents(null, null);
 	}
 
 	public openCreateDialog(): void {
