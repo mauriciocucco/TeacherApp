@@ -292,6 +292,7 @@ export class QualificationsService {
 		) {
 			this.selectedCourseId.set(courseId);
 			this.selectedQuarterId.set(quarterId);
+			this.letterSelected.set(null);
 
 			return this.getTasksExamsAndStudents(
 				queryParamsWithQuarter,
