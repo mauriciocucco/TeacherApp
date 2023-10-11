@@ -3,8 +3,8 @@
 #form-container {
 	text-align: center;
 	#form-content {
-		overflow-x: hidden;
 		padding-bottom: unset;
+		max-height: unset !important;
 	}
 }
 
