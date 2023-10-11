@@ -67,9 +67,10 @@ export class AlphabetComponent implements OnInit {
 
 	public showStudentsWithLetter(letter: string) {
 		if (this.vs.screenType() === ScreenType.MOBILE) {
+			this.qs.letterSelected.set(letter);
 			this.qs.cleanShow(this.students as WritableSignal<Student[]>);
 			this.qs.setShowByLetter(letter);
-			this.qs.letterSelected.set(letter);
+			this.qs.resetFilters.next('Students');
 			return;
 		}
 

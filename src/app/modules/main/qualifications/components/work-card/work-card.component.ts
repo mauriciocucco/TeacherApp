@@ -107,6 +107,7 @@ export class WorkCardComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.setInitialFormValues();
+		this.changeInitialState();
 		this.listenForChanges();
 	}
 
@@ -164,8 +165,6 @@ export class WorkCardComponent implements OnInit {
 			},
 			{ emitEvent: false }
 		);
-
-		this.changeInitialState();
 	}
 
 	private listenForChanges() {

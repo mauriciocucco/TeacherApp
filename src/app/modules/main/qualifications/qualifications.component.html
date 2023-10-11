@@ -1,4 +1,4 @@
-<div id="container" *ngIf="(filteredData$ | async)">
+<div id="container" [ngClass]="{'clean-height': students().length}" *ngIf="(filteredData$ | async)">
 	<app-filters></app-filters>
 
 	<app-alphabet 

@@ -18,7 +18,6 @@
 	top: 0;
 	z-index: 4;
 	@include mq-mobile {
-		margin-top: calc(150px + 3rem);
 		z-index: 2;
 	}
 }

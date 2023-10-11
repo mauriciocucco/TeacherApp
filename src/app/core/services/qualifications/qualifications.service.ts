@@ -45,6 +45,7 @@ import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
 import { QUARTERS } from '../../constants/quarters.constant';
 import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-markings.constant';
+import { ResetFiltersType } from '../../interfaces/reset-filters.type';
 
 @Injectable({
 	providedIn: 'root',
@@ -78,7 +79,7 @@ export class QualificationsService {
 	public selectedSubjectId = signal(0);
 	public selectedQuarterId = signal(0);
 	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
-	public resetFilters = new BehaviorSubject(false);
+	public resetFilters = new BehaviorSubject<ResetFiltersType>('');
 	public resetFilters$ = this.resetFilters.asObservable();
 	public tasksExamsAndStudentsSubject = new BehaviorSubject<
 		[TasksAndExamsQueryParams | null, StudentsParams | null]

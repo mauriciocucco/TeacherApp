@@ -25,6 +25,7 @@ import { MultipleMarkingSetterComponent } from './components/multiple-marking-se
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
 import { ViewService } from '../../../core/services/view/view.service';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
+import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
 
 @Component({
 	selector: 'app-qualifications',
@@ -104,7 +105,7 @@ export class QualificationsComponent implements OnInit {
 		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
 	}
 
-	private resetFilters(reset = true) {
+	private resetFilters(reset: ResetFiltersType = 'All') {
 		this.qs.resetFilters.next(reset);
 	}
 

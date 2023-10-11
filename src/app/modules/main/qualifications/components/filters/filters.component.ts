@@ -88,9 +88,21 @@ export class FiltersComponent implements OnInit {
 			.subscribe(reset => {
 				if (!reset) return;
 
-				this.resetForm();
-				this.qs.setFilters(this.filtersForm.value as FormFilters);
-				this.qs.resetFilters.next(false);
+				if (
+					reset === 'Students' &&
+					this.filtersForm.get('student')?.value
+				) {
+					this.filtersForm
+						.get('student')
+						?.setValue('', { emitEvent: false });
+				}
+
+				if (reset === 'All') {
+					this.resetForm();
+					this.qs.setFilters(this.filtersForm.value as FormFilters);
+				}
+
+				this.qs.resetFilters.next('');
 			});
 	}
 

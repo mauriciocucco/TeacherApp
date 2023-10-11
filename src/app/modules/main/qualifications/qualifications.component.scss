@@ -3,6 +3,7 @@
 #container {
 	display: flex;
 	flex-direction: column;
+	height: -webkit-fill-available;
 	gap: 3rem;
 }
 
@@ -41,12 +42,6 @@
 	display: none !important;
 }
 
-.warning-container {
-	@include mq-mobile {
-		margin-top: calc(140.4px + 3rem);
-	}
-}
-
 .mobile-margin-top {
 	@include mq-mobile {
 		margin-top: calc(180px + 3rem);
@@ -58,4 +53,8 @@
 	p {
 		margin-bottom: unset;
 	}
+}
+
+.clean-height {
+	height: unset !important;
 }
