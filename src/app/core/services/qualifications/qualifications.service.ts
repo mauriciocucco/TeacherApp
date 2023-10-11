@@ -279,7 +279,6 @@ export class QualificationsService {
 		const {
 			course: courseId,
 			subject,
-			student,
 			quarter: quarterId,
 		} = filtersChanges;
 		const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
@@ -289,7 +288,7 @@ export class QualificationsService {
 
 		if (
 			courseId !== this.selectedCourseId() ||
-			quarterId !== this.selectedQuarterId()
+			(quarterId && quarterId !== this.selectedQuarterId())
 		) {
 			this.selectedCourseId.set(courseId);
 			this.selectedQuarterId.set(quarterId);
@@ -300,11 +299,9 @@ export class QualificationsService {
 			);
 		}
 
-		if (!student) this.cleanAlphabet.next(true);
-
 		if (thereIsDataAvailable) {
 			this.selectedSubjectId.set(subject ?? 0);
-			!subject ? this.filterSignals(filtersChanges) : null; // Para q no se limpien los estudiantes al cambiar de materia en Mobile
+			!this.letterSelected() ? this.filterSignals(filtersChanges) : null;
 		}
 	}
 
@@ -555,5 +552,21 @@ export class QualificationsService {
 
 			return JSON.parse(JSON.stringify(tasks));
 		});
+	}
+
+	public restartQualificationsService() {
+		this.getTasksExamsAndStudents(null, null);
+		this.resetFilters.next('All');
+		this.setFilters({
+			course: 0,
+			quarter: 0,
+			subject: 0,
+			student: '',
+			task: '',
+			exam: '',
+		});
+		this.selectedCourseId.set(0);
+		this.selectedQuarterId.set(0);
+		this.letterSelected.set(null);
 	}
 }

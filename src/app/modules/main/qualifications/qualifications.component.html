@@ -39,6 +39,7 @@
 								<mat-tab label="Tareas">
 									<div
 										class="cards-wrapper"
+										[ngClass]="{'center-last-card': onlyOneTaskMatch()}"
 										*ngIf="
 											taskMatchSomeFilter();
 											else noMatchedTasks
@@ -58,6 +59,7 @@
 								<mat-tab label="Exámenes">
 									<div
 										class="cards-wrapper"
+										[ngClass]="{'center-last-card': onlyOneExamMatch()}"
 										*ngIf="
 											examMatchSomeFilter();
 											else noMatchedExams

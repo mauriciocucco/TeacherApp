@@ -48,6 +48,12 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public examMatchSomeFilter = computed(() =>
 		this.exams().some(exam => exam.show)
 	);
+	public onlyOneTaskMatch = computed(
+		() => this.tasks().filter(task => task.show).length === 1
+	);
+	public onlyOneExamMatch = computed(
+		() => this.exams().filter(exam => exam.show).length === 1
+	);
 	public noStudentShowingForMobile = this.qs.noStudentShowingForMobile;
 	public letterSelected = this.qs.letterSelected;
 	public courseIsSelected = this.qs.selectedCourseId;
@@ -83,7 +89,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		this.qs.getTasksExamsAndStudents(null, null);
+		this.qs.restartQualificationsService();
 	}
 
 	public openCreateDialog(): void {

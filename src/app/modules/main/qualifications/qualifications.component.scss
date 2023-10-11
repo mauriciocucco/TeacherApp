@@ -12,6 +12,7 @@
 	flex-direction: column;
 	gap: 3rem;
 	height: -webkit-fill-available;
+	padding-bottom: 5rem;
 	.mat-mdc-card {
 		&-content {
 			@include mq-mobile {
@@ -57,4 +58,10 @@
 
 .clean-height {
 	height: unset !important;
+}
+
+.center-last-card {
+	@include mq-mobile {
+		justify-content: center;
+	}
 }
