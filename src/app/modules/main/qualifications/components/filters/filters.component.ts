@@ -143,6 +143,7 @@ export class FiltersComponent implements OnInit {
 				break;
 			case 'Students':
 				this.filtersForm.get('student')?.setValue('');
+				this.cleanSelectedLetter();
 				this.qs.cleanShow(this.students);
 				break;
 			default:
@@ -150,8 +151,6 @@ export class FiltersComponent implements OnInit {
 				this.qs.cleanShow(this.exams);
 				break;
 		}
-
-		this.toggleFiltersMenu(false);
 	}
 
 	public resetForm() {
@@ -169,14 +168,12 @@ export class FiltersComponent implements OnInit {
 	}
 
 	public studentSelected(option: MatAutocompleteSelectedEvent) {
-		this.qs.cleanAlphabet.next(true);
+		this.cleanSelectedLetter();
 		this.qs.showSelectedStudent(option);
-		this.toggleFiltersMenu(false);
 	}
 
 	public taskOrExamSelected(option: MatAutocompleteSelectedEvent) {
 		this.qs.showSelectedTaskOrExam(option);
-		this.toggleFiltersMenu(false);
 	}
 
 	public toggleFiltersMenu(open: null | boolean = null) {

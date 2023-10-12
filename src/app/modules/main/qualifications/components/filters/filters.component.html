@@ -82,7 +82,10 @@
 									formControlName="student" />
 								<mat-autocomplete
 									#studentsAutocomplete
-									(optionSelected)="studentSelected($event)"
+									(optionSelected)="
+										studentSelected($event);
+										toggleFiltersMenu(false)
+									"
 									#auto="matAutocomplete">
 									<ng-container
 										*ngFor="
@@ -121,7 +124,7 @@
 								aria-label="Botón para limpiar autocompletar de estudiantes"
 								(click)="
 									clearControl('Students');
-									cleanSelectedLetter()
+									toggleFiltersMenu(false)
 								">
 								<mat-icon>clear</mat-icon>
 							</button>
@@ -145,7 +148,8 @@
 								<mat-autocomplete
 									#tasksAutocomplete
 									(optionSelected)="
-										taskOrExamSelected($event)
+										taskOrExamSelected($event);
+										toggleFiltersMenu(false)
 									"
 									#autoTask="matAutocomplete">
 									<ng-container
@@ -179,7 +183,10 @@
 								color="primary"
 								title="Limpiar tarea seleccionada"
 								aria-label="Botón para limpiar autocompletar de tareas"
-								(click)="clearControl('Tasks')">
+								(click)="
+									clearControl('Tasks');
+									toggleFiltersMenu(false)
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>
@@ -202,7 +209,8 @@
 								<mat-autocomplete
 									#examsAutocomplete
 									(optionSelected)="
-										taskOrExamSelected($event)
+										taskOrExamSelected($event);
+										toggleFiltersMenu(false)
 									"
 									#autoExam="matAutocomplete">
 									<ng-container
@@ -236,7 +244,10 @@
 								color="primary"
 								title="Limpiar exámen seleccionado"
 								aria-label="Botón para limpiar autocompletar de exámenes"
-								(click)="clearControl('Exams')">
+								(click)="
+									clearControl('Exams');
+									toggleFiltersMenu(false)
+								">
 								<mat-icon>clear</mat-icon>
 							</button>
 						</div>

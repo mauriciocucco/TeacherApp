@@ -52,14 +52,14 @@ export class MultipleMarkingSetterComponent {
 		private qs: QualificationsService,
 		public dialogRef: MatDialogRef<MultipleMarkingSetterComponent>
 	) {
-		this.listeningWorkElection();
+		this.listenForWorkElection();
 	}
 
 	public closeDialog(reloadData = false): void {
 		this.dialogRef.close(reloadData);
 	}
 
-	private listeningWorkElection() {
+	private listenForWorkElection() {
 		this.workControl.valueChanges
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(value => {

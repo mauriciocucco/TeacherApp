@@ -255,7 +255,7 @@ export class QualificationsService {
 		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
 		studentsQueryParams: StudentsParams | null = null
 	) {
-		this.resetDataSignals();
+		this.resetSignalsData();
 		this.tasksExamsAndStudentsSubject.next([
 			tasksAndExamsQueryParams,
 			studentsQueryParams,
@@ -459,7 +459,7 @@ export class QualificationsService {
 		this.cleanShow(this.students);
 	}
 
-	public resetDataSignals() {
+	public resetSignalsData() {
 		this.students.set([]);
 		this.tasks.set([]);
 		this.exams.set([]);
