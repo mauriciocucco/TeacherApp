@@ -115,7 +115,7 @@
 	</ng-template>
 	
 
-	<app-scroll *ngIf="showScroll$ | async" (scrollToTop)="onScrollToTop()"></app-scroll>
+	<app-scroll *ngIf="(showScroll$ | async) && students().length" (scrollToTop)="onScrollToTop()"></app-scroll>
 
 	<app-menu-button *ngIf="students().length" title="Crear una nueva tarea o exámen" icon="add">
 		<button mat-menu-item (click)="openCreateDialog()">
