@@ -10,7 +10,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { UnauthorizedInterceptor } from './core/interceptors/unauthorized.interceptor';
-import { CustomPreloadingStrategy } from './core/services/preload/custom-preloading-strategy.service';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -28,7 +27,6 @@ import { CustomPreloadingStrategy } from './core/services/preload/custom-preload
 			useClass: UnauthorizedInterceptor,
 			multi: true,
 		},
-		CustomPreloadingStrategy,
 	],
 	bootstrap: [AppComponent],
 })

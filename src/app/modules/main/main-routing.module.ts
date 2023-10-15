@@ -13,7 +13,6 @@ const routes: Routes = [
 					import('./qualifications/qualifications.module').then(
 						m => m.QualificationsModule
 					),
-				data: { preload: true },
 			},
 			{
 				path: 'progreso',
@@ -32,7 +31,7 @@ const routes: Routes = [
 	{
 		path: '**',
 		pathMatch: 'full',
-		redirectTo: 'calificaciones',
+		redirectTo: '',
 	},
 ];
 

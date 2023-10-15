@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { CustomPreloadingStrategy } from './core/services/preload/custom-preloading-strategy.service';
 
 const routes: Routes = [
 	{
@@ -27,8 +26,6 @@ const routes: Routes = [
 		RouterModule.forRoot(routes, {
 			anchorScrolling: 'enabled',
 			scrollOffset: [0, 60],
-			bindToComponentInputs: true,
-			preloadingStrategy: CustomPreloadingStrategy,
 		}),
 	],
 	exports: [RouterModule],
