@@ -21,7 +21,7 @@
 							"path": "src/custom-webpack.config.ts",
 							"replaceDuplicatePlugins": true
 						},
-						"outputPath": "dist/teacher-app",
+						"outputPath": "dist/teacherApp/browser",
 						"index": "src/index.html",
 						"main": "src/main.ts",
 						"polyfills": ["zone.js"],
@@ -98,7 +98,62 @@
 					"options": {
 						"lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
 					}
-				}
+        },
+        "server": {
+          "builder": "@angular-devkit/build-angular:server",
+          "options": {
+            "outputPath": "dist/teacherApp/server",
+            "main": "server.ts",
+            "tsConfig": "tsconfig.server.json",
+            "inlineStyleLanguage": "scss"
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "media"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "vendorChunk": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve-ssr": {
+          "builder": "@nguniversal/builders:ssr-dev-server",
+          "configurations": {
+            "development": {
+              "browserTarget": "teacherApp:build:development",
+              "serverTarget": "teacherApp:server:development"
+            },
+            "production": {
+              "browserTarget": "teacherApp:build:production",
+              "serverTarget": "teacherApp:server:production"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "prerender": {
+          "builder": "@nguniversal/builders:prerender",
+          "options": {
+            "routes": [
+              "/"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "teacherApp:build:production",
+              "serverTarget": "teacherApp:server:production"
+            },
+            "development": {
+              "browserTarget": "teacherApp:build:development",
+              "serverTarget": "teacherApp:server:development"
+            }
+          },
+          "defaultConfiguration": "production"
+        }
 			}
 		}
 	},

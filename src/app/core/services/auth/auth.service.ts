@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { Login } from '../../interfaces/auth/login.interface';
 import { LoginResponse } from '../../interfaces/auth/login-response.interface';
 import { ProfileResponse } from '../../interfaces/auth/profile-response.interface';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
 	providedIn: 'root',
@@ -11,7 +12,10 @@ import { ProfileResponse } from '../../interfaces/auth/profile-response.interfac
 export class AuthService {
 	private baseUrl = 'auth';
 
-	constructor(private api: ApiService) {}
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: object,
+		private api: ApiService
+	) {}
 
 	public login(login: Login): Observable<boolean> {
 		return this.api
@@ -19,7 +23,9 @@ export class AuthService {
 			.pipe(
 				tap(({ access_token }) => {
 					if (access_token) {
-						localStorage.setItem('token', access_token);
+						isPlatformBrowser(this.platformId)
+							? localStorage.setItem('token', access_token)
+							: null;
 					}
 				}),
 				map(() => true),
@@ -29,7 +35,9 @@ export class AuthService {
 
 	public verifyAuth(): Observable<boolean> {
 		const route = `${this.baseUrl}/profile`;
-		const accessToken = localStorage.getItem('token');
+		const accessToken = isPlatformBrowser(this.platformId)
+			? localStorage.getItem('token')
+			: null;
 
 		if (!accessToken) {
 			return of(false);
@@ -52,6 +60,8 @@ export class AuthService {
 	}
 
 	public getAuthorizationToken() {
-		return localStorage.getItem('token');
+		return isPlatformBrowser(this.platformId)
+			? localStorage.getItem('token')
+			: null;
 	}
 }

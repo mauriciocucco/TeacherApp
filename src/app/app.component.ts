@@ -1,7 +1,10 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
 	DestroyRef,
+	Inject,
+	PLATFORM_ID,
 	inject,
 	signal,
 } from '@angular/core';
@@ -14,6 +17,7 @@ import {
 	Router,
 	Event,
 } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
 	selector: 'app-root',
@@ -23,9 +27,15 @@ import {
 })
 export class AppComponent {
 	public showMainProgressBar = signal(false);
+	public static isBrowser = new BehaviorSubject<boolean>(false);
 	private destroyRef = inject(DestroyRef);
 
-	constructor(private router: Router) {
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: object,
+		private router: Router
+	) {
+		AppComponent.isBrowser.next(isPlatformBrowser(platformId));
+
 		this.router.events
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(event => {
