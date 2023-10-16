@@ -46,6 +46,7 @@
 										">
 										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
 											<app-work-card [work]="task" [student]="student" 
+												*ngIf="screenType() === ScreenTypeEnum.MOBILE && student.showForMobile"
 												[ngClass]="{disappear:
 													(selectedSubjectId() && task?.subject?.id !== selectedSubjectId()) ||!task?.show}">
 											</app-work-card>
@@ -66,8 +67,9 @@
 										">
 										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
 											<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"
-											[ngClass]="{disappear:
-												(selectedSubjectId() && exam?.subject?.id !== selectedSubjectId()) ||!exam?.show}">
+												*ngIf="screenType() === ScreenTypeEnum.MOBILE && student.showForMobile"
+												[ngClass]="{disappear:
+													(selectedSubjectId() && exam?.subject?.id !== selectedSubjectId()) ||!exam?.show}">
 											</app-work-card>
 										</ng-container>
 									</div>
