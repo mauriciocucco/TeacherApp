@@ -104,13 +104,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reloadData => {
 				if (reloadData) {
-					const queryParams = {
-						courseId: this.qs.selectedCourseId(),
-					};
-
 					this.changeToCorrectTab();
 					this.resetFilters();
-					this.qs.getTasksExamsAndStudents(queryParams, queryParams);
 				}
 			});
 	}
