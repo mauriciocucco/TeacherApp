@@ -153,6 +153,7 @@ export class QualificationsService {
 				}),
 				finalize(() => {
 					this.deleteDialogRef.close(true);
+					this.deleteWork.next(0);
 				})
 			);
 		}),
