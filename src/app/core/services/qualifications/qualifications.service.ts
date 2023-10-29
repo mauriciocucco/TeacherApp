@@ -371,6 +371,8 @@ export class QualificationsService {
 
 		if (!value) return this.cleanShow(signalToFilter);
 
+		console.log('SIGUIOOOOOOOOOOOOO');
+
 		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
 
@@ -455,6 +457,8 @@ export class QualificationsService {
 
 			return JSON.parse(JSON.stringify(elements));
 		});
+
+		console.log(signal());
 	}
 
 	private cleanAllShow() {
