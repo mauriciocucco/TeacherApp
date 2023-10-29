@@ -4,7 +4,9 @@
 		<form [formGroup]="createForm" id="create-form">
 			<mat-form-field class="mat-form-field">
 				<mat-label>Tipo de trabajo</mat-label>
-				<mat-select formControlName="type">
+				<mat-select
+					formControlName="type"
+					(valueChange)="selectWorkType($event)">
 					<mat-option [value]="workEnum.TASK">
 						{{ workEnum.TASK }}
 					</mat-option>

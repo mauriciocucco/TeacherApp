@@ -76,4 +76,8 @@ export class CreateDialogComponent {
 			studentId: student.id,
 		}));
 	}
+
+	public selectWorkType(workOption: Work) {
+		this.qs.selectedWorkType.set(workOption);
+	}
 }
