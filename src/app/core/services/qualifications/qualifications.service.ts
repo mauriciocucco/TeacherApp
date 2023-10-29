@@ -287,6 +287,8 @@ export class QualificationsService {
 			quarterId
 		);
 
+		console.log('FILTROS: ', filtersChanges);
+
 		if (
 			courseId !== this.selectedCourseId() ||
 			(quarterId && quarterId !== this.selectedQuarterId())
@@ -303,6 +305,7 @@ export class QualificationsService {
 
 		if (thereIsDataAvailable) {
 			this.selectedSubjectId.set(subject ?? 0);
+			console.log('MATERIA: ', this.selectedSubjectId());
 			!this.letterSelected() ? this.filterSignals(filtersChanges) : null;
 		}
 	}
