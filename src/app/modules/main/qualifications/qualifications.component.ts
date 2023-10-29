@@ -124,22 +124,8 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			this.vs.screenType() === ScreenType.MOBILE
 				? { width: '100vw', height: '100vh', maxWidth: '100vw' }
 				: {};
-		const dialogRef = this.dialog.open(
-			MultipleMarkingSetterComponent,
-			matConfig
-		);
 
-		dialogRef
-			.afterClosed()
-			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(reloadData => {
-				if (reloadData) {
-					const queryParams = {
-						courseId: this.qs.selectedCourseId(),
-					};
-					this.qs.getTasksExamsAndStudents(queryParams, queryParams);
-				}
-			});
+		this.dialog.open(MultipleMarkingSetterComponent, matConfig);
 	}
 
 	public onScrollToTop(): void {
