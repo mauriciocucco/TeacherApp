@@ -287,8 +287,6 @@ export class QualificationsService {
 			quarterId
 		);
 
-		console.log('FILTROS: ', filtersChanges);
-
 		if (
 			courseId !== this.selectedCourseId() ||
 			(quarterId && quarterId !== this.selectedQuarterId())
@@ -305,7 +303,6 @@ export class QualificationsService {
 
 		if (thereIsDataAvailable) {
 			this.selectedSubjectId.set(subject ?? 0);
-			console.log('MATERIA: ', this.selectedSubjectId());
 			!this.letterSelected() ? this.filterSignals(filtersChanges) : null;
 		}
 	}
@@ -370,8 +367,6 @@ export class QualificationsService {
 		if (controlType === 'Exams') signalToFilter = this.exams;
 
 		if (!value) return this.cleanShow(signalToFilter);
-
-		console.log('SIGUIOOOOOOOOOOOOO');
 
 		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
 	}
@@ -457,8 +452,6 @@ export class QualificationsService {
 
 			return JSON.parse(JSON.stringify(elements));
 		});
-
-		console.log(signal());
 	}
 
 	private cleanAllShow() {
