@@ -17,8 +17,6 @@ import { FormBuilder } from '@angular/forms';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
 import { tap } from 'rxjs';
-import { Task } from '../../../../../core/interfaces/task.interface';
-import { Exam } from '../../../../../core/interfaces/exam.interface';
 import {
 	MatAutocomplete,
 	MatAutocompleteSelectedEvent,
@@ -30,6 +28,7 @@ import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormFilters } from '../../interfaces/form-filters.interface';
 import { Quarter } from '../../../../../core/interfaces/quarter.interface';
+import { WorkUnion } from '../../../../../core/interfaces/work-union.interface';
 
 @Component({
 	selector: 'app-filters',
@@ -43,8 +42,8 @@ export class FiltersComponent implements OnInit {
 	public courses: Signal<Course[]> = this.qs.courses;
 	public quarters: Signal<Quarter[]> = this.qs.quarters;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public tasks: WritableSignal<Task[]> = this.qs.tasks;
-	public exams: WritableSignal<Exam[]> = this.qs.exams;
+	public tasks: WritableSignal<WorkUnion[]> = this.qs.tasks;
+	public exams: WritableSignal<WorkUnion[]> = this.qs.exams;
 	public openFiltersMenu = signal(false);
 	public filtersForm = this.fb.nonNullable.group({
 		student: [{ value: '', disabled: true }],
@@ -57,7 +56,6 @@ export class FiltersComponent implements OnInit {
 	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
-	public trackItems = this.qs.trackItems;
 	private destroyRef = inject(DestroyRef);
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;

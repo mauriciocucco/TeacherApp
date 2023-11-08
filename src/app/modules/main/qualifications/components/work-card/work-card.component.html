@@ -82,13 +82,13 @@
 						"></ng-container>
 					<ng-template #taskSelect>
 						<mat-select formControlName="markingId">
-							<mat-option
-								*ngFor="let marking of markings()"
-								[value]="marking.id">
+							@for (marking of markings(); track marking.id) {
+							<mat-option [value]="marking.id">
 								{{ marking.name }}
 								-
 								{{ marking.description }}
 							</mat-option>
+							}
 						</mat-select>
 					</ng-template>
 					<ng-template #examInput>

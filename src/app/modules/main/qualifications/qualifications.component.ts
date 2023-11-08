@@ -60,7 +60,6 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 	public selectedTab = signal(0);
 	public selectedSubjectId = this.qs.selectedSubjectId;
 	public studentIsSelected = this.qs.studentIsSelected;
-	public trackItems = this.qs.trackItems;
 	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
 	private readonly document = inject(DOCUMENT);

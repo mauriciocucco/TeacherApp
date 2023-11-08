@@ -3,11 +3,11 @@
 	<div id="selectors">
 		<div id="selection-list">
 			<mat-selection-list id="students-list" #studentsList>
-				<mat-list-option
-					*ngFor="let student of students"
-					[value]="student.id">
+				@for (student of students; track student.id) {
+				<mat-list-option [value]="student.id">
 					{{ student.name }} {{ student.lastname }}
 				</mat-list-option>
+				}
 			</mat-selection-list>
 			<h4>
 				{{ studentsList.selectedOptions.selected.length }} /
@@ -36,9 +36,8 @@
 							: 'Examen'
 					}}</mat-label>
 					<mat-select formControlName="workId">
-						<mat-option
-							*ngFor="let work of works"
-							[value]="work.id">
+						@for (work of works; track work.id) {
+						<mat-option [value]="work.id">
 							<div class="option-wrapper">
 								<p class="work-option-name" [title]="work.name">
 									{{ work.name }}
@@ -46,6 +45,7 @@
 								<p>{{ '-' }} {{ work.date | shortDate }}</p>
 							</div>
 						</mat-option>
+						}
 					</mat-select>
 				</mat-form-field>
 				<mat-form-field
@@ -53,11 +53,11 @@
 					*ngIf="workControl?.value === workEnum.TASK">
 					<mat-label>{{ 'Calificación' }}</mat-label>
 					<mat-select formControlName="marking">
-						<mat-option
-							*ngFor="let marking of markings"
-							[value]="marking.id">
+						@for (marking of markings; track marking.id) {
+						<mat-option [value]="marking.id">
 							{{ marking.name }} - {{ marking.description }}
 						</mat-option>
+						}
 					</mat-select>
 				</mat-form-field>
 				<mat-form-field

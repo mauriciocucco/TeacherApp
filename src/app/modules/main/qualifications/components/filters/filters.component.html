@@ -23,11 +23,11 @@
 								'mobile-show': openFiltersMenu()
 							}"
 							(click)="toggleFiltersMenu()">
-							<mat-radio-button
-								*ngFor="let subject of subjects()"
-								[value]="subject.id"
-								>{{ subject.name }}</mat-radio-button
-							>
+							@for(subject of subjects(); track subject.id) {
+							<mat-radio-button [value]="subject.id">{{
+								subject.name
+							}}</mat-radio-button>
+							}
 							<mat-radio-button [value]="0">{{
 								'Todas las materias'
 							}}</mat-radio-button>
@@ -41,12 +41,13 @@
 								<mat-select
 									formControlName="course"
 									placeholder="Seleccionar un curso">
-									<mat-option
-										*ngFor="let course of courses()"
-										[value]="course.id">
+									@for (course of courses(); track course.id)
+									{
+									<mat-option [value]="course.id">
 										{{ course.year }}° -
 										{{ course.shift | shift }}
 									</mat-option>
+									}
 								</mat-select>
 							</mat-form-field>
 							<button
@@ -87,24 +88,21 @@
 										toggleFiltersMenu(false)
 									"
 									#auto="matAutocomplete">
-									<ng-container
-										*ngFor="
-											let student of students();
-											trackBy: trackItems
+									@for (student of students(); track
+									student.id) {
+									<mat-option
+										[ngClass]="{
+											disappear: !student.show
+										}"
+										[value]="
+											student.name +
+											' ' +
+											student.lastname
 										">
-										<mat-option
-											[ngClass]="{
-												disappear: !student.show
-											}"
-											[value]="
-												student.name +
-												' ' +
-												student.lastname
-											">
-											{{ student.name }}
-											{{ student?.lastname }}
-										</mat-option>
-									</ng-container>
+										{{ student.name }}
+										{{ student?.lastname }}
+									</mat-option>
+									}
 								</mat-autocomplete>
 							</mat-form-field>
 							<button
@@ -152,20 +150,16 @@
 										toggleFiltersMenu(false)
 									"
 									#autoTask="matAutocomplete">
-									<ng-container
-										*ngFor="
-											let task of tasks();
-											trackBy: trackItems
-										">
-										<mat-option
-											[ngClass]="{
-												disappear: !task.show
-											}"
-											[value]="task.name">
-											{{ task.name }} -
-											{{ task.date | shortDate }}
-										</mat-option>
-									</ng-container>
+									@for (task of tasks(); track task.id) {
+									<mat-option
+										[ngClass]="{
+											disappear: !task.show
+										}"
+										[value]="task.name">
+										{{ task.name }} -
+										{{ task.date | shortDate }}
+									</mat-option>
+									}
 								</mat-autocomplete>
 							</mat-form-field>
 							<button
@@ -213,20 +207,16 @@
 										toggleFiltersMenu(false)
 									"
 									#autoExam="matAutocomplete">
-									<ng-container
-										*ngFor="
-											let exam of exams();
-											trackBy: trackItems
-										">
-										<mat-option
-											[ngClass]="{
-												disappear: !exam.show
-											}"
-											[value]="exam.name">
-											{{ exam.name }} -
-											{{ exam.date | shortDate }}
-										</mat-option>
-									</ng-container>
+									@for (exam of exams(); track exam.id) {
+									<mat-option
+										[ngClass]="{
+											disappear: !exam.show
+										}"
+										[value]="exam.name">
+										{{ exam.name }} -
+										{{ exam.date | shortDate }}
+									</mat-option>
+									}
 								</mat-autocomplete>
 							</mat-form-field>
 							<button
@@ -261,13 +251,14 @@
 								}">
 								<mat-label>Trimestre</mat-label>
 								<mat-select formControlName="quarter">
-									<mat-option
-										*ngFor="let quarter of quarters()"
-										[value]="quarter.id">
+									@for (quarter of quarters(); track
+									quarter.id) {
+									<mat-option [value]="quarter.id">
 										{{ quarter.name }} ({{
 											quarter.description
 										}})
 									</mat-option>
+									}
 								</mat-select>
 							</mat-form-field>
 						</div>

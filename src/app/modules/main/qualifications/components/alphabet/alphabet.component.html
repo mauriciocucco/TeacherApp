@@ -4,13 +4,14 @@
 	aria-label="Alphabet"
 	(change)="toggleChange($event)"
 	#alphabetToggleGroup>
+	@for (letter of alphabet; track letter) {
 	<mat-button-toggle
 		class="toggle-button"
 		appearance="legacy"
 		[disabled]="!checkIfExists(letter)"
-		*ngFor="let letter of alphabet"
 		[value]="letter"
 		(click)="showStudentsWithLetter(letter)"
 		>{{ letter }}</mat-button-toggle
 	>
+	}
 </mat-button-toggle-group>

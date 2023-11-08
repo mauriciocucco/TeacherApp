@@ -7,16 +7,17 @@
 		>
 	</app-alphabet>
 
-	<ng-container *ngTemplateOutlet="courseIsSelected() ? dataContainer : courseNotSelected"></ng-container>
-	
-	<ng-template #dataContainer>
-		<div
-		id="students-cards-container"
-		*ngIf="students().length; else spinner"
-		[ngClass]="{
-			'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
-		}">
-			<ng-container *ngFor="let student of students(); trackBy: trackItems">
+	@if (courseIsSelected()) {
+
+		@if (students().length) {
+
+			<div
+				id="students-cards-container"
+				[ngClass]="{
+					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
+			}">
+
+			@for (student of students(); track student.id) {
 				<mat-card 
 					class="qualifications-students-card"
 					[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
@@ -37,84 +38,91 @@
 								(selectedIndexChange)="selectWorkType($event)"
 								id="qualifications-tab-group">
 								<mat-tab label="Tareas">
-									<div
+
+									@if (taskMatchSomeFilter()) {
+
+										<div
 										class="cards-wrapper"
-										[ngClass]="{'center-last-card': onlyOneTaskMatch()}"
-										*ngIf="
-											taskMatchSomeFilter();
-											else noMatchedTasks
-										">
-										<ng-container *ngFor="let task of tasks(); trackBy: trackItems">
-											<app-work-card [work]="task" [student]="student" 
-												*ngIf="screenType() === ScreenTypeEnum.DESKTOP || student.showForMobile"
-												[ngClass]="{disappear:
-													(selectedSubjectId() && task?.subject?.id !== selectedSubjectId()) ||!task?.show}">
-											</app-work-card>
-										</ng-container>
-									</div>
-									<ng-template #noMatchedTasks>
+										[ngClass]="{'center-last-card': onlyOneTaskMatch()}">
+
+											@for (task of tasks(); track task.id) {
+												<app-work-card [work]="task" [student]="student" 
+													*ngIf="screenType() === ScreenTypeEnum.DESKTOP || student.showForMobile"
+													[ngClass]="{disappear:
+														(selectedSubjectId() && task?.subject?.id !== selectedSubjectId()) ||!task?.show}">
+												</app-work-card>
+											}
+
+										</div>
+
+									} @else {
+
 										<app-warning [info]="'No se encontraron tareas'" [cardStyle]="{'height': '44rem'}" [imgSource]="'./assets/images/empty-icon.png'" [imgWidth]="150" [imgHeight]="150"></app-warning>
-									</ng-template>
+
+									}
 								</mat-tab>
 
 								<mat-tab label="Exámenes">
-									<div
+
+									@if (examMatchSomeFilter()) {
+
+										<div
 										class="cards-wrapper"
-										[ngClass]="{'center-last-card': onlyOneExamMatch()}"
-										*ngIf="
-											examMatchSomeFilter();
-											else noMatchedExams
-										">
-										<ng-container *ngFor="let exam of exams(); trackBy: trackItems">
-											<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"
+										[ngClass]="{'center-last-card': onlyOneExamMatch()}">
+
+											@for (exam of exams(); track exam.id) {
+												<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"
 												*ngIf="screenType() === ScreenTypeEnum.DESKTOP || student.showForMobile"
 												[ngClass]="{disappear:
 													(selectedSubjectId() && exam?.subject?.id !== selectedSubjectId()) ||!exam?.show}">
-											</app-work-card>
-										</ng-container>
-									</div>
-									<ng-template #noMatchedExams>
+												</app-work-card>
+											}
+										</div>
+
+									} @else {
+
 										<app-warning [info]="'No se encontraron exámenes'" [cardStyle]="{'height': '44rem'}" [imgSource]="'./assets/images/empty-icon.png'" [imgWidth]="150" [imgHeight]="150"></app-warning>
-									</ng-template>
+
+									}
+
 								</mat-tab>
 							</mat-tab-group>
 						</mat-card-content>
 				</mat-card>
-			</ng-container>
-		</div>
+			}
+			
+			</div>
 
-		<ng-template #spinner>
+		} @else {
+
 			<div class="spinner-wrapper">
 				<mat-spinner></mat-spinner>
 			</div>
-		</ng-template>
-	</ng-template>
+		}
 
-	<ng-template #courseNotSelected>
+	} @else {
+
 		<div class="warning-container">
 			<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
 		</div>
-	</ng-template>
+	}
 
 	<!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
-	<ng-container
-			[ngTemplateOutlet]="
-				letterSelected()? noMatch: chooseAStudent
-	"></ng-container>
+	@if (letterSelected()) {
 
-	<ng-template #chooseAStudent>
-		<app-warning 
-				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile() && students().length"
-				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
-		></app-warning>
-	</ng-template>
-
-	<ng-template #noMatch>
 		<app-warning 
 				*ngIf="screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()"
 				[info]="'No se encontraron alumnxs'"
 		></app-warning>
-	</ng-template>
+
+	} @else {
+
+		<app-warning 
+				*ngIf="screenType() === ScreenTypeEnum.MOBILE && courseIsSelected() && noStudentShowingForMobile() && students().length"
+				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
+		></app-warning>
+
+	}
 	
 
 	<app-scroll *ngIf="(showScroll$ | async) && students().length" (scrollToTop)="onScrollToTop()"></app-scroll>

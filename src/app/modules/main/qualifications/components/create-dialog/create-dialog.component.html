@@ -18,11 +18,11 @@
 			<mat-form-field class="mat-form-field">
 				<mat-label>Materia</mat-label>
 				<mat-select formControlName="subject">
-					<mat-option
-						*ngFor="let subject of subjects()"
-						[value]="subject.id">
+					@for(subject of subjects(); track subject.id) {
+					<mat-option [value]="subject.id">
 						{{ subject.name }}
 					</mat-option>
+					}
 				</mat-select>
 			</mat-form-field>
 			<mat-form-field class="mat-form-field">

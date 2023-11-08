@@ -46,6 +46,8 @@ import { MultipleMarkingSetterComponent } from '../../../modules/main/qualificat
 import { QUARTERS } from '../../constants/quarters.constant';
 import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-markings.constant';
 import { ResetFiltersType } from '../../interfaces/reset-filters.type';
+import { Quarter } from '../../interfaces/quarter.interface';
+import { WorkUnion } from '../../interfaces/work-union.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -61,8 +63,8 @@ export class QualificationsService {
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
-	public tasks: WritableSignal<Task[]> = signal([]);
-	public exams: WritableSignal<Exam[]> = signal([]);
+	public tasks: WritableSignal<WorkUnion[]> = signal([]);
+	public exams: WritableSignal<WorkUnion[]> = signal([]);
 	public students: WritableSignal<Student[]> = signal([]);
 	public quarters = signal(QUARTERS);
 	public studentIsSelected = computed(() =>
@@ -98,8 +100,8 @@ export class QualificationsService {
 			switchMap(observablesArray => forkJoin(observablesArray)),
 			tap(([tasks, exams, students]) => {
 				this.setSignalsValues(
-					tasks as Task[],
-					exams as Exam[],
+					tasks as WorkUnion[],
+					exams as WorkUnion[],
 					students as Student[]
 				);
 				this.cleanAllShow();
@@ -122,7 +124,7 @@ export class QualificationsService {
 		this.tasksExamsAndStudents$,
 		this.filtersChanges$,
 	]).pipe(
-		tap(([[tasks, exams, students], filtersChanges]) => {
+		tap(([[tasks, exams, students], filtersChanges]: any) => {
 			const thereIsDataAvailable = Boolean(
 				tasks?.length || exams?.length || (students as Student[]).length
 			);
@@ -264,8 +266,8 @@ export class QualificationsService {
 	}
 
 	private setSignalsValues(
-		tasks: Task[],
-		exams: Exam[],
+		tasks: WorkUnion[],
+		exams: WorkUnion[],
 		students: Student[]
 	) {
 		this.tasks.set(tasks);
@@ -359,7 +361,7 @@ export class QualificationsService {
 		controlType: ControlType = 'Students'
 	): void {
 		const valueToFilter = value?.toLowerCase();
-		let signalToFilter: WritableSignal<Student[] | Task[] | Exam[]> = this
+		let signalToFilter: WritableSignal<Student[] | WorkUnion[]> = this
 			.students as WritableSignal<Student[]>;
 
 		if (controlType === 'Tasks') signalToFilter = this.tasks;
@@ -373,11 +375,11 @@ export class QualificationsService {
 
 	private processAutocompleteOutput(
 		valueToFilter: string,
-		signalToFilter: WritableSignal<Student[] | Task[] | Exam[]>
+		signalToFilter: WritableSignal<Student[] | WorkUnion[]>
 	) {
-		signalToFilter.mutate(elements => {
-			elements.forEach(element => {
-				if (this.isStudentElement(element as Task | Exam | Student)) {
+		signalToFilter.update((elements: WorkUnion[] | Student[]) => {
+			elements.forEach((element: WorkUnion | Student) => {
+				if (this.isStudentElement(element as WorkUnion | Student)) {
 					`${(element as Student).name} ${
 						(element as Student).lastname
 					}`
@@ -386,20 +388,20 @@ export class QualificationsService {
 						? (element.show = true)
 						: (element.show = false);
 				} else {
-					(element as Task | Exam).name
+					(element as WorkUnion).name
 						.toLowerCase()
 						.includes(valueToFilter)
 						? (element.show = true)
 						: (element.show = false);
 				}
 			});
+
+			return elements;
 		});
 	}
 
 	//es una función Type Guard de Tyepscript
-	private isStudentElement(
-		element: Student | Task | Exam
-	): element is Student {
+	private isStudentElement(element: Student | WorkUnion): element is Student {
 		return 'lastname' in element;
 	}
 
@@ -407,14 +409,15 @@ export class QualificationsService {
 		const nameAndLastName = option.option.value;
 		const students = this.students();
 		const studentSelected = students.find(
-			student => `${student.name} ${student.lastname}` === nameAndLastName
+			(student: Student) =>
+				`${student.name} ${student.lastname}` === nameAndLastName
 		);
 
 		this.cleanShow(this.students as WritableSignal<Student[]>);
 
-		this.students.mutate(students => {
+		this.students.update((students: Student[]) => {
 			students
-				? students.forEach(student => {
+				? students.forEach((student: Student) => {
 						if (student.id !== studentSelected?.id)
 							student.show = false;
 
@@ -422,12 +425,14 @@ export class QualificationsService {
 							student.showForMobile = true;
 				  })
 				: null;
+
+			return students;
 		});
 	}
 
 	public showSelectedTaskOrExam(option: MatAutocompleteSelectedEvent) {
 		const selectedValue = option.option.value;
-		const workSignal: WritableSignal<Task[]> | WritableSignal<Exam[]> =
+		const workSignal: WritableSignal<WorkUnion[]> =
 			this.selectedWorkType() === Work.TASK ? this.tasks : this.exams;
 		const matchedWork = (workSignal() as WorkBase[]).find(
 			element => element.name === selectedValue
@@ -435,22 +440,24 @@ export class QualificationsService {
 
 		this.cleanShow(workSignal);
 
-		workSignal.mutate(elements => {
-			elements.forEach(element => {
+		workSignal.update((elements: WorkUnion[]) => {
+			elements.forEach((element: WorkUnion) => {
 				if (element.id !== matchedWork?.id) element.show = false;
 			});
+
+			return elements;
 		});
 	}
 
-	public cleanShow(signal: WritableSignal<Task[] | Exam[] | Student[]>) {
-		signal.update(elements => {
-			elements.forEach(element => {
+	public cleanShow(signal: WritableSignal<WorkUnion[] | Student[]>) {
+		signal.update((elements: WorkUnion[] | Student[]) => {
+			elements.forEach((element: WorkUnion | Student) => {
 				element.show = true;
 
 				if ('showForMobile' in element) element.showForMobile = false;
 			});
 
-			return JSON.parse(JSON.stringify(elements));
+			return elements;
 		});
 	}
 
@@ -477,12 +484,24 @@ export class QualificationsService {
 		updatedWork: UpdateTask | UpdateExam
 	) {
 		this.selectedWorkType() === Work.TASK
-			? this.tasks.mutate(tasks =>
-					this.filterAndUpdateSelectedWork(workId, updatedWork, tasks)
-			  )
-			: this.exams.mutate(exams =>
-					this.filterAndUpdateSelectedWork(workId, updatedWork, exams)
-			  );
+			? this.tasks.update((tasks: WorkUnion[]) => {
+					this.filterAndUpdateSelectedWork(
+						workId,
+						updatedWork,
+						tasks
+					);
+
+					return tasks;
+			  })
+			: this.exams.update((exams: WorkUnion[]) => {
+					this.filterAndUpdateSelectedWork(
+						workId,
+						updatedWork,
+						exams
+					);
+
+					return exams;
+			  });
 	}
 
 	private filterAndUpdateSelectedWork(
@@ -499,9 +518,9 @@ export class QualificationsService {
 	}
 
 	public setShowByLetter(letter: string) {
-		this.students.mutate(students => {
+		this.students.update((students: Student[]) => {
 			students
-				? students.forEach(student => {
+				? students.forEach((student: Student) => {
 						if (
 							this.removeAccent(
 								student?.lastname?.charAt(0)
@@ -511,11 +530,9 @@ export class QualificationsService {
 						}
 				  })
 				: null;
-		});
-	}
 
-	public trackItems(index: number, item: Student | Task | Exam): number {
-		return item.id;
+			return students;
+		});
 	}
 
 	private removeAccent(letter: string) {
@@ -525,7 +542,7 @@ export class QualificationsService {
 	private setQueryParams(courseId: number, quarterId: number) {
 		const courseParam = { courseId };
 		const selectedQuarter = this.quarters().find(
-			quarter => quarter.id === quarterId
+			(quarter: Quarter) => quarter.id === quarterId
 		);
 		const queryParamsWithQuarter = {
 			...courseParam,
@@ -543,8 +560,8 @@ export class QualificationsService {
 	) {
 		if (this.selectedWorkType() !== Work.TASK || !markingIdEdited) return;
 
-		this.tasks.update(tasks => {
-			tasks.forEach(task => {
+		this.tasks.update((tasks: WorkUnion[]) => {
+			tasks.forEach((task: WorkUnion) => {
 				if (task.id === updatedTaskId) {
 					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
 						? task.totalDelivered--
@@ -552,7 +569,7 @@ export class QualificationsService {
 				}
 			});
 
-			return JSON.parse(JSON.stringify(tasks));
+			return tasks;
 		});
 	}
 
