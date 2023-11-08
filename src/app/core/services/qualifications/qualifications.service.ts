@@ -426,7 +426,7 @@ export class QualificationsService {
 				  })
 				: null;
 
-			return students;
+			return JSON.parse(JSON.stringify(students));
 		});
 	}
 
@@ -457,7 +457,7 @@ export class QualificationsService {
 				if ('showForMobile' in element) element.showForMobile = false;
 			});
 
-			return elements;
+			return JSON.parse(JSON.stringify(elements));
 		});
 	}
 
@@ -569,7 +569,7 @@ export class QualificationsService {
 				}
 			});
 
-			return tasks;
+			return JSON.parse(JSON.stringify(tasks));
 		});
 	}
 

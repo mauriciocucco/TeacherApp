@@ -102,18 +102,17 @@
 	}
 
 	<!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
-	@if (screenType() === ScreenTypeEnum.MOBILE && letterSelected()) {
-		<app-warning 
-				*ngIf="noStudentShowingForMobile()"
-				[info]="'No se encontraron alumnxs'"
-		></app-warning>
-	} @else {
-		<app-warning 
-				*ngIf="noStudentShowingForMobile() && courseIsSelected() && students().length"
-				[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
-		></app-warning>
+	@if(screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()) {
+		@if (letterSelected()) {
+			<app-warning 
+					[info]="'No se encontraron alumnxs'"
+			></app-warning>
+		} @else if (students().length) {
+			<app-warning 
+					[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
+			></app-warning>
+		}
 	}
-	
 
 	<app-scroll *ngIf="(showScroll$ | async) && students().length" (scrollToTop)="onScrollToTop()"></app-scroll>
 </div>
