@@ -31,12 +31,12 @@
 						<mat-select
 							placeholder="Seleccionar un curso"
 							[formControl]="courseControl">
-							<mat-option
-								*ngFor="let course of courses()"
-								[value]="course.id">
+							@for(course of courses(); track course.id) {
+							<mat-option [value]="course.id">
 								{{ course.year }}° -
 								{{ course.shift | shift }}
 							</mat-option>
+							}
 						</mat-select>
 					</mat-form-field>
 
@@ -80,12 +80,14 @@
 						<mat-autocomplete
 							(optionSelected)="studentSelected($event)"
 							#auto="matAutocomplete">
+							@for(student of filteredStudents | async; track
+							student.id) {
 							<mat-option
-								*ngFor="let student of filteredStudents | async"
 								[value]="student.name + ' ' + student.lastname">
 								{{ student.name }}
 								{{ student?.lastname }}
 							</mat-option>
+							}
 						</mat-autocomplete>
 					</mat-form-field>
 
