@@ -75,8 +75,8 @@
 				},
 				"extract-i18n": {
 					"builder": "@angular-devkit/build-angular:extract-i18n",
-					"options": {
-						"browserTarget": "teacherApp:build"
+          "options": {
+            "buildTarget": "teacherApp:build"
 					}
 				},
 				"test": {
