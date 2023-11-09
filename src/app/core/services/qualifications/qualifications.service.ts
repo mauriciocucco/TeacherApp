@@ -48,6 +48,7 @@ import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-ma
 import { ResetFiltersType } from '../../interfaces/reset-filters.type';
 import { Quarter } from '../../interfaces/quarter.interface';
 import { WorkUnion } from '../../interfaces/work-union.interface';
+import { StudentToTask } from '../../interfaces/student-to-task.interface';
 
 @Injectable({
 	providedIn: 'root',
@@ -555,19 +556,34 @@ export class QualificationsService {
 
 	public updateDeliveredValue(
 		updatedTaskId: number,
-		markingIdFormValue: number,
-		markingIdEdited: boolean
+		studentId: number,
+		markingIdFormValue: number
 	) {
-		if (this.selectedWorkType() !== Work.TASK || !markingIdEdited) return;
-
 		this.tasks.update((tasks: WorkUnion[]) => {
-			tasks.forEach((task: WorkUnion) => {
-				if (task.id === updatedTaskId) {
-					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
-						? task.totalDelivered--
-						: task.totalDelivered++;
-				}
-			});
+			const taskToUpdate = tasks.find(
+				(task: Task) => task.id === updatedTaskId
+			);
+			const studentTask = taskToUpdate?.studentToTask?.find(
+				(studentToTask: StudentToTask) =>
+					studentToTask.studentId === studentId
+			);
+			const changeDeliveredValue =
+				(!UNDELIVERED_TASKS_MARKINGS.includes(
+					studentTask?.markingId ?? -1
+				) &&
+					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)) ||
+				(UNDELIVERED_TASKS_MARKINGS.includes(
+					studentTask?.markingId ?? -1
+				) &&
+					!UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue));
+
+			if (changeDeliveredValue && taskToUpdate && studentTask) {
+				UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
+					? taskToUpdate.totalDelivered--
+					: taskToUpdate.totalDelivered++;
+
+				studentTask.markingId = markingIdFormValue;
+			}
 
 			return JSON.parse(JSON.stringify(tasks));
 		});

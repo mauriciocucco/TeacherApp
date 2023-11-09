@@ -59,7 +59,6 @@ export class WorkCardComponent implements OnInit {
 		observation: '',
 	};
 	public updateForm = this.fb.nonNullable.group(this.initialState);
-	private markingIdEdited = false;
 	private loading = new BehaviorSubject(false);
 	public loading$ = this.loading.asObservable();
 	private updateWork = new BehaviorSubject({ workId: 0 });
@@ -79,8 +78,8 @@ export class WorkCardComponent implements OnInit {
 			this.loading.next(false);
 			this.qs.updateDeliveredValue(
 				updatedWorkId,
-				Number(this.updateForm.get('markingId')?.value),
-				this.markingIdEdited
+				this.student!.id,
+				Number(this.updateForm.get('markingId')?.value)
 			);
 			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 		}),
@@ -184,9 +183,6 @@ export class WorkCardComponent implements OnInit {
 			.subscribe(({ markingId, examMarking, observation }) => {
 				if (markingId !== this.initialState.markingId) {
 					this.update('markingId');
-					this.markingIdEdited = true;
-				} else {
-					this.markingIdEdited = false;
 				}
 
 				examMarking !== this.initialState.examMarking ||
