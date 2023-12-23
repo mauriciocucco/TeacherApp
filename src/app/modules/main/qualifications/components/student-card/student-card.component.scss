@@ -16,3 +16,34 @@
 		justify-content: center;
 	}
 }
+
+.work-card-placeholder {
+	background: #f6f7f8;
+	height: 44rem;
+	overflow: hidden;
+	position: relative;
+	width: 24.4rem;
+
+	&::before {
+		animation: loading 1s infinite;
+		content: '';
+		background: linear-gradient(
+			to right,
+			transparent,
+			rgba(255, 255, 255, 0.637),
+			transparent
+		);
+		display: block;
+		height: 100%;
+		left: -24.4rem;
+		position: absolute;
+		top: 0;
+		width: 24.4rem;
+	}
+}
+
+@keyframes loading {
+	to {
+		left: 100%;
+	}
+}
