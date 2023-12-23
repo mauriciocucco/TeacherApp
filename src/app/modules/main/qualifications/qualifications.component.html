@@ -15,11 +15,7 @@
 					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
 			}">
 				@for (student of students(); track student.id) {
-					@defer(on viewport){
-						<app-student-card #studentCard [student]="student"></app-student-card>
-					} @placeholder {
-						<div id="{{ student.lastname.charAt(0).toUpperCase() }}"></div>
-					}
+					<app-student-card #studentCard [student]="student"></app-student-card>
 				}
 			</div>
 
