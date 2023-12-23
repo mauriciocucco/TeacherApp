@@ -1,11 +1,5 @@
 @if (student) {
-<mat-card
-	[ngClass]="{
-		disappear:
-			(screenType() === ScreenTypeEnum.DESKTOP && !student.show) ||
-			(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
-	}"
-	id="{{ student.lastname.charAt(0).toUpperCase() }}">
+<mat-card id="{{ student.lastname.charAt(0).toUpperCase() }}">
 	<mat-card-header
 		><h2 class="student-header">
 			{{ student.name }} {{ student.lastname }}

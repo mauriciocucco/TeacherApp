@@ -15,7 +15,12 @@
 					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
 			}">
 				@for (student of students(); track student.id) {
-					<app-student-card #studentCard [student]="student"></app-student-card>
+					<app-student-card #studentCard [student]="student" 
+					[ngClass]="{
+						disappear:
+							(screenType() === ScreenTypeEnum.DESKTOP && !student.show) ||
+							(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
+					}"></app-student-card>
 				}
 			</div>
 
