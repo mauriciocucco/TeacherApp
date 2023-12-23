@@ -3,18 +3,17 @@ import { NgModule } from '@angular/core';
 import { QualificationsRoutingModule } from './qualifications-routing.module';
 import { QualificationsComponent } from './qualifications.component';
 import { SharedModule } from '../../../shared/shared.module';
-import { StudentRelationPipe } from './pipes/student-relation.pipe';
 import { AlphabetComponent } from './components/alphabet/alphabet.component';
 import { FiltersComponent } from './components/filters/filters.component';
-import { WorkCardComponent } from './components/work-card/work-card.component';
+import { StudentCardComponent } from './components/student-card/student-card.component';
 
 @NgModule({
-	declarations: [
-		QualificationsComponent,
-		StudentRelationPipe,
-		FiltersComponent,
-		WorkCardComponent,
+	declarations: [QualificationsComponent, FiltersComponent],
+	imports: [
+		QualificationsRoutingModule,
+		SharedModule,
+		AlphabetComponent,
+		StudentCardComponent,
 	],
-	imports: [QualificationsRoutingModule, SharedModule, AlphabetComponent],
 })
 export class QualificationsModule {}

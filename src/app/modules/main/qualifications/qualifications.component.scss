@@ -22,25 +22,10 @@
 	}
 }
 
-.student-header {
-	margin-bottom: unset;
-}
-
-.cards-wrapper {
-	display: flex;
-	gap: 2.5rem;
-	padding: 0.5rem;
-	overflow-x: auto;
-}
-
 .spinner-wrapper {
 	@include flex-center;
 	height: 100%;
 	width: 100%;
-}
-
-.disappear {
-	display: none !important;
 }
 
 .mobile-margin-top {
@@ -58,10 +43,4 @@
 
 .clean-height {
 	height: unset !important;
-}
-
-.center-last-card {
-	@include mq-mobile {
-		justify-content: center;
-	}
 }

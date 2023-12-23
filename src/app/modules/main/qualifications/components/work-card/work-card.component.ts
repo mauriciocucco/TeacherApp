@@ -38,9 +38,12 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { UpdateTask } from '../../../../../core/interfaces/update-task.interface';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
+import { SharedModule } from '../../../../../shared/shared.module';
 
 @Component({
 	selector: 'app-work-card',
+	standalone: true,
+	imports: [SharedModule, StudentRelationPipe],
 	templateUrl: './work-card.component.html',
 	styleUrls: ['./work-card.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,

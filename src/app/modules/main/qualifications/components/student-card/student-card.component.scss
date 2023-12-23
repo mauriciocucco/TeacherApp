@@ -1,0 +1,18 @@
+@import '../../../../../../variables.scss';
+
+.student-header {
+	margin-bottom: unset;
+}
+
+.cards-wrapper {
+	display: flex;
+	gap: 2.5rem;
+	padding: 1.5rem;
+	overflow-x: auto;
+}
+
+.center-last-card {
+	@include mq-mobile {
+		justify-content: center;
+	}
+}

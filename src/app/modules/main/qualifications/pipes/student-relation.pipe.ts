@@ -9,6 +9,7 @@ type Argument = 'markingId' | 'marking' | 'observation' | 'onTime';
 
 @Pipe({
 	name: 'studentRelation',
+	standalone: true,
 })
 export class StudentRelationPipe implements PipeTransform {
 	transform(studentInfo: StudentRelation, argument: Argument): string {

@@ -15,63 +15,11 @@
 					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
 			}">
 				@for (student of students(); track student.id) {
-					<mat-card 
-						class="qualifications-students-card"
-						[ngClass]="{'disappear': (screenType() === ScreenTypeEnum.DESKTOP && !student.show) || 
-												(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
-									}" 
-						id="{{ student.lastname.charAt(0).toUpperCase()}}"
-					>
-							<mat-card-header
-								><h2 class="student-header">
-									{{ student.name }} {{ student.lastname }}
-								</h2></mat-card-header
-							>
-							<mat-card-content>
-								<mat-tab-group
-									#tabChildren
-									animationDuration="0"
-									[selectedIndex]="selectedTab()"
-									(selectedIndexChange)="selectWorkType($event)"
-									id="qualifications-tab-group">
-									<mat-tab label="Tareas">
-										@if (taskMatchSomeFilter()) {
-											<div
-											class="cards-wrapper"
-											[ngClass]="{'center-last-card': onlyOneTaskMatch()}">
-												@for (task of tasks(); track task.id) {
-													<app-work-card [work]="task" [student]="student" 
-														*ngIf="screenType() === ScreenTypeEnum.DESKTOP || student.showForMobile"
-														[ngClass]="{disappear:
-															(selectedSubjectId() && task?.subject?.id !== selectedSubjectId()) ||!task?.show}">
-													</app-work-card>
-												}
-											</div>
-										} @else {
-											<app-warning [info]="'No se encontraron tareas'" [cardStyle]="{'height': '44rem'}" [imgSource]="'./assets/images/empty-icon.png'" [imgWidth]="150" [imgHeight]="150"></app-warning>
-										}
-									</mat-tab>
-									<mat-tab label="Exámenes">
-										@if (examMatchSomeFilter()) {
-											<div
-											class="cards-wrapper"
-											[ngClass]="{'center-last-card': onlyOneExamMatch()}">
-												@for (exam of exams(); track exam.id) {
-													<app-work-card [work]="exam" [student]="student" [workType]="WorkEnum.EXAM"
-													*ngIf="screenType() === ScreenTypeEnum.DESKTOP || student.showForMobile"
-													[ngClass]="{disappear:
-														(selectedSubjectId() && exam?.subject?.id !== selectedSubjectId()) ||!exam?.show}">
-													</app-work-card>
-												}
-											</div>
-										} @else {
-											<app-warning [info]="'No se encontraron exámenes'" [cardStyle]="{'height': '44rem'}" [imgSource]="'./assets/images/empty-icon.png'" [imgWidth]="150" [imgHeight]="150"></app-warning>
-										}
-
-									</mat-tab>
-								</mat-tab-group>
-							</mat-card-content>
-					</mat-card>
+					@defer(on viewport){
+						<app-student-card #studentCard [student]="student"></app-student-card>
+					} @placeholder {
+						<div id="{{ student.lastname.charAt(0).toUpperCase() }}"></div>
+					}
 				}
 			</div>
 

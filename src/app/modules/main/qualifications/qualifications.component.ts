@@ -3,18 +3,16 @@ import {
 	Component,
 	DestroyRef,
 	HostListener,
+	Inject,
 	OnDestroy,
 	OnInit,
 	QueryList,
 	Signal,
+	ViewChild,
 	ViewChildren,
-	computed,
 	inject,
-	signal,
 } from '@angular/core';
 import { Observable, fromEvent, map } from 'rxjs';
-import { Task } from '../../../core/interfaces/task.interface';
-import { Exam } from '../../../core/interfaces/exam.interface';
 import { Student } from '../../../core/interfaces/student.interface';
 import { MatTabGroup } from '@angular/material/tabs';
 import { Work } from '../../../core/enums/work.enum';
@@ -27,6 +25,7 @@ import { CreateDialogComponent } from './components/create-dialog/create-dialog.
 import { ViewService } from '../../../core/services/view/view.service';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
 import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
+import { StudentCardComponent } from './components/student-card/student-card.component';
 
 @Component({
 	selector: 'app-qualifications',
@@ -37,30 +36,13 @@ import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
 export class QualificationsComponent implements OnInit, OnDestroy {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
-	public tasks: Signal<Task[]> = this.qs.tasks;
-	public exams: Signal<Exam[]> = this.qs.exams;
 	public students: Signal<Student[]> = this.qs.students;
 	public filteredData$ = this.qs.filteredData$;
 	public WorkEnum = Work;
-	public taskMatchSomeFilter = computed(() =>
-		this.tasks().some(task => task.show)
-	);
-	public examMatchSomeFilter = computed(() =>
-		this.exams().some(exam => exam.show)
-	);
-	public onlyOneTaskMatch = computed(
-		() => this.tasks().filter(task => task.show).length === 1
-	);
-	public onlyOneExamMatch = computed(
-		() => this.exams().filter(exam => exam.show).length === 1
-	);
 	public noStudentShowingForMobile = this.qs.noStudentShowingForMobile;
 	public letterSelected = this.qs.letterSelected;
 	public courseIsSelected = this.qs.selectedCourseId;
-	public selectedTab = signal(0);
-	public selectedSubjectId = this.qs.selectedSubjectId;
 	public studentIsSelected = this.qs.studentIsSelected;
-	private selectedWorkType = this.qs.selectedWorkType;
 	private destroyRef = inject(DestroyRef);
 	private readonly document = inject(DOCUMENT);
 	private readonly viewport = inject(ViewportScroller);
@@ -71,6 +53,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		map(() => this.viewport.getScrollPosition()?.[1] > 0), // chequea que el usuario scrolee hacia abajo
 		takeUntilDestroyed(this.destroyRef)
 	);
+	@ViewChild('studentCard') studentCard!: StudentCardComponent;
 	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
 	@HostListener('window:resize', ['$event'])
 	onResize(): void {
@@ -79,7 +62,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private qs: QualificationsService,
-		public dialog: MatDialog,
+		@Inject(MatDialog) public dialog: MatDialog,
 		private vs: ViewService
 	) {}
 
@@ -103,15 +86,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reloadData => {
 				if (reloadData) {
-					this.changeToCorrectTab();
+					this.studentCard.changeToCorrectTab();
 					this.resetFilters();
 				}
 			});
-	}
-
-	private changeToCorrectTab() {
-		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
-		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
 	}
 
 	private resetFilters(reset: ResetFiltersType = 'All') {
@@ -129,11 +107,5 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 
 	public onScrollToTop(): void {
 		this.viewport.scrollToPosition([0, 0]);
-	}
-
-	public selectWorkType(taskTab: number) {
-		taskTab
-			? this.qs.selectedWorkType.set(Work.EXAM)
-			: this.qs.selectedWorkType.set(Work.TASK);
 	}
 }
