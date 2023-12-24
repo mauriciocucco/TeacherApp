@@ -9,6 +9,7 @@
 	gap: 2.5rem;
 	padding: 1.5rem;
 	overflow-x: auto;
+	width: max-content;
 }
 
 .center-last-card {
@@ -19,6 +20,7 @@
 
 .work-card-placeholder {
 	background: #f6f7f8;
+	border-radius: 0.4rem;
 	height: 44rem;
 	overflow: hidden;
 	position: relative;
@@ -33,17 +35,18 @@
 			rgba(255, 255, 255, 0.637),
 			transparent
 		);
+		background-size: 200% 100%;
+		background-position: 200% 0;
 		display: block;
 		height: 100%;
-		left: -24.4rem;
 		position: absolute;
 		top: 0;
-		width: 24.4rem;
+		width: 100%;
 	}
 }
 
 @keyframes loading {
 	to {
-		left: 100%;
+		background-position: -100% 0;
 	}
 }
