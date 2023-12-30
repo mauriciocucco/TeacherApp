@@ -3,12 +3,10 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { SharedModule } from '../../../../../shared/shared.module';
-import { Work } from '../../../../../core/enums/work.enum';
-import { CreateTask } from '../../../../../core/interfaces/create-task.interface';
-import { CreateExam } from '../../../../../core/interfaces/create-exam.interface';
+import { WorkName } from '../../../../../core/enums/work-name.enum';
 import { ButtonState } from '../../enums/button-state.enum';
-import { CreateForm } from '../../components/create-dialog/interfaces/create-form.interface';
-import { CreatePayload as Payload } from '../../../../../core/interfaces/create-payload.interface';
+import { CreateWork } from '../../../../../core/interfaces/create-work.interface';
+import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 
 @Component({
 	selector: 'app-create-dialog',
@@ -20,16 +18,17 @@ import { CreatePayload as Payload } from '../../../../../core/interfaces/create-
 })
 export class CreateDialogComponent {
 	public createForm = this.fb.nonNullable.group({
-		type: '',
-		course: '',
-		subject: '',
+		workTypeId: '',
+		courseId: '',
+		subjectId: '',
 		date: '',
 		name: '',
 		description: '',
 	});
 	public courses = this.qs.courses;
 	public subjects = this.qs.subjects;
-	public workEnum = Work;
+	public workName = WorkName;
+	public workTypeId = WorkTypeId;
 	public buttonStateEnum = ButtonState;
 	public saveButtonMessage = signal(ButtonState.CREATE);
 	public createWork$ = this.qs.createWork$;
@@ -49,35 +48,28 @@ export class CreateDialogComponent {
 		const payload = this.setPayload();
 
 		this.saveButtonMessage.set(ButtonState.SAVING);
-		this.qs.create(payload as Payload, this.dialogRef);
+		this.qs.create(payload, this.dialogRef);
 	}
 
-	private setPayload(): CreateTask | CreateExam {
-		const formDeepCopy: CreateForm = JSON.parse(
+	private setPayload(): CreateWork {
+		const formDeepCopy: CreateWork = JSON.parse(
 			JSON.stringify(this.createForm.value)
 		);
 
-		formDeepCopy.type === Work.TASK
-			? (formDeepCopy.studentToTask =
-					this.setTaskOrExamToStudentAttribute())
-			: (formDeepCopy.studentToExam =
-					this.setTaskOrExamToStudentAttribute());
+		formDeepCopy.studentToWork = this.setStudentToWork();
+		formDeepCopy.courseId = this.qs.selectedCourseId();
+		formDeepCopy.description = formDeepCopy.description?.trimEnd() ?? '';
 
-		delete formDeepCopy.type;
-
-		formDeepCopy.course = this.qs.selectedCourseId();
-		formDeepCopy.description = formDeepCopy.description?.trimEnd();
-
-		return formDeepCopy as unknown as CreateTask | CreateExam;
+		return formDeepCopy;
 	}
 
-	private setTaskOrExamToStudentAttribute() {
+	private setStudentToWork() {
 		return this.students().map(student => ({
 			studentId: student.id,
 		}));
 	}
 
-	public selectWorkType(workOption: Work) {
+	public selectWorkType(workOption: WorkTypeId) {
 		this.qs.selectedWorkType.set(workOption);
 	}
 }

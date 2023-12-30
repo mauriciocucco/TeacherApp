@@ -16,8 +16,8 @@
 				<div
 					class="cards-wrapper"
 					[ngClass]="{ 'center-last-card': onlyOneTaskMatch() }">
-					@for (task of tasks(); track task.id) { @defer(on viewport)
-					{
+					@for (task of tasks(); track task.workId) { @defer(on
+					viewport) {
 					<app-work-card
 						[work]="task"
 						[student]="student"
@@ -28,7 +28,7 @@
 						[ngClass]="{
 							disappear:
 								(selectedSubjectId() &&
-									task?.subject?.id !==
+									task?.work?.subjectId !==
 										selectedSubjectId()) ||
 								!task?.show
 						}">
@@ -51,11 +51,10 @@
 				<div
 					class="cards-wrapper"
 					[ngClass]="{ 'center-last-card': onlyOneExamMatch() }">
-					@for (exam of exams(); track exam.id) {
+					@for (exam of exams(); track exam.workId) {
 					<app-work-card
 						[work]="exam"
 						[student]="student"
-						[workType]="WorkEnum.EXAM"
 						*ngIf="
 							screenType() === ScreenTypeEnum.DESKTOP ||
 							student.showForMobile
@@ -63,7 +62,7 @@
 						[ngClass]="{
 							disappear:
 								(selectedSubjectId() &&
-									exam?.subject?.id !==
+									exam?.work?.subjectId !==
 										selectedSubjectId()) ||
 								!exam?.show
 						}">

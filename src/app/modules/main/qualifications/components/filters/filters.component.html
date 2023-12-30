@@ -17,7 +17,7 @@
 						<!-- MATERIA -->
 						<mat-radio-group
 							aria-label="Elegí una materia"
-							formControlName="subject"
+							formControlName="subjectId"
 							class="mobile-hide"
 							[ngClass]="{
 								'mobile-show': openFiltersMenu()
@@ -39,7 +39,7 @@
 							<mat-form-field appearance="fill">
 								<mat-label>Curso</mat-label>
 								<mat-select
-									formControlName="course"
+									formControlName="courseId"
 									placeholder="Seleccionar un curso">
 									@for (course of courses(); track course.id)
 									{
@@ -80,7 +80,7 @@
 									placeholder="Seleccione un alumnx"
 									[matAutocomplete]="auto"
 									aria-label="Number"
-									formControlName="student" />
+									formControlName="studentName" />
 								<mat-autocomplete
 									#studentsAutocomplete
 									(optionSelected)="
@@ -110,11 +110,11 @@
 								[ngClass]="{
 									'mobile-show':
 										openFiltersMenu() &&
-										filtersForm.get('student')?.value,
+										filtersForm.get('studentName')?.value,
 									show:
 										screenType() ===
 											ScreenTypeEnum.DESKTOP &&
-										filtersForm.get('student')?.value
+										filtersForm.get('studentName')?.value
 								}"
 								mat-mini-fab
 								color="primary"
@@ -142,11 +142,11 @@
 									placeholder="Seleccione una tarea"
 									[matAutocomplete]="autoTask"
 									aria-label="Number"
-									formControlName="task" />
+									formControlName="taskName" />
 								<mat-autocomplete
 									#tasksAutocomplete
 									(optionSelected)="
-										taskOrExamSelected($event);
+										workSelected($event, workTypeId.TASK);
 										toggleFiltersMenu(false)
 									"
 									#autoTask="matAutocomplete">
@@ -167,11 +167,11 @@
 								[ngClass]="{
 									'mobile-show':
 										openFiltersMenu() &&
-										filtersForm.get('task')?.value,
+										filtersForm.get('taskName')?.value,
 									show:
 										screenType() ===
 											ScreenTypeEnum.DESKTOP &&
-										filtersForm.get('task')?.value
+										filtersForm.get('taskName')?.value
 								}"
 								mat-mini-fab
 								color="primary"
@@ -199,11 +199,11 @@
 									placeholder="Seleccione un exámen"
 									[matAutocomplete]="autoExam"
 									aria-label="Number"
-									formControlName="exam" />
+									formControlName="examName" />
 								<mat-autocomplete
 									#examsAutocomplete
 									(optionSelected)="
-										taskOrExamSelected($event);
+										workSelected($event, workTypeId.EXAM);
 										toggleFiltersMenu(false)
 									"
 									#autoExam="matAutocomplete">
@@ -224,11 +224,11 @@
 								[ngClass]="{
 									'mobile-show':
 										openFiltersMenu() &&
-										filtersForm.get('exam')?.value,
+										filtersForm.get('examName')?.value,
 									show:
 										screenType() ===
 											ScreenTypeEnum.DESKTOP &&
-										filtersForm.get('exam')?.value
+										filtersForm.get('examName')?.value
 								}"
 								mat-mini-fab
 								color="primary"
@@ -250,7 +250,7 @@
 									'mobile-show': openFiltersMenu()
 								}">
 								<mat-label>Trimestre</mat-label>
-								<mat-select formControlName="quarter">
+								<mat-select formControlName="quarterId">
 									@for (quarter of quarters(); track
 									quarter.id) {
 									<mat-option [value]="quarter.id">

@@ -19,11 +19,11 @@
 				<mat-form-field class="mat-form-field">
 					<mat-label>Tipo de trabajo</mat-label>
 					<mat-select [formControl]="workControl">
-						<mat-option [value]="workEnum.TASK">
-							{{ workEnum.TASK }}
+						<mat-option [value]="WorkTypeId.TASK">
+							{{ workName.TASK }}
 						</mat-option>
-						<mat-option [value]="workEnum.EXAM">
-							{{ workEnum.EXAM }}
+						<mat-option [value]="WorkTypeId.EXAM">
+							{{ workName.EXAM }}
 						</mat-option>
 					</mat-select>
 				</mat-form-field>
@@ -31,12 +31,12 @@
 					class="mat-form-field"
 					*ngIf="workControl?.value">
 					<mat-label>{{
-						workControl && workControl!.value === workEnum.TASK
-							? 'Tarea'
-							: 'Examen'
+						workControl && workControl!.value === WorkTypeId.TASK
+							? workName.TASK
+							: workName.EXAM
 					}}</mat-label>
 					<mat-select formControlName="workId">
-						@for (work of works; track work.id) {
+						@for (work of works(); track work.id) {
 						<mat-option [value]="work.id">
 							<div class="option-wrapper">
 								<p class="work-option-name" [title]="work.name">
@@ -50,7 +50,7 @@
 				</mat-form-field>
 				<mat-form-field
 					class="mat-form-field"
-					*ngIf="workControl?.value === workEnum.TASK">
+					*ngIf="workControl?.value === WorkTypeId.TASK">
 					<mat-label>{{ 'Calificación' }}</mat-label>
 					<mat-select formControlName="marking">
 						@for (marking of markings; track marking.id) {
@@ -62,7 +62,7 @@
 				</mat-form-field>
 				<mat-form-field
 					appearance="fill"
-					*ngIf="workControl?.value === workEnum.EXAM">
+					*ngIf="workControl?.value === WorkTypeId.EXAM">
 					<mat-label>{{ 'Calificación' }}</mat-label>
 					<input
 						#matInput

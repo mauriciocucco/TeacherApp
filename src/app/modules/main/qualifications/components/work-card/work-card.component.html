@@ -1,26 +1,21 @@
 <mat-card class="qualification-card">
 	<mat-card-header class="qualification-card-header">
-		<h3 [title]="work?.name">{{ work?.name }}</h3>
+		<h3 [title]="work?.work?.name">{{ work?.work?.name }}</h3>
 		<h4
 			*ngIf="
-				(work?.totalDelivered !== null ||
-					work?.totalDelivered !== undefined) &&
-				workType === workEnum.TASK
+				(work?.work?.totalDelivered !== null ||
+					work?.work?.totalDelivered !== undefined) &&
+				work?.work?.workTypeId === workTypeId.TASK
 			">
-			{{ students().length }}/{{ work?.totalDelivered }}
+			{{ students().length }}/{{ work?.work?.totalDelivered }}
 		</h4>
 		<p>
-			{{ work?.date | shortDate }}
+			{{ work?.work?.date | shortDate }}
 		</p>
 		<mat-checkbox
-			*ngIf="workType === workEnum.TASK"
+			*ngIf="work?.work?.workTypeId === workTypeId.TASK"
 			class="example-margin"
-			[checked]="
-			{
-				works: work?.studentToTask? work?.studentToTask : work?.studentToExam,
-				studentId: student?.id,
-			} | studentRelation : 'onTime'
-			"
+			[checked]="work?.onTime"
 			(change)="setDeliveredOnTime($event)"
 			>Entregado a tiempo</mat-checkbox
 		>
@@ -78,7 +73,9 @@
 					<mat-label>Nota</mat-label>
 					<ng-container
 						*ngTemplateOutlet="
-							workType === workEnum.TASK ? taskSelect : examInput
+							work?.work?.workTypeId === workTypeId.TASK
+								? taskSelect
+								: examInput
 						"></ng-container>
 					<ng-template #taskSelect>
 						<mat-select formControlName="markingId">
@@ -95,14 +92,16 @@
 						<input
 							matInput
 							placeholder="Nota del examen"
-							formControlName="examMarking" />
+							formControlName="score" />
 					</ng-template>
 				</mat-form-field>
 				<mat-form-field class="observation-textarea">
 					<mat-label>Observación</mat-label>
 					<textarea
 						matInput
-						[rows]="workType === workEnum.TASK ? 5 : 8"
+						[rows]="
+							work?.work?.workTypeId === workTypeId.TASK ? 5 : 8
+						"
 						formControlName="observation"></textarea>
 				</mat-form-field>
 			</form>

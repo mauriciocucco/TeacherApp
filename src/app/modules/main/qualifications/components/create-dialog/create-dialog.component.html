@@ -5,19 +5,19 @@
 			<mat-form-field class="mat-form-field">
 				<mat-label>Tipo de trabajo</mat-label>
 				<mat-select
-					formControlName="type"
+					formControlName="workTypeId"
 					(valueChange)="selectWorkType($event)">
-					<mat-option [value]="workEnum.TASK">
-						{{ workEnum.TASK }}
+					<mat-option [value]="workTypeId.TASK">
+						{{ workName.TASK }}
 					</mat-option>
-					<mat-option [value]="workEnum.EXAM">
-						{{ workEnum.EXAM }}
+					<mat-option [value]="workTypeId.EXAM">
+						{{ workName.EXAM }}
 					</mat-option>
 				</mat-select>
 			</mat-form-field>
 			<mat-form-field class="mat-form-field">
 				<mat-label>Materia</mat-label>
-				<mat-select formControlName="subject">
+				<mat-select formControlName="subjectId">
 					@for(subject of subjects(); track subject.id) {
 					<mat-option [value]="subject.id">
 						{{ subject.name }}
