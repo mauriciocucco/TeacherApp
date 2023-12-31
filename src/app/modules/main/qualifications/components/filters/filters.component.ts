@@ -6,12 +6,10 @@ import {
 	OnInit,
 	Signal,
 	ViewChild,
-	WritableSignal,
 	effect,
 	inject,
 	signal,
 } from '@angular/core';
-import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { ControlType } from '../create-dialog/interfaces/control-type.interface';
 import { FormBuilder } from '@angular/forms';
@@ -37,7 +35,7 @@ import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FiltersComponent implements OnInit {
-	public students: WritableSignal<Student[]> = this.qs.students;
+	public studentsNames = this.qs.studentsNames;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public quarters: Signal<Quarter[]> = this.qs.quarters;
@@ -119,10 +117,13 @@ export class FiltersComponent implements OnInit {
 						filters.subjectId = 0; // Porque el emitEvent del reset está en false
 					}
 
+					if (filters.quarterId !== this.qs.selectedQuarterId())
+						this.filtersForm.enable({ emitEvent: false });
+
 					this.qs.setFilters({
 						...filters,
 						quarterId:
-							this.filtersForm.get('quarter')?.value ??
+							this.filtersForm.get('quarterId')?.value ??
 							this.selectActualQuarter(),
 					});
 				}),
@@ -133,31 +134,36 @@ export class FiltersComponent implements OnInit {
 
 	private enableControlsEffect() {
 		effect(() => {
-			if (!this.works().length) return;
-
-			this.enableControls();
+			if (Array.isArray(this.works())) this.enableControls();
 		});
 	}
 
+	private setFormControlStatus(controlName: string, status: boolean) {
+		const control = this.filtersForm.get(controlName);
+		if (control) {
+			status
+				? control.enable({ emitEvent: false })
+				: control.disable({ emitEvent: false });
+		}
+	}
+
 	private enableControls() {
-		if (this.filtersForm.get('subject')?.enabled) return;
+		if (!this.filtersForm.get('subjectId')?.enabled) return;
 
 		if (!this.works().length) {
-			this.filtersForm.get('studentName')?.enable({ emitEvent: false });
-			return this.filtersForm
-				.get('quarterId')
-				?.enable({ emitEvent: false });
+			['taskName', 'examName', 'subjectId'].forEach(controlName => {
+				this.setFormControlStatus(controlName, false);
+			});
+			this.setFormControlStatus('studentName', true);
+			this.setFormControlStatus('quarterId', true);
+			return;
 		}
 
 		this.filtersForm.enable({ emitEvent: false });
 
-		if (!this.tasks().length) {
-			this.filtersForm.get('taskName')?.disable({ emitEvent: false });
-		}
+		if (!this.tasks().length) this.setFormControlStatus('taskName', false);
 
-		if (!this.exams().length) {
-			this.filtersForm.get('examName')?.disable({ emitEvent: false });
-		}
+		if (!this.exams().length) this.setFormControlStatus('examName', false);
 	}
 
 	public clearControl(control: ControlType) {
@@ -179,6 +185,7 @@ export class FiltersComponent implements OnInit {
 	}
 
 	public resetForm() {
+		this.filtersForm.enable({ emitEvent: false });
 		this.filtersForm.patchValue(
 			{
 				courseId: this.filtersForm.get('courseId')?.value ?? 0,

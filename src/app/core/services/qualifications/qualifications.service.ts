@@ -58,6 +58,7 @@ export class QualificationsService {
 	public exams = computed(() =>
 		this.works()?.filter(work => work.workTypeId === WorkTypeId.EXAM)
 	);
+	public studentsNames: WritableSignal<Partial<Student>[]> = signal([]);
 	public students: WritableSignal<Student[]> = signal([]);
 	public studentIsSelected = computed(() =>
 		this.students()
@@ -85,11 +86,7 @@ export class QualificationsService {
 		tap(works => {
 			if (works) {
 				this.setWorksSignal(works);
-				!works.length
-					? this.getStudents({
-							courseId: this.worksQueryParams()?.courseId,
-					  })
-					: this.getStudents(this.worksQueryParams());
+				this.getStudents(this.worksQueryParams());
 			}
 		}),
 		catchError(error => {
@@ -241,7 +238,6 @@ export class QualificationsService {
 	) {}
 
 	public getWorks(worksQueryParams: WorksQueryParams | null) {
-		this.resetWorksSignal();
 		this.worksSubject.next(worksQueryParams);
 	}
 
@@ -288,7 +284,7 @@ export class QualificationsService {
 
 		if (thereIsDataAvailable) {
 			this.selectedSubjectId.set(subjectId ?? 0);
-			// !this.letterSelected() ? this.filterValues(filtersChanges) : null;
+			!this.letterSelected() ? this.filterSignals(filtersChanges) : null;
 		}
 	}
 
@@ -344,6 +340,14 @@ export class QualificationsService {
 
 				return student;
 			})
+		);
+
+		this.studentsNames.set(
+			students.map(({ name, lastname }) => ({
+				name,
+				lastname,
+				show: true,
+			}))
 		);
 	}
 
@@ -405,53 +409,89 @@ export class QualificationsService {
 		this.updateStudentsSignal(updatedWork);
 	}
 
-	// public filterValues(
-	// 	value: string | null,
-	// 	controlType: ControlType = 'Students'
-	// ): void {
-	// 	const valueToFilter = value?.toLowerCase();
-	// 	let signalToFilter: WritableSignal<Student[] | WorkUnion[]> = this
-	// 		.students as WritableSignal<Student[]>;
+	private cleanWorkSignal(workTypeId: WorkTypeId) {
+		this.works.update((works: Partial<WorkI>[]) => {
+			return works.map(work => {
+				if (work.workTypeId === workTypeId) work.show = true;
 
-	// 	if (controlType === 'Tasks') signalToFilter = this.tasks;
+				return work;
+			});
+		});
+	}
 
-	// 	if (controlType === 'Exams') signalToFilter = this.exams;
+	private cleanStudentsNamesSignal() {
+		this.studentsNames.update((students: Partial<Student>[]) => {
+			return students.map(student => {
+				student.show = true;
 
-	// 	if (!value) return this.cleanShow(signalToFilter);
+				return student;
+			});
+		});
+	}
 
-	// 	this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
-	// }
+	private filterWorks(
+		taskName: string | undefined,
+		examName: string | undefined
+	) {
+		this.works.update((works: Partial<WorkI>[]) => {
+			return works.map(work => {
+				if (work.workTypeId === WorkTypeId.TASK) {
+					if (!taskName) return work;
 
-	// private processAutocompleteOutput(
-	// 	valueToFilter: string,
-	// 	signalToFilter: WritableSignal<Student[] | WorkUnion[]>
-	// ) {
-	// 	signalToFilter.update((elements: WorkUnion[] | Student[]) => {
-	// 		elements.forEach((element: WorkUnion | Student) => {
-	// 			if (this.isStudentElement(element as WorkUnion | Student)) {
-	// 				`${(element as Student).name} ${
-	// 					(element as Student).lastname
-	// 				}`
-	// 					.toLowerCase()
-	// 					.includes(valueToFilter)
-	// 					? (element.show = true)
-	// 					: (element.show = false);
-	// 			} else {
-	// 				(element as WorkUnion).name
-	// 					.toLowerCase()
-	// 					.includes(valueToFilter)
-	// 					? (element.show = true)
-	// 					: (element.show = false);
-	// 			}
-	// 		});
+					work.name?.toLowerCase().includes(taskName.toLowerCase())
+						? (work.show = true)
+						: (work.show = false);
+				} else {
+					if (!examName) return work;
 
-	// 		return elements;
-	// 	});
-	// }
+					work.name?.toLowerCase().includes(examName.toLowerCase())
+						? (work.show = true)
+						: (work.show = false);
+				}
 
-	//es una función Type Guard de Tyepscript
-	private isStudentElement(element: Student | WorkI): element is Student {
-		return 'lastname' in element;
+				return work;
+			});
+		});
+	}
+
+	private filterStudentsNames(studentName: string | undefined) {
+		this.studentsNames.update(students => {
+			return students.map(student => {
+				if (!studentName) return student;
+
+				`${student.name} ${student.lastname}`
+					.toLowerCase()
+					.includes(studentName.toLowerCase())
+					? (student.show = true)
+					: (student.show = false);
+
+				return student;
+			});
+		});
+	}
+
+	private filterSignals({
+		studentName,
+		taskName,
+		examName,
+	}: Partial<FormFilters>) {
+		if (!taskName) {
+			this.cleanWorkSignal(WorkTypeId.TASK);
+			this.cleanWorksShowProp(WorkTypeId.TASK);
+		}
+
+		if (!examName) {
+			this.cleanWorkSignal(WorkTypeId.EXAM);
+			this.cleanWorksShowProp(WorkTypeId.EXAM);
+		}
+
+		if (!studentName) {
+			this.cleanStudentsNamesSignal();
+			this.cleanStudentsShowProp();
+		}
+
+		this.filterWorks(taskName, examName);
+		this.filterStudentsNames(studentName);
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
@@ -506,17 +546,18 @@ export class QualificationsService {
 				student.studentToWork = student.studentToWork.map(
 					studentToWork => {
 						if (
-							studentToWork.workId !== selectedWork?.id &&
-							studentToWork.work.workTypeId === workTypeId
+							(studentToWork.workId === selectedWork?.id &&
+								studentToWork.work.workTypeId === workTypeId) ||
+							studentToWork.work.workTypeId !== workTypeId
 						) {
-							return { ...studentToWork, show: false };
+							return studentToWork;
 						}
 
-						return studentToWork;
+						return { ...studentToWork, show: false };
 					}
 				);
 
-				return student;
+				return JSON.parse(JSON.stringify(student));
 			});
 		});
 	}
@@ -539,7 +580,7 @@ export class QualificationsService {
 					return stw;
 				});
 
-				return student;
+				return JSON.parse(JSON.stringify(student));
 			});
 		});
 	}

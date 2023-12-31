@@ -3,17 +3,17 @@
 		<mat-card-header>Filtros</mat-card-header>
 		<mat-card-content
 			[ngClass]="{
-                'hide-menu-state': students(),
+                'hide-menu-state': studentsNames(),
                 'open-menu-state': openFiltersMenu(),
             }"
 			[ngStyle]="{ 'padding-bottom': 'unset' }">
 			<form [formGroup]="filtersForm">
 				<div
 					id="content-container"
-					[ngClass]="{ 'mobile-container': students() }">
+					[ngClass]="{ 'mobile-container': studentsNames() }">
 					<div
 						class="first-row mobile-hide"
-						[ngClass]="{ 'mobile-show': students() }">
+						[ngClass]="{ 'mobile-show': studentsNames() }">
 						<!-- MATERIA -->
 						<mat-radio-group
 							aria-label="Elegí una materia"
@@ -55,7 +55,7 @@
 								id="filters-button"
 								color="primary"
 								[ngClass]="{
-									'mobile-show': students().length > 0
+									'mobile-show': studentsNames().length > 0
 								}"
 								(click)="toggleFiltersMenu()">
 								{{
@@ -88,7 +88,7 @@
 										toggleFiltersMenu(false)
 									"
 									#auto="matAutocomplete">
-									@for (student of students(); track
+									@for (student of studentsNames(); track
 									student.id) {
 									<mat-option
 										[ngClass]="{

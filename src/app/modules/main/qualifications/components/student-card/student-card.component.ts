@@ -66,13 +66,11 @@ export class StudentCardComponent implements OnChanges {
 
 			if (!filteredWorks?.length) return [];
 
-			return filteredWorks
-				?.map(work => ({ ...work, show: true }))
-				.sort(
-					(a, b) =>
-						new Date(b.work.date).getTime() -
-						new Date(a.work.date).getTime()
-				);
+			return filteredWorks.sort(
+				(a, b) =>
+					new Date(b.work.date).getTime() -
+					new Date(a.work.date).getTime()
+			);
 		});
 	}
 
