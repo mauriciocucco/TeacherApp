@@ -2,8 +2,6 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	Input,
-	OnChanges,
-	SimpleChanges,
 	WritableSignal,
 	computed,
 	signal,
@@ -25,8 +23,7 @@ import { StudentToWork } from '../../../../../core/interfaces/student-to-work.in
 	styleUrl: './student-card.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudentCardComponent implements OnChanges {
-	@Input() student: Student | null = null;
+export class StudentCardComponent {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
 	public selectedTab = signal(0);
@@ -45,15 +42,13 @@ export class StudentCardComponent implements OnChanges {
 	public onlyOneExamMatch = computed(
 		() => this.exams()?.filter(exam => exam.show).length === 1
 	);
+	// @Input() set student(value: Student) {
+	// 	this.updateWork(WorkTypeId.TASK, this.tasks.update);
+	// 	this.updateWork(WorkTypeId.EXAM, this.exams.update);
+	// }
+	@Input() student!: Student;
 
 	constructor(private qs: QualificationsService, private vs: ViewService) {}
-
-	ngOnChanges(changes: SimpleChanges): void {
-		if (changes['student']?.currentValue) {
-			this.updateWork(WorkTypeId.TASK, this.tasks.update);
-			this.updateWork(WorkTypeId.EXAM, this.exams.update);
-		}
-	}
 
 	private updateWork(
 		workTypeId: number,

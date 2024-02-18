@@ -81,11 +81,12 @@ export class QualificationsService {
 	public worksSubject = new BehaviorSubject<WorksQueryParams | null>(null);
 	public works$ = this.worksSubject.asObservable().pipe(
 		switchMap(worksQueryParams =>
-			worksQueryParams ? this.ws.getWorks(worksQueryParams) : of(false)
+			worksQueryParams ? this.ws.getWorks(worksQueryParams) : of([])
 		),
 		tap(works => {
 			if (works) {
 				this.setWorksSignal(works);
+				this.resetStudentsSignal();
 				this.getStudents(this.worksQueryParams());
 			}
 		}),
@@ -98,7 +99,10 @@ export class QualificationsService {
 	public studentsSubject = new BehaviorSubject<WorksQueryParams | null>(null);
 	public students$ = this.studentsSubject.asObservable().pipe(
 		switchMap(worksQueryParams => this.ss.getStudents(worksQueryParams)),
-		tap(students => this.setStudentsSignal(students)),
+		tap(students => {
+			this.setStudentsSignal(students);
+			this.setStudentsNamesSignal(students);
+		}),
 		catchError(error => {
 			console.error('Hubo un error en el stream de students$: ', error);
 
@@ -131,9 +135,13 @@ export class QualificationsService {
 		this.works$,
 		this.filtersChanges$,
 	]).pipe(
-		tap(([students, works, filtersChanges]) =>
-			this.applyChanges(filtersChanges)
-		)
+		tap(([students, works, filtersChanges]) => {
+			const { courseId, quarterId } = filtersChanges;
+			const thereIsDataAvailable = works.length || students.length;
+
+			this.setWorksQueryParams(courseId, quarterId);
+			this.applyChanges(filtersChanges, thereIsDataAvailable);
+		})
 	);
 	private deleteDialogRef!: MatDialogRef<DeleteDialogComponent>;
 	private deleteWork = new BehaviorSubject(0);
@@ -160,7 +168,7 @@ export class QualificationsService {
 		tap(deletedWork => {
 			if (!deletedWork.name) return;
 
-			this.updateWorks();
+			this.updateSignals();
 			this.handleHttpResponseMessage(`Se eliminó "${deletedWork.name}".`);
 		})
 	);
@@ -194,7 +202,7 @@ export class QualificationsService {
 		tap(updatedWork => {
 			if (!updatedWork.name) return;
 
-			this.updateWorks(updatedWork);
+			this.updateSignals(updatedWork);
 			this.handleHttpResponseMessage('La edición fue exitosa.');
 		})
 	);
@@ -225,7 +233,7 @@ export class QualificationsService {
 		tap(createdWork => {
 			if (!createdWork.name) return;
 
-			this.updateWorks();
+			this.updateSignals();
 			this.handleHttpResponseMessage('La creación fue exitosa.');
 		})
 	);
@@ -237,12 +245,11 @@ export class QualificationsService {
 		private _snackBar: MatSnackBar
 	) {}
 
-	public getWorks(worksQueryParams: WorksQueryParams | null) {
-		this.worksSubject.next(worksQueryParams);
+	public getWorks() {
+		this.worksSubject.next(this.worksQueryParams());
 	}
 
 	public getStudents(worksQueryParams: WorksQueryParams | null) {
-		this.resetStudentsSignal();
 		this.studentsSubject.next(worksQueryParams);
 	}
 
@@ -252,31 +259,30 @@ export class QualificationsService {
 	) {
 		if (!courseId && !quarterId) return;
 
-		const courseParam = { courseId };
 		const selectedQuarter = this.quarters().find(
 			(quarter: Quarter) => quarter.id === quarterId
 		);
 
 		this.worksQueryParams.set({
-			...courseParam,
+			courseId,
 			startDate: selectedQuarter?.start.getTime(),
 			endDate: selectedQuarter?.end.getTime(),
 		});
 	}
 
-	private applyChanges(filtersChanges: Partial<FormFilters>) {
+	private applyChanges(
+		filtersChanges: Partial<FormFilters>,
+		thereIsDataAvailable: boolean
+	) {
 		const { courseId, subjectId, quarterId } = filtersChanges;
-		const thereIsDataAvailable = this.works().length;
-
-		this.setWorksQueryParams(courseId, quarterId);
 
 		if (
 			courseId &&
 			quarterId &&
 			(courseId !== this.selectedCourseId() ||
-				(quarterId && quarterId !== this.selectedQuarterId()))
+				quarterId !== this.selectedQuarterId())
 		) {
-			this.getWorks(this.worksQueryParams());
+			this.getWorks();
 			this.selectedCourseId.set(courseId);
 			this.selectedQuarterId.set(quarterId);
 			return this.letterSelected.set(null);
@@ -332,6 +338,16 @@ export class QualificationsService {
 		);
 	}
 
+	private setStudentsNamesSignal(students: Student[]) {
+		this.studentsNames.set(
+			students.map(({ name, lastname }) => ({
+				name,
+				lastname,
+				show: true,
+			}))
+		);
+	}
+
 	private setStudentsSignal(students: Student[]) {
 		this.students.set(
 			students.map(student => {
@@ -340,14 +356,6 @@ export class QualificationsService {
 
 				return student;
 			})
-		);
-
-		this.studentsNames.set(
-			students.map(({ name, lastname }) => ({
-				name,
-				lastname,
-				show: true,
-			}))
 		);
 	}
 
@@ -400,33 +408,13 @@ export class QualificationsService {
 		});
 	}
 
-	private updateWorks(updatedWork?: WorkI) {
+	private updateSignals(updatedWork?: WorkI) {
 		if (!updatedWork) {
-			return this.getWorks(this.worksQueryParams());
+			return this.getWorks();
 		}
 
 		this.updateWorksSignal(updatedWork);
 		this.updateStudentsSignal(updatedWork);
-	}
-
-	private cleanWorkSignal(workTypeId: WorkTypeId) {
-		this.works.update((works: Partial<WorkI>[]) => {
-			return works.map(work => {
-				if (work.workTypeId === workTypeId) work.show = true;
-
-				return work;
-			});
-		});
-	}
-
-	private cleanStudentsNamesSignal() {
-		this.studentsNames.update((students: Partial<Student>[]) => {
-			return students.map(student => {
-				student.show = true;
-
-				return student;
-			});
-		});
 	}
 
 	private filterWorks(
@@ -435,20 +423,15 @@ export class QualificationsService {
 	) {
 		this.works.update((works: Partial<WorkI>[]) => {
 			return works.map(work => {
-				if (work.workTypeId === WorkTypeId.TASK) {
-					if (!taskName) return work;
+				const filterName =
+					work.workTypeId === WorkTypeId.TASK ? taskName : examName;
 
-					work.name?.toLowerCase().includes(taskName.toLowerCase())
-						? (work.show = true)
-						: (work.show = false);
-				} else {
-					if (!examName) return work;
-
-					work.name?.toLowerCase().includes(examName.toLowerCase())
-						? (work.show = true)
-						: (work.show = false);
+				if (filterName) {
+					work.show =
+						work.name
+							?.toLowerCase()
+							.includes(filterName.toLowerCase()) ?? false;
 				}
-
 				return work;
 			});
 		});
@@ -475,20 +458,11 @@ export class QualificationsService {
 		taskName,
 		examName,
 	}: Partial<FormFilters>) {
-		if (!taskName) {
-			this.cleanWorkSignal(WorkTypeId.TASK);
-			this.cleanWorksShowProp(WorkTypeId.TASK);
-		}
+		if (!taskName) this.cleanWorksShowProp(WorkTypeId.TASK);
 
-		if (!examName) {
-			this.cleanWorkSignal(WorkTypeId.EXAM);
-			this.cleanWorksShowProp(WorkTypeId.EXAM);
-		}
+		if (!examName) this.cleanWorksShowProp(WorkTypeId.EXAM);
 
-		if (!studentName) {
-			this.cleanStudentsNamesSignal();
-			this.cleanStudentsShowProp();
-		}
+		if (!studentName) this.cleanStudentsShowProp();
 
 		this.filterWorks(taskName, examName);
 		this.filterStudentsNames(studentName);
@@ -501,8 +475,6 @@ export class QualificationsService {
 			(student: Student) =>
 				`${student.name} ${student.lastname}` === nameAndLastName
 		);
-
-		this.cleanStudentsShowProp();
 
 		this.students.update((students: Student[]) => {
 			students
@@ -525,8 +497,6 @@ export class QualificationsService {
 	) {
 		const workName = option.option.value;
 		const selectedWork = this.works().find(work => work.name === workName);
-
-		this.cleanWorksShowProp(workTypeId);
 
 		this.works.update(works => {
 			return works.map(work => {
@@ -586,6 +556,14 @@ export class QualificationsService {
 	}
 
 	public cleanStudentsShowProp() {
+		this.studentsNames.update((students: Partial<Student>[]) => {
+			return students.map(student => {
+				student.show = true;
+
+				return student;
+			});
+		});
+
 		this.students.update((students: Student[]) => {
 			return students.map(student => {
 				return {
@@ -598,10 +576,6 @@ export class QualificationsService {
 				};
 			});
 		});
-	}
-
-	public resetWorksSignal() {
-		this.works.set([]);
 	}
 
 	public resetStudentsSignal() {
@@ -662,7 +636,7 @@ export class QualificationsService {
 	}
 
 	public restartQualificationsService() {
-		this.getStudents(null);
+		this.resetStudentsSignal();
 		this.resetFilters.next('All');
 		this.setFilters(this.defaultFormFilters);
 		this.selectedCourseId.set(0);

@@ -54,6 +54,7 @@ export class FiltersComponent implements OnInit {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
 	public workTypeId = WorkTypeId;
+	private students = this.qs.students;
 	private works = this.qs.works;
 	private destroyRef = inject(DestroyRef);
 	@ViewChild('studentsAutocomplete', { static: false })
@@ -72,7 +73,7 @@ export class FiltersComponent implements OnInit {
 		private fb: FormBuilder,
 		private vs: ViewService
 	) {
-		this.enableControlsEffect();
+		this.modifyFiltersControlsEffect();
 	}
 
 	ngOnInit(): void {
@@ -114,17 +115,11 @@ export class FiltersComponent implements OnInit {
 						filters.courseId !== this.qs.selectedCourseId()
 					) {
 						this.resetForm();
-						filters.subjectId = 0; // Porque el emitEvent del reset está en false
 					}
-
-					if (filters.quarterId !== this.qs.selectedQuarterId())
-						this.filtersForm.enable({ emitEvent: false });
 
 					this.qs.setFilters({
 						...filters,
-						quarterId:
-							this.filtersForm.get('quarterId')?.value ??
-							this.selectActualQuarter(),
+						quarterId: this.filtersForm.get('quarterId')?.value,
 					});
 				}),
 				takeUntilDestroyed(this.destroyRef)
@@ -132,14 +127,15 @@ export class FiltersComponent implements OnInit {
 			.subscribe();
 	}
 
-	private enableControlsEffect() {
+	private modifyFiltersControlsEffect() {
 		effect(() => {
-			if (Array.isArray(this.works())) this.enableControls();
+			if (Array.isArray(this.works())) this.modifyFiltersControls();
 		});
 	}
 
 	private setFormControlStatus(controlName: string, status: boolean) {
 		const control = this.filtersForm.get(controlName);
+
 		if (control) {
 			status
 				? control.enable({ emitEvent: false })
@@ -147,10 +143,10 @@ export class FiltersComponent implements OnInit {
 		}
 	}
 
-	private enableControls() {
-		if (!this.filtersForm.get('subjectId')?.enabled) return;
+	private modifyFiltersControls() {
+		if (!this.students().length) return;
 
-		if (!this.works().length) {
+		if (!this.works().length && this.students().length) {
 			['taskName', 'examName', 'subjectId'].forEach(controlName => {
 				this.setFormControlStatus(controlName, false);
 			});
@@ -164,6 +160,9 @@ export class FiltersComponent implements OnInit {
 		if (!this.tasks().length) this.setFormControlStatus('taskName', false);
 
 		if (!this.exams().length) this.setFormControlStatus('examName', false);
+
+		if (!this.exams().length && !this.tasks().length)
+			this.setFormControlStatus('subjectId', false);
 	}
 
 	public clearControl(control: ControlType) {
@@ -172,20 +171,21 @@ export class FiltersComponent implements OnInit {
 				this.filtersForm.get('taskName')?.setValue('');
 				this.qs.cleanWorksShowProp(this.workTypeId.TASK);
 				break;
+			case 'Exams':
+				this.filtersForm.get('examName')?.setValue('');
+				this.qs.cleanWorksShowProp(this.workTypeId.EXAM);
+				break;
 			case 'Students':
 				this.filtersForm.get('studentName')?.setValue('');
 				this.cleanSelectedLetter();
 				this.qs.cleanStudentsShowProp();
 				break;
 			default:
-				this.filtersForm.get('examName')?.setValue('');
-				this.qs.cleanWorksShowProp(this.workTypeId.EXAM);
 				break;
 		}
 	}
 
 	public resetForm() {
-		this.filtersForm.enable({ emitEvent: false });
 		this.filtersForm.patchValue(
 			{
 				courseId: this.filtersForm.get('courseId')?.value ?? 0,

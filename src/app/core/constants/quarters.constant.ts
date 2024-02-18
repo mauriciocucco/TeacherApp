@@ -5,7 +5,7 @@ export const QUARTERS = [
 		id: 1,
 		name: 'Primer trimestre',
 		description: '01/03 - 31/05',
-		start: new Date(new Date(actualYear, 2, 1).setHours(0, 0, 0, 0)),
+		start: new Date(new Date(actualYear, 0, 1).setHours(0, 0, 0, 0)),
 		end: new Date(new Date(actualYear, 4, 30).setHours(23, 59, 59, 999)),
 	},
 	{

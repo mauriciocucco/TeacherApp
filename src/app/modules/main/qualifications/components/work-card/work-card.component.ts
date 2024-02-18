@@ -7,8 +7,6 @@ import {
 	signal,
 	ChangeDetectionStrategy,
 	OnInit,
-	OnChanges,
-	SimpleChanges,
 } from '@angular/core';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
@@ -29,7 +27,6 @@ import {
 	debounce,
 	timer,
 	distinctUntilChanged,
-	finalize,
 } from 'rxjs';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { ViewService } from '../../../../../core/services/view/view.service';
@@ -46,7 +43,7 @@ import { StudentToWork } from '../../../../../core/interfaces/student-to-work.in
 	styleUrls: ['./work-card.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkCardComponent implements OnInit, OnChanges {
+export class WorkCardComponent implements OnInit {
 	public workTypeId = WorkTypeId;
 	public students: Signal<Student[]> = this.qs.students;
 	public works = this.qs.works;
@@ -75,21 +72,28 @@ export class WorkCardComponent implements OnInit, OnChanges {
 		switchMap(({ workId, ...payload }) =>
 			this.ws.updateWork(payload, workId)
 		),
-		tap(({ id: updatedWorkId }) =>
-			this.handleUpdateSuccess({ id: updatedWorkId })
-		),
+		tap(({ id: updatedWorkId }) => {
+			this.handleUpdateSuccess({ id: updatedWorkId });
+			this.loading.next(false);
+		}),
 		catchError(error => {
 			console.error('Hubo un error en el stream de updateWork$: ', error);
 
 			this.backToInitialState();
 			this.qs.handleHttpResponseMessage();
+			this.loading.next(false);
 
 			return EMPTY;
-		}),
-		finalize(() => this.loading.next(false))
+		})
 	);
 	private destroyRef = inject(DestroyRef);
-	@Input() work: Partial<StudentToWork> | undefined = undefined;
+	@Input() set work(value: Partial<StudentToWork> | undefined) {
+		if (!value) return;
+
+		const { markingId, score, observation } = value;
+
+		this.updateForm.patchValue({ markingId, score, observation });
+	}
 	@Input() student: Student | undefined = undefined;
 
 	constructor(
@@ -103,14 +107,6 @@ export class WorkCardComponent implements OnInit, OnChanges {
 	ngOnInit(): void {
 		this.changeInitialState();
 		this.listenForChanges();
-	}
-
-	ngOnChanges(changes: SimpleChanges): void {
-		if (changes['work']?.currentValue) {
-			const { markingId, score, observation } =
-				changes['work'].currentValue;
-			this.updateForm.patchValue({ markingId, score, observation });
-		}
 	}
 
 	private handleUpdateSuccess({ id: updatedWorkId }: { id: number }) {
@@ -189,8 +185,8 @@ export class WorkCardComponent implements OnInit, OnChanges {
 		this.markingIdChanged.set(false);
 	}
 
-	public openInfoDialog(work: Partial<StudentToWork> | undefined) {
-		if (!work) return;
+	public openInfoDialog(studentToWork: Partial<StudentToWork> | undefined) {
+		if (!studentToWork) return;
 
 		const matConfig =
 			this.vs.screenType() === ScreenType.MOBILE
@@ -198,16 +194,16 @@ export class WorkCardComponent implements OnInit, OnChanges {
 				: {};
 
 		this.dialog.open(InfoDialogComponent, {
-			data: work,
+			data: studentToWork,
 			...matConfig,
 		});
 	}
 
-	public openDeleteDialog(work: Partial<StudentToWork> | undefined) {
-		if (!work) return;
+	public openDeleteDialog(studentToWork: Partial<StudentToWork> | undefined) {
+		if (!studentToWork) return;
 
 		this.dialog.open(DeleteDialogComponent, {
-			data: work,
+			data: studentToWork.work,
 		});
 	}
 

@@ -13,7 +13,7 @@
 				id="students-cards-container"
 				[ngClass]="{
 					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
-			}">				
+			    }">				
 					
 				@for (student of students(); track student.id) {
 					<app-student-card #studentCard [student]="student" 
