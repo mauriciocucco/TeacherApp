@@ -408,7 +408,7 @@ export class QualificationsService {
 		});
 	}
 
-	private updateSignals(updatedWork?: WorkI) {
+	public updateSignals(updatedWork?: WorkI) {
 		if (!updatedWork) {
 			return this.getWorks();
 		}

@@ -1,12 +1,13 @@
 import {
 	Component,
 	DestroyRef,
-	Input,
 	Signal,
 	inject,
 	signal,
 	ChangeDetectionStrategy,
 	OnInit,
+	input,
+	effect,
 } from '@angular/core';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
@@ -72,8 +73,9 @@ export class WorkCardComponent implements OnInit {
 		switchMap(({ workId, ...payload }) =>
 			this.ws.updateWork(payload, workId)
 		),
-		tap(({ id: updatedWorkId }) => {
-			this.handleUpdateSuccess({ id: updatedWorkId });
+		tap(updatedWork => {
+			this.qs.updateSignals(updatedWork);
+			this.handleUpdateSuccess({ id: updatedWork.id });
 			this.loading.next(false);
 		}),
 		catchError(error => {
@@ -87,14 +89,8 @@ export class WorkCardComponent implements OnInit {
 		})
 	);
 	private destroyRef = inject(DestroyRef);
-	@Input() set work(value: Partial<StudentToWork> | undefined) {
-		if (!value) return;
-
-		const { markingId, score, observation } = value;
-
-		this.updateForm.patchValue({ markingId, score, observation });
-	}
-	@Input() student: Student | undefined = undefined;
+	public studentToWork = input<Partial<StudentToWork>>();
+	public student = input<Student>();
 
 	constructor(
 		private qs: QualificationsService,
@@ -102,38 +98,65 @@ export class WorkCardComponent implements OnInit {
 		private fb: FormBuilder,
 		private ws: WorksService,
 		private vs: ViewService
-	) {}
+	) {
+		this.studentToWorkChange();
+	}
 
 	ngOnInit(): void {
+		this.setInitialFormValues();
 		this.changeInitialState();
 		this.listenForChanges();
+	}
+
+	private studentToWorkChange() {
+		effect(() => {
+			if (!this.studentToWork()) return;
+
+			const { markingId, score, observation } =
+				this.studentToWork() as Partial<StudentToWork>;
+
+			this.updateForm.patchValue(
+				{ markingId, score, observation },
+				{ emitEvent: false }
+			);
+		});
+	}
+
+	private setInitialFormValues() {
+		this.updateForm.patchValue(
+			{
+				markingId: this.studentToWork()?.markingId,
+				score: this.studentToWork()?.score,
+				observation: this.studentToWork()?.observation,
+			},
+			{ emitEvent: false }
+		);
 	}
 
 	private handleUpdateSuccess({ id: updatedWorkId }: { id: number }) {
 		if (this.markingIdChanged())
 			this.qs.updateDeliveredValue(
 				updatedWorkId,
-				this.student?.id ?? 0,
+				this.student()?.id ?? 0,
 				Number(this.updateForm.get('markingId')?.value)
 			);
 		this.changeInitialState();
-		this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 	}
 
 	public setDeliveredOnTime({ checked: onTime }: MatCheckboxChange) {
-		if (!this.work?.workId) return;
+		if (!this.studentToWork()?.workId) return;
 
 		const payload = {
 			studentToWork: [
 				{
-					studentId: this.student?.id,
+					studentId: this.student()?.id,
 					onTime,
 				},
 			],
 		};
 
 		this.ws
-			.updateWork(payload, this.work.workId)
+			.updateWork(payload, this.studentToWork()?.workId as number)
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe({
 				next: () => {
@@ -211,7 +234,7 @@ export class WorkCardComponent implements OnInit {
 		return {
 			studentToWork: [
 				{
-					studentId: this.student?.id,
+					studentId: this.student()?.id,
 					markingId: this.updateForm.get('markingId')?.value ?? null,
 					score: this.updateForm.get('score')?.value ?? null,
 					observation:
@@ -225,7 +248,7 @@ export class WorkCardComponent implements OnInit {
 		const payload = this.setPayload();
 
 		this.updateWork.next({
-			workId: this.work?.workId as number,
+			workId: this.studentToWork()?.workId as number,
 			...payload,
 		});
 	}

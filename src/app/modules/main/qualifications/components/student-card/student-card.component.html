@@ -1,8 +1,8 @@
-@if (student) {
-<mat-card id="{{ student.lastname.charAt(0).toUpperCase() }}">
+@if (student()) {
+<mat-card id="{{ student()?.lastname?.charAt(0)?.toUpperCase() }}">
 	<mat-card-header
 		><h2 class="student-header">
-			{{ student.name }} {{ student.lastname }}
+			{{ student()?.name }} {{ student()?.lastname }}
 		</h2></mat-card-header
 	>
 	<mat-card-content>
@@ -16,14 +16,14 @@
 				<div
 					class="cards-wrapper"
 					[ngClass]="{ 'center-last-card': onlyOneTaskMatch() }">
-					@for (task of tasks(); track task.workId) { @defer(on
-					viewport) {
+					@for (task of studentToTasks(); track task.workId) {
+					@defer(on viewport) {
 					<app-work-card
-						[work]="task"
-						[student]="student"
+						[studentToWork]="task"
+						[student]="student()"
 						*ngIf="
 							screenType() === ScreenTypeEnum.DESKTOP ||
-							student.showForMobile
+							student()?.showForMobile
 						"
 						[ngClass]="{
 							disappear:
@@ -51,13 +51,13 @@
 				<div
 					class="cards-wrapper"
 					[ngClass]="{ 'center-last-card': onlyOneExamMatch() }">
-					@for (exam of exams(); track exam.workId) {
+					@for (exam of studentToExams(); track exam.workId) {
 					<app-work-card
-						[work]="exam"
-						[student]="student"
+						[studentToWork]="exam"
+						[student]="student()"
 						*ngIf="
 							screenType() === ScreenTypeEnum.DESKTOP ||
-							student.showForMobile
+							student()?.showForMobile
 						"
 						[ngClass]="{
 							disappear:

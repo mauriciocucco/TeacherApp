@@ -1,9 +1,10 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
-	Input,
 	WritableSignal,
 	computed,
+	effect,
+	input,
 	signal,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
@@ -27,41 +28,59 @@ export class StudentCardComponent {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
 	public selectedTab = signal(0);
-	public tasks: WritableSignal<StudentToWork[]> = signal([]);
-	public exams: WritableSignal<StudentToWork[]> = signal([]);
+	public studentToTasks: WritableSignal<StudentToWork[]> = signal([]);
+	public studentToExams: WritableSignal<StudentToWork[]> = signal([]);
 	public selectedSubjectId = this.qs.selectedSubjectId;
 	public taskMatchSomeFilter = computed(() =>
-		this.tasks()?.some(task => task.show)
+		this.studentToTasks()?.some(task => task.show)
 	);
 	public onlyOneTaskMatch = computed(
-		() => this.tasks()?.filter(task => task.show).length === 1
+		() => this.studentToTasks()?.filter(task => task.show).length === 1
 	);
 	public examMatchSomeFilter = computed(() =>
-		this.exams()?.some(exam => exam.show)
+		this.studentToExams()?.some(exam => exam.show)
 	);
 	public onlyOneExamMatch = computed(
-		() => this.exams()?.filter(exam => exam.show).length === 1
+		() => this.studentToExams()?.filter(exam => exam.show).length === 1
 	);
-	// @Input() set student(value: Student) {
-	// 	this.updateWork(WorkTypeId.TASK, this.tasks.update);
-	// 	this.updateWork(WorkTypeId.EXAM, this.exams.update);
-	// }
-	@Input() student!: Student;
+	public student = input<Student>();
 
-	constructor(private qs: QualificationsService, private vs: ViewService) {}
+	constructor(private qs: QualificationsService, private vs: ViewService) {
+		this.studentChange();
+	}
 
-	private updateWork(
+	private studentChange() {
+		effect(
+			() => {
+				if (!this.student()) return;
+
+				this.updateStudentToWork(
+					WorkTypeId.TASK,
+					this.studentToTasks.update
+				);
+				this.updateStudentToWork(
+					WorkTypeId.EXAM,
+					this.studentToExams.update
+				);
+			},
+			{
+				allowSignalWrites: true,
+			}
+		);
+	}
+
+	private updateStudentToWork(
 		workTypeId: number,
 		updater: (value: () => StudentToWork[]) => void
 	) {
 		updater(() => {
-			const filteredWorks = this.student?.studentToWork?.filter(
+			const filteredStudentToWork = this.student()?.studentToWork?.filter(
 				studentToWork => studentToWork.work.workTypeId === workTypeId
 			);
 
-			if (!filteredWorks?.length) return [];
+			if (!filteredStudentToWork?.length) return [];
 
-			return filteredWorks.sort(
+			return filteredStudentToWork.sort(
 				(a, b) =>
 					new Date(b.work.date).getTime() -
 					new Date(a.work.date).getTime()

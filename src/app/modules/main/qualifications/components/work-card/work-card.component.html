@@ -1,21 +1,23 @@
 <mat-card class="qualification-card">
 	<mat-card-header class="qualification-card-header">
-		<h3 [title]="work?.work?.name">{{ work?.work?.name }}</h3>
+		<h3 [title]="studentToWork()?.work?.name">
+			{{ studentToWork()?.work?.name }}
+		</h3>
 		<h4
 			*ngIf="
-				(work?.work?.totalDelivered !== null ||
-					work?.work?.totalDelivered !== undefined) &&
-				work?.work?.workTypeId === workTypeId.TASK
+				(studentToWork()?.work?.totalDelivered !== null ||
+					studentToWork()?.work?.totalDelivered !== undefined) &&
+				studentToWork()?.work?.workTypeId === workTypeId.TASK
 			">
-			{{ students().length }}/{{ work?.work?.totalDelivered }}
+			{{ students().length }}/{{ studentToWork()?.work?.totalDelivered }}
 		</h4>
 		<p>
-			{{ work?.work?.date | shortDate }}
+			{{ studentToWork()?.work?.date | shortDate }}
 		</p>
 		<mat-checkbox
-			*ngIf="work?.work?.workTypeId === workTypeId.TASK"
+			*ngIf="studentToWork()?.work?.workTypeId === workTypeId.TASK"
 			class="example-margin"
-			[checked]="work?.onTime"
+			[checked]="studentToWork()?.onTime"
 			(change)="setDeliveredOnTime($event)"
 			>Entregado a tiempo</mat-checkbox
 		>
@@ -47,7 +49,7 @@
 				title="Eliminar trabajo"
 				color="warn"
 				aria-label="Icono para borrar"
-				(click)="openDeleteDialog(work)">
+				(click)="openDeleteDialog(studentToWork())">
 				<mat-icon>delete</mat-icon>
 			</button>
 			<button
@@ -56,7 +58,7 @@
 				mat-mini-fab
 				color="blue"
 				aria-label="Icono para ver más detalles"
-				(click)="openInfoDialog(work)">
+				(click)="openInfoDialog(studentToWork())">
 				<mat-icon>info</mat-icon>
 			</button>
 		</div>
@@ -73,7 +75,8 @@
 					<mat-label>Nota</mat-label>
 					<ng-container
 						*ngTemplateOutlet="
-							work?.work?.workTypeId === workTypeId.TASK
+							studentToWork()?.work?.workTypeId ===
+							workTypeId.TASK
 								? taskSelect
 								: examInput
 						"></ng-container>
@@ -100,7 +103,10 @@
 					<textarea
 						matInput
 						[rows]="
-							work?.work?.workTypeId === workTypeId.TASK ? 5 : 8
+							studentToWork()?.work?.workTypeId ===
+							workTypeId.TASK
+								? 5
+								: 8
 						"
 						formControlName="observation"></textarea>
 				</mat-form-field>
