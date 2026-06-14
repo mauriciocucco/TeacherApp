@@ -6,11 +6,10 @@ import {
 	OnInit,
 	Signal,
 	ViewChild,
-	WritableSignal,
+	effect,
 	inject,
 	signal,
 } from '@angular/core';
-import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { ControlType } from '../create-dialog/interfaces/control-type.interface';
 import { FormBuilder } from '@angular/forms';
@@ -21,41 +20,43 @@ import {
 	MatAutocomplete,
 	MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { Work } from '../../../../../core/enums/work.enum';
 import { Course } from '../../../../../core/interfaces/course.interface';
 import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { Subject as SchoolSubject } from '../../../../../core/interfaces/subject.interface';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormFilters } from '../../interfaces/form-filters.interface';
 import { Quarter } from '../../../../../core/interfaces/quarter.interface';
-import { WorkUnion } from '../../../../../core/interfaces/work-union.interface';
+import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 
 @Component({
-	selector: 'app-filters',
-	templateUrl: './filters.component.html',
-	styleUrls: ['./filters.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-filters',
+    templateUrl: './filters.component.html',
+    styleUrls: ['./filters.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FiltersComponent implements OnInit {
-	public students: WritableSignal<Student[]> = this.qs.students;
+	public studentsNames = this.qs.studentsNames;
 	public subjects: Signal<SchoolSubject[]> = this.qs.subjects;
 	public courses: Signal<Course[]> = this.qs.courses;
 	public quarters: Signal<Quarter[]> = this.qs.quarters;
 	public markings: Signal<Marking[]> = this.qs.markings;
-	public tasks: WritableSignal<WorkUnion[]> = this.qs.tasks;
-	public exams: WritableSignal<WorkUnion[]> = this.qs.exams;
+	public tasks = this.qs.tasks;
+	public exams = this.qs.exams;
 	public openFiltersMenu = signal(false);
 	public filtersForm = this.fb.nonNullable.group({
-		student: [{ value: '', disabled: true }],
-		task: [{ value: '', disabled: true }],
-		exam: [{ value: '', disabled: true }],
-		subject: [{ value: 0, disabled: true }],
-		course: 0,
-		quarter: [{ value: this.selectActualQuarter(), disabled: true }],
+		studentName: [{ value: '', disabled: true }],
+		taskName: [{ value: '', disabled: true }],
+		examName: [{ value: '', disabled: true }],
+		subjectId: [{ value: 0, disabled: true }],
+		courseId: 0,
+		quarterId: [{ value: this.selectActualQuarter(), disabled: true }],
 	});
-	public WorkEnum = Work;
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
+	public workTypeId = WorkTypeId;
+	private students = this.qs.students;
+	private works = this.qs.works;
 	private destroyRef = inject(DestroyRef);
 	@ViewChild('studentsAutocomplete', { static: false })
 	studentsAutocomplete?: MatAutocomplete;
@@ -63,7 +64,7 @@ export class FiltersComponent implements OnInit {
 	tasksAutocomplete?: MatAutocomplete;
 	@ViewChild('examsAutocomplete', { static: false })
 	examsAutocomplete?: MatAutocomplete;
-	@HostListener('window:resize', ['$event'])
+	@HostListener('window:resize')
 	onResize(): void {
 		this.vs.setScreenType();
 	}
@@ -72,7 +73,9 @@ export class FiltersComponent implements OnInit {
 		private qs: QualificationsService,
 		private fb: FormBuilder,
 		private vs: ViewService
-	) {}
+	) {
+		this.modifyFiltersControlsEffect();
+	}
 
 	ngOnInit(): void {
 		this.vs.setScreenType();
@@ -88,10 +91,10 @@ export class FiltersComponent implements OnInit {
 
 				if (
 					reset === 'Students' &&
-					this.filtersForm.get('student')?.value
+					this.filtersForm.get('studentName')?.value
 				) {
 					this.filtersForm
-						.get('student')
+						.get('studentName')
 						?.setValue('', { emitEvent: false });
 				}
 
@@ -109,44 +112,76 @@ export class FiltersComponent implements OnInit {
 			.pipe(
 				tap(filters => {
 					if (
-						filters.course &&
-						filters.course !== this.qs.selectedCourseId()
+						filters.courseId &&
+						filters.courseId !== this.qs.selectedCourseId()
 					) {
 						this.resetForm();
-						filters.subject = 0; // Porque el emitEvent del reset está en false
-						this.enableControls();
 					}
 
 					this.qs.setFilters({
 						...filters,
-						quarter: this.filtersForm.get('quarter')?.value,
-					} as FormFilters);
+						quarterId: this.filtersForm.get('quarterId')?.value,
+					});
 				}),
 				takeUntilDestroyed(this.destroyRef)
 			)
 			.subscribe();
 	}
 
-	private enableControls() {
-		if (this.filtersForm.get('subject')?.enabled) return;
+	private modifyFiltersControlsEffect() {
+		effect(() => {
+			if (Array.isArray(this.works())) this.modifyFiltersControls();
+		});
+	}
+
+	private setFormControlStatus(controlName: string, status: boolean) {
+		const control = this.filtersForm.get(controlName);
+
+		if (control) {
+			status
+				? control.enable({ emitEvent: false })
+				: control.disable({ emitEvent: false });
+		}
+	}
+
+	private modifyFiltersControls() {
+		if (!this.students().length) return;
+
+		if (!this.works().length && this.students().length) {
+			['taskName', 'examName', 'subjectId'].forEach(controlName => {
+				this.setFormControlStatus(controlName, false);
+			});
+			this.setFormControlStatus('studentName', true);
+			this.setFormControlStatus('quarterId', true);
+			return;
+		}
 
 		this.filtersForm.enable({ emitEvent: false });
+
+		if (!this.tasks().length) this.setFormControlStatus('taskName', false);
+
+		if (!this.exams().length) this.setFormControlStatus('examName', false);
+
+		if (!this.exams().length && !this.tasks().length)
+			this.setFormControlStatus('subjectId', false);
 	}
 
 	public clearControl(control: ControlType) {
 		switch (control) {
 			case 'Tasks':
-				this.filtersForm.get('task')?.setValue('');
-				this.qs.cleanShow(this.tasks);
+				this.filtersForm.get('taskName')?.setValue('');
+				this.qs.cleanWorksShowProp(this.workTypeId.TASK);
+				break;
+			case 'Exams':
+				this.filtersForm.get('examName')?.setValue('');
+				this.qs.cleanWorksShowProp(this.workTypeId.EXAM);
 				break;
 			case 'Students':
-				this.filtersForm.get('student')?.setValue('');
+				this.filtersForm.get('studentName')?.setValue('');
 				this.cleanSelectedLetter();
-				this.qs.cleanShow(this.students);
+				this.qs.cleanStudentsShowProp();
 				break;
 			default:
-				this.filtersForm.get('exam')?.setValue('');
-				this.qs.cleanShow(this.exams);
 				break;
 		}
 	}
@@ -154,12 +189,12 @@ export class FiltersComponent implements OnInit {
 	public resetForm() {
 		this.filtersForm.patchValue(
 			{
-				course: this.filtersForm.get('course')?.value,
-				subject: 0,
-				student: '',
-				task: '',
-				exam: '',
-				quarter: this.selectActualQuarter(),
+				courseId: this.filtersForm.get('courseId')?.value ?? 0,
+				subjectId: 0,
+				studentName: '',
+				taskName: '',
+				examName: '',
+				quarterId: this.selectActualQuarter(),
 			},
 			{ emitEvent: false }
 		);
@@ -170,8 +205,11 @@ export class FiltersComponent implements OnInit {
 		this.qs.showSelectedStudent(option);
 	}
 
-	public taskOrExamSelected(option: MatAutocompleteSelectedEvent) {
-		this.qs.showSelectedTaskOrExam(option);
+	public workSelected(
+		option: MatAutocompleteSelectedEvent,
+		workTypeId: WorkTypeId
+	) {
+		this.qs.showSelectedWork(option, workTypeId);
 	}
 
 	public toggleFiltersMenu(open: null | boolean = null) {

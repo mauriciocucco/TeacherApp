@@ -3,12 +3,9 @@ import { ApiService } from '../api/api.service';
 import {
 	BehaviorSubject,
 	EMPTY,
-	Observable,
 	catchError,
 	combineLatest,
 	finalize,
-	forkJoin,
-	map,
 	of,
 	switchMap,
 	tap,
@@ -18,37 +15,26 @@ import { Subject as SchoolSubject } from '../../../core/interfaces/subject.inter
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Course } from '../../interfaces/course.interface';
 import { Marking } from '../../interfaces/marking.interface';
-import { Task } from '../../interfaces/task.interface';
-import { Exam } from '../../interfaces/exam.interface';
 import { Student } from '../../interfaces/student.interface';
-import { TasksAndExamsQueryParams } from '../../../modules/main/qualifications/interfaces/tasks-and-exams-query-params.interface';
-import { StudentsParams } from '../../../modules/main/qualifications/interfaces/students-params.interface';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Work } from '../../enums/work.enum';
-import { TasksService } from '../tasks/tasks.service';
-import { ExamsService } from '../exams/exams.service';
 import { StudentsService } from '../students/students.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkBase } from '../../interfaces/work-base.interface';
-import { UpdateTask } from '../../interfaces/update-task.interface';
-import { UpdateExam } from '../../interfaces/update-exam.interface';
-import { ControlType } from '../../../modules/main/qualifications/components/create-dialog/interfaces/control-type.interface';
 import { FormFilters } from '../../../modules/main/qualifications/interfaces/form-filters.interface';
 import { MatDialogRef } from '@angular/material/dialog';
 import { DeleteDialogComponent } from '../../../modules/main/qualifications/components/delete-dialog/delete-dialog.component';
 import { InfoDialogComponent } from '../../../modules/main/qualifications/components/info-dialog/info-dialog.component';
-import { UpdatePayload } from '../../interfaces/update-payload.interface';
 import { CreateDialogComponent } from '../../../modules/main/qualifications/components/create-dialog/create-dialog.component';
-import { CreatePayload } from '../../interfaces/create-payload.interface';
-import { CreateTask } from '../../interfaces/create-task.interface';
-import { CreateExam } from '../../interfaces/create-exam.interface';
 import { MultipleMarkingSetterComponent } from '../../../modules/main/qualifications/components/multiple-marking-setter/multiple-marking-setter.component';
 import { QUARTERS } from '../../constants/quarters.constant';
-import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-markings.constant';
 import { ResetFiltersType } from '../../interfaces/reset-filters.type';
 import { Quarter } from '../../interfaces/quarter.interface';
-import { WorkUnion } from '../../interfaces/work-union.interface';
-import { StudentToTask } from '../../interfaces/student-to-task.interface';
+import { WorksQueryParams } from '../../../modules/main/qualifications/interfaces/works-query-params.interface';
+import { WorksService } from '../works/works.service';
+import { CreateWork } from '../../interfaces/create-work.interface';
+import { UpdateWork } from '../../interfaces/update-work.interface';
+import { WorkI } from '../../interfaces/work.interface';
+import { WorkTypeId } from '../../enums/work-type-id.enum';
+import { UNDELIVERED_TASKS_MARKINGS } from '../../constants/undelivered-tasks-markings.constant';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
 @Injectable({
 	providedIn: 'root',
@@ -64,10 +50,16 @@ export class QualificationsService {
 	public subjects = toSignal(this.subjects$, { initialValue: [] });
 	public courses = toSignal(this.courses$, { initialValue: [] });
 	public markings = toSignal(this.markings$, { initialValue: [] });
-	public tasks: WritableSignal<WorkUnion[]> = signal([]);
-	public exams: WritableSignal<WorkUnion[]> = signal([]);
-	public students: WritableSignal<Student[]> = signal([]);
 	public quarters = signal(QUARTERS);
+	public works: WritableSignal<Partial<WorkI>[]> = signal([]);
+	public tasks = computed(() =>
+		this.works()?.filter(work => work.workTypeId === WorkTypeId.TASK)
+	);
+	public exams = computed(() =>
+		this.works()?.filter(work => work.workTypeId === WorkTypeId.EXAM)
+	);
+	public studentsNames: WritableSignal<Partial<Student>[]> = signal([]);
+	public students: WritableSignal<Student[]> = signal([]);
 	public studentIsSelected = computed(() =>
 		this.students()
 			? this.students().filter(s => s.show)?.length <= 1
@@ -78,58 +70,76 @@ export class QualificationsService {
 			? this.students().filter(s => s.showForMobile)?.length === 0
 			: false
 	);
-	public selectedCourseId: WritableSignal<number> = signal(0);
+	public selectedCourseId = signal(0);
 	public selectedSubjectId = signal(0);
 	public selectedQuarterId = signal(0);
-	public selectedWorkType: WritableSignal<Work> = signal(Work.TASK);
+	public selectedWorkType: WritableSignal<WorkTypeId> = signal(
+		WorkTypeId.TASK
+	);
 	public resetFilters = new BehaviorSubject<ResetFiltersType>('');
 	public resetFilters$ = this.resetFilters.asObservable();
-	public tasksExamsAndStudentsSubject = new BehaviorSubject<
-		[TasksAndExamsQueryParams | null, StudentsParams | null]
-	>([null, null]);
-	public tasksExamsAndStudents$ = this.tasksExamsAndStudentsSubject
-		.asObservable()
-		.pipe(
-			map(
-				([tasksAndExamsQueryParams, studentsQueryParams]) =>
-					[
-						this.ts.getTasks(tasksAndExamsQueryParams),
-						this.es.getExams(tasksAndExamsQueryParams),
-						this.ss.getStudents(studentsQueryParams),
-					] as Observable<Task[] | Exam[] | Student[]>[]
-			),
-			switchMap(observablesArray => forkJoin(observablesArray)),
-			tap(([tasks, exams, students]) => {
-				this.setSignalsValues(
-					tasks as WorkUnion[],
-					exams as WorkUnion[],
-					students as Student[]
-				);
-				this.cleanAllShow();
-			}),
-			catchError(error => {
-				console.error(
-					'Hubo un error en el stream de tasksExamsAndStudents$: ',
-					error
-				);
+	public worksSubject = new BehaviorSubject<WorksQueryParams | null>(null);
+	public works$ = this.worksSubject.asObservable().pipe(
+		switchMap(worksQueryParams =>
+			worksQueryParams ? this.ws.getWorks(worksQueryParams) : of([])
+		),
+		tap(works => {
+			if (works) {
+				this.setWorksSignal(works);
+				this.resetStudentsSignal();
+				this.getStudents(this.worksQueryParams());
+			}
+		}),
+		catchError(error => {
+			console.error('Hubo un error en el stream de works$: ', error);
 
-				return EMPTY;
-			})
-		);
-	private filtersChanges: BehaviorSubject<FormFilters> = new BehaviorSubject({
-		course: 0,
-		quarter: 0,
-	} as FormFilters);
+			return EMPTY;
+		})
+	);
+	public studentsSubject = new BehaviorSubject<WorksQueryParams | null>(null);
+	public students$ = this.studentsSubject.asObservable().pipe(
+		switchMap(worksQueryParams => this.ss.getStudents(worksQueryParams)),
+		tap(students => {
+			this.setStudentsSignal(students);
+			this.setStudentsNamesSignal(students);
+		}),
+		catchError(error => {
+			console.error('Hubo un error en el stream de students$: ', error);
+
+			return EMPTY;
+		})
+	);
+	private defaultFormFilters: FormFilters = {
+		courseId: 0,
+		quarterId: 0,
+		subjectId: 0,
+		studentName: '',
+		taskName: '',
+		examName: '',
+	};
+	private defaultCreateWork: CreateWork = {
+		name: '',
+		description: '',
+		date: '',
+		workTypeId: 0,
+		subjectId: 0,
+		courseId: 0,
+		studentToWork: [],
+	};
+	private worksQueryParams = signal<WorksQueryParams | null>(null);
+	private filtersChanges: BehaviorSubject<Partial<FormFilters>> =
+		new BehaviorSubject<Partial<FormFilters>>(this.defaultFormFilters);
 	private filtersChanges$ = this.filtersChanges.asObservable();
 	public filteredData$ = combineLatest([
-		this.tasksExamsAndStudents$,
+		this.students$,
+		this.works$,
 		this.filtersChanges$,
 	]).pipe(
-		tap(([[tasks, exams, students], filtersChanges]: any) => {
-			const thereIsDataAvailable = Boolean(
-				tasks?.length || exams?.length || (students as Student[]).length
-			);
+		tap(([students, works, filtersChanges]) => {
+			const { courseId, quarterId } = filtersChanges;
+			const thereIsDataAvailable = works.length || students.length;
 
+			this.setWorksQueryParams(courseId, quarterId);
 			this.applyChanges(filtersChanges, thereIsDataAvailable);
 		})
 	);
@@ -139,12 +149,7 @@ export class QualificationsService {
 		switchMap(workId => {
 			if (!workId) return of(true);
 
-			const delete$ =
-				this.selectedWorkType() === Work.TASK
-					? this.ts.deleteTask(workId)
-					: this.es.deleteExam(workId);
-
-			return delete$.pipe(
+			return this.ws.deleteWork(workId).pipe(
 				catchError(error => {
 					console.error(
 						'Hubo un error en el stream de deleteWork$: ',
@@ -163,29 +168,22 @@ export class QualificationsService {
 		tap(deletedWork => {
 			if (!deletedWork.name) return;
 
-			this.resetWorks();
+			this.updateSignals();
 			this.handleHttpResponseMessage(`Se eliminó "${deletedWork.name}".`);
 		})
 	);
 	private updateDialogRef!: MatDialogRef<
 		InfoDialogComponent | MultipleMarkingSetterComponent
 	>;
-	private updateWork = new BehaviorSubject({
-		workId: 0,
-		name: '',
-		description: '',
-		date: '',
-	});
+	private updateWork = new BehaviorSubject<[workId: number, UpdateWork]>([
+		0,
+		{},
+	]);
 	public updateWork$ = this.updateWork.asObservable().pipe(
-		switchMap(({ workId, ...payload }) => {
+		switchMap(([workId, payload]) => {
 			if (!workId) return of(true);
 
-			const update$ =
-				this.selectedWorkType() === Work.TASK
-					? this.ts.updateTask(payload, workId)
-					: this.es.updateExam(payload, workId);
-
-			return update$.pipe(
+			return this.ws.updateWork(payload, workId).pipe(
 				catchError(error => {
 					console.error(
 						'Hubo un error en el stream de updateWork$: ',
@@ -197,33 +195,26 @@ export class QualificationsService {
 				}),
 				finalize(() => {
 					this.updateDialogRef.close(this.refreshView());
-					this.updateWork.next({ workId: 0 } as UpdatePayload);
+					this.updateWork.next([0, {}]);
 				})
 			);
 		}),
 		tap(updatedWork => {
 			if (!updatedWork.name) return;
 
-			this.refreshView()
-				? this.resetWorks()
-				: this.updateWorkCardInfo(updatedWork.id, updatedWork);
+			this.updateSignals(updatedWork);
 			this.handleHttpResponseMessage('La edición fue exitosa.');
 		})
 	);
 	private createDialogRef!: MatDialogRef<CreateDialogComponent>;
-	private createWork = new BehaviorSubject({
-		name: '',
-	});
+	private createWork = new BehaviorSubject<CreateWork>(
+		this.defaultCreateWork
+	);
 	public createWork$ = this.createWork.asObservable().pipe(
 		switchMap(payload => {
 			if (!payload.name) return of(true);
 
-			const create$ =
-				this.selectedWorkType() === Work.TASK
-					? this.ts.createTask(payload as CreateTask)
-					: this.es.createExam(payload as CreateExam);
-
-			return create$.pipe(
+			return this.ws.createWork(payload).pipe(
 				catchError(error => {
 					console.error(
 						'Hubo un error en el stream de createWork$: ',
@@ -235,93 +226,80 @@ export class QualificationsService {
 				}),
 				finalize(() => {
 					this.createDialogRef.close(true);
-					this.createWork.next({ name: '' });
+					this.createWork.next(this.defaultCreateWork);
 				})
 			);
 		}),
 		tap(createdWork => {
 			if (!createdWork.name) return;
 
-			this.resetWorks();
+			this.updateSignals();
 			this.handleHttpResponseMessage('La creación fue exitosa.');
 		})
 	);
 
 	constructor(
 		private apiService: ApiService,
-		private ts: TasksService,
-		private es: ExamsService,
+		private ws: WorksService,
 		private ss: StudentsService,
 		private _snackBar: MatSnackBar
 	) {}
 
-	public getTasksExamsAndStudents(
-		tasksAndExamsQueryParams: TasksAndExamsQueryParams | null,
-		studentsQueryParams: StudentsParams | null = null
-	) {
-		this.resetSignalsData();
-		this.tasksExamsAndStudentsSubject.next([
-			tasksAndExamsQueryParams,
-			studentsQueryParams,
-		]);
+	public getWorks() {
+		this.worksSubject.next(this.worksQueryParams());
 	}
 
-	private setSignalsValues(
-		tasks: WorkUnion[],
-		exams: WorkUnion[],
-		students: Student[]
+	public getStudents(worksQueryParams: WorksQueryParams | null) {
+		this.studentsSubject.next(worksQueryParams);
+	}
+
+	private setWorksQueryParams(
+		courseId: number | undefined,
+		quarterId: number | undefined
 	) {
-		this.tasks.set(tasks);
-		this.exams.set(exams);
-		this.students.set(students);
+		if (!courseId && !quarterId) return;
+
+		const selectedQuarter = this.quarters().find(
+			(quarter: Quarter) => quarter.id === quarterId
+		);
+
+		this.worksQueryParams.set({
+			courseId,
+			startDate: selectedQuarter?.start.getTime(),
+			endDate: selectedQuarter?.end.getTime(),
+		});
 	}
 
 	private applyChanges(
-		filtersChanges: FormFilters,
+		filtersChanges: Partial<FormFilters>,
 		thereIsDataAvailable: boolean
 	) {
-		const {
-			course: courseId,
-			subject,
-			quarter: quarterId,
-		} = filtersChanges;
-		const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
-			courseId,
-			quarterId
-		);
+		const { courseId, subjectId, quarterId } = filtersChanges;
 
 		if (
-			courseId !== this.selectedCourseId() ||
-			(quarterId && quarterId !== this.selectedQuarterId())
+			courseId &&
+			quarterId &&
+			(courseId !== this.selectedCourseId() ||
+				quarterId !== this.selectedQuarterId())
 		) {
+			this.getWorks();
 			this.selectedCourseId.set(courseId);
 			this.selectedQuarterId.set(quarterId);
-			this.letterSelected.set(null);
-
-			return this.getTasksExamsAndStudents(
-				queryParamsWithQuarter,
-				courseParam
-			);
+			return this.letterSelected.set(null);
 		}
 
 		if (thereIsDataAvailable) {
-			this.selectedSubjectId.set(subject ?? 0);
+			this.selectedSubjectId.set(subjectId ?? 0);
 			!this.letterSelected() ? this.filterSignals(filtersChanges) : null;
 		}
 	}
 
-	public setFilters(changes: FormFilters) {
+	public setFilters(changes: Partial<FormFilters>) {
 		this.filtersChanges.next(changes);
 	}
 
-	private filterSignals({ student, task, exam }: FormFilters) {
-		this.filterValues(student);
-		this.filterValues(task, 'Tasks');
-		this.filterValues(exam, 'Exams');
-	}
-
 	public create(
-		payload: CreatePayload,
+		payload: CreateWork,
 		dialogRef: MatDialogRef<CreateDialogComponent>
 	) {
 		this.createDialogRef = dialogRef;
@@ -329,7 +307,7 @@ export class QualificationsService {
 	}
 
 	public update(
-		payload: UpdatePayload,
+		payload: [workId: number, UpdateWork],
 		dialogRef: MatDialogRef<
 			InfoDialogComponent | MultipleMarkingSetterComponent
 		>,
@@ -348,62 +326,146 @@ export class QualificationsService {
 		this.deleteWork.next(workId);
 	}
 
-	private resetWorks() {
-		const { courseParam, queryParamsWithQuarter } = this.setQueryParams(
-			this.selectedCourseId(),
-			this.selectedQuarterId()
+	private setWorksSignal(works: WorkI[]) {
+		this.works.set(
+			works.map(({ id, name, date, workTypeId }) => ({
+				id,
+				name,
+				date,
+				workTypeId,
+				show: true,
+			}))
 		);
-
-		this.getTasksExamsAndStudents(queryParamsWithQuarter, courseParam);
 	}
 
-	public filterValues(
-		value: string | null,
-		controlType: ControlType = 'Students'
-	): void {
-		const valueToFilter = value?.toLowerCase();
-		let signalToFilter: WritableSignal<Student[] | WorkUnion[]> = this
-			.students as WritableSignal<Student[]>;
-
-		if (controlType === 'Tasks') signalToFilter = this.tasks;
-
-		if (controlType === 'Exams') signalToFilter = this.exams;
-
-		if (!value) return this.cleanShow(signalToFilter);
-
-		this.processAutocompleteOutput(valueToFilter as string, signalToFilter);
+	private setStudentsNamesSignal(students: Student[]) {
+		this.studentsNames.set(
+			students.map(({ name, lastname }) => ({
+				name,
+				lastname,
+				show: true,
+			}))
+		);
 	}
 
-	private processAutocompleteOutput(
-		valueToFilter: string,
-		signalToFilter: WritableSignal<Student[] | WorkUnion[]>
-	) {
-		signalToFilter.update((elements: WorkUnion[] | Student[]) => {
-			elements.forEach((element: WorkUnion | Student) => {
-				if (this.isStudentElement(element as WorkUnion | Student)) {
-					`${(element as Student).name} ${
-						(element as Student).lastname
-					}`
-						.toLowerCase()
-						.includes(valueToFilter)
-						? (element.show = true)
-						: (element.show = false);
-				} else {
-					(element as WorkUnion).name
-						.toLowerCase()
-						.includes(valueToFilter)
-						? (element.show = true)
-						: (element.show = false);
+	private setStudentsSignal(students: Student[]) {
+		this.students.set(
+			students.map(student => {
+				student.show = true;
+				student.studentToWork.forEach(stw => (stw.show = true));
+
+				return student;
+			})
+		);
+	}
+
+	private updateWorksSignal({ id, name, date, workTypeId }: WorkI) {
+		this.works.update((works: Partial<WorkI>[]) => {
+			return works.map(work => {
+				if (work.id === id) {
+					return { id, name, date, workTypeId, show: true };
 				}
+				return work;
 			});
-
-			return elements;
 		});
 	}
 
-	//es una función Type Guard de Tyepscript
-	private isStudentElement(element: Student | WorkUnion): element is Student {
-		return 'lastname' in element;
+	private updateStudentsSignal({
+		id,
+		name,
+		date,
+		description,
+		workTypeId,
+		studentToWork: updatedStudentToWork,
+	}: WorkI) {
+		this.students.update((students: Student[]) => {
+			return students.map((student: Student) => {
+				const studentToWork = student.studentToWork.find(
+					stw => stw.workId === id
+				);
+
+				if (studentToWork) {
+					const matchedStudentToWork = updatedStudentToWork.find(
+						updatedStw =>
+							updatedStw.studentId === studentToWork.studentId
+					);
+
+					studentToWork.work.name = name;
+					studentToWork.work.date = date;
+					studentToWork.work.description = description;
+					studentToWork.work.workTypeId = workTypeId;
+
+					if (matchedStudentToWork) {
+						studentToWork.observation =
+							matchedStudentToWork.observation ?? '';
+						studentToWork.score =
+							matchedStudentToWork.score ?? null;
+					}
+				}
+
+				return student;
+			});
+		});
+	}
+
+	public updateSignals(updatedWork?: WorkI) {
+		if (!updatedWork) {
+			return this.getWorks();
+		}
+
+		this.updateWorksSignal(updatedWork);
+		this.updateStudentsSignal(updatedWork);
+	}
+
+	private filterWorks(
+		taskName: string | undefined,
+		examName: string | undefined
+	) {
+		this.works.update((works: Partial<WorkI>[]) => {
+			return works.map(work => {
+				const filterName =
+					work.workTypeId === WorkTypeId.TASK ? taskName : examName;
+
+				if (filterName) {
+					work.show =
+						work.name
+							?.toLowerCase()
+							.includes(filterName.toLowerCase()) ?? false;
+				}
+				return work;
+			});
+		});
+	}
+
+	private filterStudentsNames(studentName: string | undefined) {
+		this.studentsNames.update(students => {
+			return students.map(student => {
+				if (!studentName) return student;
+
+				`${student.name} ${student.lastname}`
+					.toLowerCase()
+					.includes(studentName.toLowerCase())
+					? (student.show = true)
+					: (student.show = false);
+
+				return student;
+			});
+		});
+	}
+
+	private filterSignals({
+		studentName,
+		taskName,
+		examName,
+	}: Partial<FormFilters>) {
+		if (!taskName) this.cleanWorksShowProp(WorkTypeId.TASK);
+
+		if (!examName) this.cleanWorksShowProp(WorkTypeId.EXAM);
+
+		if (!studentName) this.cleanStudentsShowProp();
+
+		this.filterWorks(taskName, examName);
+		this.filterStudentsNames(studentName);
 	}
 
 	public showSelectedStudent(option: MatAutocompleteSelectedEvent) {
@@ -413,8 +475,6 @@ export class QualificationsService {
 			(student: Student) =>
 				`${student.name} ${student.lastname}` === nameAndLastName
 		);
-
-		this.cleanShow(this.students as WritableSignal<Student[]>);
 
 		this.students.update((students: Student[]) => {
 			students
@@ -431,91 +491,101 @@ export class QualificationsService {
 		});
 	}
 
-	public showSelectedTaskOrExam(option: MatAutocompleteSelectedEvent) {
-		const selectedValue = option.option.value;
-		const workSignal: WritableSignal<WorkUnion[]> =
-			this.selectedWorkType() === Work.TASK ? this.tasks : this.exams;
-		const matchedWork = (workSignal() as WorkBase[]).find(
-			element => element.name === selectedValue
-		);
+	public showSelectedWork(
+		option: MatAutocompleteSelectedEvent,
+		workTypeId: WorkTypeId
+	) {
+		const workName = option.option.value;
+		const selectedWork = this.works().find(work => work.name === workName);
 
-		this.cleanShow(workSignal);
+		this.works.update(works => {
+			return works.map(work => {
+				if (
+					work.id !== selectedWork?.id &&
+					work.workTypeId === workTypeId
+				) {
+					return { ...work, show: false };
+				}
 
-		workSignal.update((elements: WorkUnion[]) => {
-			elements.forEach((element: WorkUnion) => {
-				if (element.id !== matchedWork?.id) element.show = false;
+				return work;
 			});
+		});
 
-			return elements;
+		this.students.update((students: Student[]) => {
+			return students.map((student: Student) => {
+				student.studentToWork = student.studentToWork.map(
+					studentToWork => {
+						if (
+							(studentToWork.workId === selectedWork?.id &&
+								studentToWork.work.workTypeId === workTypeId) ||
+							studentToWork.work.workTypeId !== workTypeId
+						) {
+							return studentToWork;
+						}
+
+						return { ...studentToWork, show: false };
+					}
+				);
+
+				return JSON.parse(JSON.stringify(student));
+			});
 		});
 	}
 
-	public cleanShow(signal: WritableSignal<WorkUnion[] | Student[]>) {
-		signal.update((elements: WorkUnion[] | Student[]) => {
-			elements.forEach((element: WorkUnion | Student) => {
-				element.show = true;
+	public cleanWorksShowProp(workTypeId: WorkTypeId) {
+		this.works.update((works: Partial<WorkI>[]) => {
+			return works.map(work => {
+				if (work.workTypeId === workTypeId) work.show = true;
 
-				if ('showForMobile' in element) element.showForMobile = false;
+				return work;
 			});
+		});
 
-			return JSON.parse(JSON.stringify(elements));
+		this.students.update((students: Student[]) => {
+			return students.map((student: Student) => {
+				student.studentToWork = student.studentToWork.map(stw => {
+					if (stw.work.workTypeId === workTypeId) {
+						return { ...stw, show: true };
+					}
+					return stw;
+				});
+
+				return JSON.parse(JSON.stringify(student));
+			});
 		});
 	}
 
-	private cleanAllShow() {
-		this.cleanShow(this.tasks);
-		this.cleanShow(this.exams);
-		this.cleanShow(this.students);
+	public cleanStudentsShowProp() {
+		this.studentsNames.update((students: Partial<Student>[]) => {
+			return students.map(student => {
+				student.show = true;
+
+				return student;
+			});
+		});
+
+		this.students.update((students: Student[]) => {
+			return students.map(student => {
+				return {
+					...student,
+					show: true,
+					showForMobile:
+						'showForMobile' in student
+							? false
+							: (student as Student).showForMobile,
+				};
+			});
+		});
 	}
 
-	public resetSignalsData() {
+	public resetStudentsSignal() {
 		this.students.set([]);
-		this.tasks.set([]);
-		this.exams.set([]);
 	}
 
 	public handleHttpResponseMessage(
 		responseMessage = 'Ocurrió un error con su pedido.'
 	) {
 		this._snackBar.open(responseMessage, '', { duration: 4000 });
-	}
-
-	public updateWorkCardInfo(
-		workId: number,
-		updatedWork: UpdateTask | UpdateExam
-	) {
-		this.selectedWorkType() === Work.TASK
-			? this.tasks.update((tasks: WorkUnion[]) => {
-					this.filterAndUpdateSelectedWork(
-						workId,
-						updatedWork,
-						tasks
-					);
-
-					return tasks;
-			  })
-			: this.exams.update((exams: WorkUnion[]) => {
-					this.filterAndUpdateSelectedWork(
-						workId,
-						updatedWork,
-						exams
-					);
-
-					return exams;
-			  });
-	}
-
-	private filterAndUpdateSelectedWork(
-		workId: number,
-		updatedWork: UpdateTask | UpdateExam,
-		works: Task[] | Exam[]
-	) {
-		const selectedWorkIndex = works.findIndex(work => work.id === workId);
-
-		works[selectedWorkIndex] = {
-			...works[selectedWorkIndex],
-			...updatedWork,
-		} as Task | Exam;
 	}
 
 	public setShowByLetter(letter: string) {
@@ -540,66 +610,35 @@ export class QualificationsService {
 		return letter.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 	}
 
-	private setQueryParams(courseId: number, quarterId: number) {
-		const courseParam = { courseId };
-		const selectedQuarter = this.quarters().find(
-			(quarter: Quarter) => quarter.id === quarterId
-		);
-		const queryParamsWithQuarter = {
-			...courseParam,
-			startDate: selectedQuarter?.start.getTime(),
-			endDate: selectedQuarter?.end.getTime(),
-		};
-
-		return { courseParam, queryParamsWithQuarter };
-	}
-
 	public updateDeliveredValue(
-		updatedTaskId: number,
+		updatedWorkId: number,
 		studentId: number,
 		markingIdFormValue: number
 	) {
-		this.tasks.update((tasks: WorkUnion[]) => {
-			const taskToUpdate = tasks.find(
-				(task: Task) => task.id === updatedTaskId
-			);
-			const studentTask = taskToUpdate?.studentToTask?.find(
-				(studentToTask: StudentToTask) =>
-					studentToTask.studentId === studentId
-			);
-			const changeDeliveredValue =
-				(!UNDELIVERED_TASKS_MARKINGS.includes(
-					studentTask?.markingId ?? -1
-				) &&
-					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)) ||
-				(UNDELIVERED_TASKS_MARKINGS.includes(
-					studentTask?.markingId ?? -1
-				) &&
-					!UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue));
+		this.students.update((students: Student[]) => {
+			return students.map((student: Student) => {
+				const studentToWork = student.studentToWork.find(
+					stw => stw.workId === updatedWorkId
+				);
 
-			if (changeDeliveredValue && taskToUpdate && studentTask) {
-				UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
-					? taskToUpdate.totalDelivered--
-					: taskToUpdate.totalDelivered++;
+				if (studentToWork) {
+					if (student.id === studentId)
+						studentToWork.markingId = markingIdFormValue;
 
-				studentTask.markingId = markingIdFormValue;
-			}
+					UNDELIVERED_TASKS_MARKINGS.includes(markingIdFormValue)
+						? studentToWork.work.totalDelivered--
+						: studentToWork.work.totalDelivered++;
+				}
 
-			return JSON.parse(JSON.stringify(tasks));
+				return student;
+			});
 		});
 	}
 
 	public restartQualificationsService() {
-		this.getTasksExamsAndStudents(null, null);
+		this.resetStudentsSignal();
 		this.resetFilters.next('All');
-		this.setFilters({
-			course: 0,
-			quarter: 0,
-			subject: 0,
-			student: '',
-			task: '',
-			exam: '',
-		});
+		this.setFilters(this.defaultFormFilters);
 		this.selectedCourseId.set(0);
 		this.selectedQuarterId.set(0);
 		this.letterSelected.set(null);

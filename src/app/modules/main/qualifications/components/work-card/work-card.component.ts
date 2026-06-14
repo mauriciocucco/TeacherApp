@@ -1,31 +1,23 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
 	Component,
 	DestroyRef,
-	Input,
 	Signal,
 	inject,
 	signal,
 	ChangeDetectionStrategy,
 	OnInit,
+	input,
+	effect,
 } from '@angular/core';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
-import { Task } from '../../../../../core/interfaces/task.interface';
-import { Exam } from '../../../../../core/interfaces/exam.interface';
-import { Work } from '../../../../../core/enums/work.enum';
+import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 import { Marking } from '../../../../../core/interfaces/marking.interface';
 import { InfoDialogComponent } from '../info-dialog/info-dialog.component';
 import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { StudentRelationPipe } from '../../pipes/student-relation.pipe';
-import { UpdateControl } from '../../interfaces/update-control.type';
-import { UpdateState } from '../../interfaces/update-state.interface';
-import { debounce, timer, distinctUntilChanged } from 'rxjs';
-import { TasksService } from '../../../../../core/services/tasks/tasks.service';
-import { ExamsService } from '../../../../../core/services/exams/exams.service';
 import {
 	BehaviorSubject,
 	EMPTY,
@@ -33,32 +25,38 @@ import {
 	filter,
 	switchMap,
 	tap,
+	debounce,
+	timer,
+	distinctUntilChanged,
 } from 'rxjs';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { UpdateTask } from '../../../../../core/interfaces/update-task.interface';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
 import { SharedModule } from '../../../../../shared/shared.module';
+import { WorksService } from '../../../../../core/services/works/works.service';
+import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-work-card',
-	standalone: true,
-	imports: [SharedModule, StudentRelationPipe],
-	templateUrl: './work-card.component.html',
-	styleUrls: ['./work-card.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-work-card',
+    imports: [SharedModule],
+    templateUrl: './work-card.component.html',
+    styleUrls: ['./work-card.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkCardComponent implements OnInit {
-	public studentRelationPipe = new StudentRelationPipe();
-	public workEnum = Work;
+	public workTypeId = WorkTypeId;
 	public students: Signal<Student[]> = this.qs.students;
-	public tasks: Signal<Task[]> = this.qs.tasks;
-	public exams: Signal<Exam[]> = this.qs.exams;
+	public works = this.qs.works;
 	public markings: Signal<Marking[]> = this.qs.markings;
+	private markingIdChanged = signal(false);
 	public editMode = signal(false);
-	public initialState: UpdateState = {
-		markingId: '',
-		examMarking: '',
+	public initialState: Partial<{
+		markingId: number | null;
+		score: number | null;
+		observation: string;
+	}> = {
+		markingId: null,
+		score: null,
 		observation: '',
 	};
 	public updateForm = this.fb.nonNullable.group(this.initialState);
@@ -72,43 +70,36 @@ export class WorkCardComponent implements OnInit {
 			this.loading.next(true);
 		}),
 		switchMap(({ workId, ...payload }) =>
-			this.workType === Work.TASK
-				? this.ts.updateTask(payload, workId)
-				: this.es.updateExam(payload, workId)
+			this.ws.updateWork(payload, workId)
 		),
-		tap(({ id: updatedWorkId }) => {
-			this.changeInitialState();
+		tap(updatedWork => {
+			this.qs.updateSignals(updatedWork);
+			this.handleUpdateSuccess({ id: updatedWork.id });
 			this.loading.next(false);
-			this.qs.updateDeliveredValue(
-				updatedWorkId,
-				this.student!.id,
-				Number(this.updateForm.get('markingId')?.value)
-			);
-			this.qs.handleHttpResponseMessage('La edición fue exitosa.');
 		}),
 		catchError(error => {
 			console.error('Hubo un error en el stream de updateWork$: ', error);
 
 			this.backToInitialState();
-			this.loading.next(false);
 			this.qs.handleHttpResponseMessage();
+			this.loading.next(false);
 
 			return EMPTY;
 		})
 	);
 	private destroyRef = inject(DestroyRef);
-	@Input() work: Partial<Task & Exam> | undefined = undefined;
-	@Input() student: Student | undefined = undefined;
-	@Input() workType: Work = Work.TASK;
+	public studentToWork = input<Partial<StudentToWork>>();
+	public student = input<Student>();
 
 	constructor(
 		private qs: QualificationsService,
 		public dialog: MatDialog,
 		private fb: FormBuilder,
-		private ts: TasksService,
-		private es: ExamsService,
+		private ws: WorksService,
 		private vs: ViewService
-	) {}
+	) {
+		this.studentToWorkChange();
+	}
 
 	ngOnInit(): void {
 		this.setInitialFormValues();
@@ -116,18 +107,55 @@ export class WorkCardComponent implements OnInit {
 		this.listenForChanges();
 	}
 
+	private studentToWorkChange() {
+		effect(() => {
+			if (!this.studentToWork()) return;
+
+			const { markingId, score, observation } =
+				this.studentToWork() as Partial<StudentToWork>;
+
+			this.updateForm.patchValue(
+				{ markingId, score, observation },
+				{ emitEvent: false }
+			);
+		});
+	}
+
+	private setInitialFormValues() {
+		this.updateForm.patchValue(
+			{
+				markingId: this.studentToWork()?.markingId,
+				score: this.studentToWork()?.score,
+				observation: this.studentToWork()?.observation,
+			},
+			{ emitEvent: false }
+		);
+	}
+
+	private handleUpdateSuccess({ id: updatedWorkId }: { id: number }) {
+		if (this.markingIdChanged())
+			this.qs.updateDeliveredValue(
+				updatedWorkId,
+				this.student()?.id ?? 0,
+				Number(this.updateForm.get('markingId')?.value)
+			);
+		this.changeInitialState();
+	}
+
 	public setDeliveredOnTime({ checked: onTime }: MatCheckboxChange) {
+		if (!this.studentToWork()?.workId) return;
+
 		const payload = {
-			studentToTask: [
+			studentToWork: [
 				{
-					studentId: this.student?.id,
+					studentId: this.student()?.id,
 					onTime,
 				},
 			],
 		};
 
-		this.ts
-			.updateTask(payload as UpdateTask, this.work!.id as number)
+		this.ws
+			.updateWork(payload, this.studentToWork()?.workId as number)
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe({
 				next: () => {
@@ -141,37 +169,6 @@ export class WorkCardComponent implements OnInit {
 			});
 	}
 
-	private setInitialFormValues() {
-		this.updateForm.patchValue(
-			{
-				markingId: this.studentRelationPipe.transform(
-					{
-						works: this.work?.studentToTask,
-						studentId: this.student?.id,
-					},
-					'markingId'
-				),
-				examMarking: this.studentRelationPipe.transform(
-					{
-						works: this.work?.studentToExam,
-						studentId: this.student?.id,
-					},
-					'marking'
-				),
-				observation: this.studentRelationPipe.transform(
-					{
-						works: this.work?.studentToTask
-							? this.work?.studentToTask
-							: this.work?.studentToExam,
-						studentId: this.student?.id,
-					},
-					'observation'
-				),
-			},
-			{ emitEvent: false }
-		);
-	}
-
 	private listenForChanges() {
 		this.updateForm.valueChanges
 			.pipe(
@@ -183,13 +180,14 @@ export class WorkCardComponent implements OnInit {
 				distinctUntilChanged(),
 				takeUntilDestroyed(this.destroyRef)
 			)
-			.subscribe(({ markingId, examMarking, observation }) => {
+			.subscribe(({ markingId, score, observation }) => {
 				if (markingId !== this.initialState.markingId) {
-					this.update('markingId');
+					this.markingIdChanged.set(true);
+					return this.update();
 				}
 
-				examMarking !== this.initialState.examMarking ||
-				observation !== this.initialState.observation
+				score != this.initialState.score ||
+				observation != this.initialState.observation
 					? this.editMode.set(true)
 					: this.editMode.set(false);
 			});
@@ -205,11 +203,12 @@ export class WorkCardComponent implements OnInit {
 	}
 
 	private changeInitialState() {
-		this.initialState = this.updateForm.value as UpdateState;
+		this.initialState = this.updateForm.value;
+		this.markingIdChanged.set(false);
 	}
 
-	public openInfoDialog(work: Partial<Task & Exam> | undefined) {
-		if (!work) return;
+	public openInfoDialog(studentToWork: Partial<StudentToWork> | undefined) {
+		if (!studentToWork) return;
 
 		const matConfig =
 			this.vs.screenType() === ScreenType.MOBILE
@@ -217,59 +216,39 @@ export class WorkCardComponent implements OnInit {
 				: {};
 
 		this.dialog.open(InfoDialogComponent, {
-			data: work,
+			data: studentToWork,
 			...matConfig,
 		});
 	}
 
-	public openDeleteDialog(work: Partial<Task & Exam> | undefined) {
-		if (!work) return;
+	public openDeleteDialog(studentToWork: Partial<StudentToWork> | undefined) {
+		if (!studentToWork) return;
 
 		this.dialog.open(DeleteDialogComponent, {
-			data: work,
+			data: studentToWork.work,
 		});
 	}
 
-	public update(controlName?: UpdateControl) {
-		const payload = controlName
-			? this.setPayloadByControlName(controlName)
-			: this.setPayload();
-
-		this.updateWork.next({ workId: this.work?.id as number, ...payload });
-	}
-
-	private setPayloadByControlName(controlName: UpdateControl) {
-		const firstLevel =
-			this.workType === Work.TASK ? 'studentToTask' : 'studentToExam';
-
+	private setPayload() {
 		return {
-			[firstLevel]: [
+			studentToWork: [
 				{
-					studentId: this.student?.id,
-					[controlName]: this.updateForm.get(controlName)?.value,
+					studentId: this.student()?.id,
+					markingId: this.updateForm.get('markingId')?.value ?? null,
+					score: this.updateForm.get('score')?.value ?? null,
+					observation:
+						this.updateForm.get('observation')?.value ?? '',
 				},
 			],
 		};
 	}
 
-	private setPayload() {
-		const commonProps = {
-			studentId: this.student?.id,
-			observation: this.updateForm.get('observation')?.value ?? '',
-		};
+	public update() {
+		const payload = this.setPayload();
 
-		return this.workType === Work.TASK
-			? {
-					studentToTask: [commonProps],
-			  }
-			: {
-					studentToExam: [
-						{
-							...commonProps,
-							marking:
-								this.updateForm.get('examMarking')?.value ?? '',
-						},
-					],
-			  };
+		this.updateWork.next({
+			workId: this.studentToWork()?.workId as number,
+			...payload,
+		});
 	}
 }

@@ -1,97 +1,106 @@
-<div id="container" *ngIf="updateWork$ | async">
-	<h1 mat-dialog-title>Asignación múltiple de calificaciones</h1>
-	<div id="selectors">
-		<div id="selection-list">
-			<mat-selection-list id="students-list" #studentsList>
-				@for (student of students; track student.id) {
-				<mat-list-option [value]="student.id">
-					{{ student.name }} {{ student.lastname }}
-				</mat-list-option>
-				}
-			</mat-selection-list>
-			<h4>
-				{{ studentsList.selectedOptions.selected.length }} /
-				{{ students.length }}
-			</h4>
+@if (updateWork$ | async) {
+	<div id="container">
+		<h1 mat-dialog-title>Asignación múltiple de calificaciones</h1>
+		<div id="selectors">
+			<div id="selection-list">
+				<mat-selection-list id="students-list" #studentsList>
+					@for (student of students; track student.id) {
+						<mat-list-option [value]="student.id">
+							{{ student.name }} {{ student.lastname }}
+						</mat-list-option>
+					}
+				</mat-selection-list>
+				<h4>
+					{{ studentsList.selectedOptions.selected.length }} /
+					{{ students.length }}
+				</h4>
+			</div>
+			<div id="options-wrapper">
+				<form [formGroup]="markingsForm">
+					<mat-form-field class="mat-form-field">
+						<mat-label>Tipo de trabajo</mat-label>
+						<mat-select [formControl]="workControl">
+							<mat-option [value]="WorkTypeId.TASK">
+								{{ workName.TASK }}
+							</mat-option>
+							<mat-option [value]="WorkTypeId.EXAM">
+								{{ workName.EXAM }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+					@if (workControl?.value) {
+						<mat-form-field class="mat-form-field">
+							<mat-label>{{
+								workControl &&
+								workControl!.value === WorkTypeId.TASK
+									? workName.TASK
+									: workName.EXAM
+							}}</mat-label>
+							<mat-select formControlName="workId">
+								@for (work of works(); track work.id) {
+									<mat-option [value]="work.id">
+										<div class="option-wrapper">
+											<p
+												class="work-option-name"
+												[title]="work.name">
+												{{ work.name }}
+											</p>
+											<p>
+												{{ '-' }}
+												{{ work.date | shortDate }}
+											</p>
+										</div>
+									</mat-option>
+								}
+							</mat-select>
+						</mat-form-field>
+					}
+					@if (workControl?.value === WorkTypeId.TASK) {
+						<mat-form-field class="mat-form-field">
+							<mat-label>{{ 'Calificación' }}</mat-label>
+							<mat-select formControlName="marking">
+								@for (marking of markings; track marking.id) {
+									<mat-option [value]="marking.id">
+										{{ marking.name }} -
+										{{ marking.description }}
+									</mat-option>
+								}
+							</mat-select>
+						</mat-form-field>
+					}
+					@if (workControl?.value === WorkTypeId.EXAM) {
+						<mat-form-field appearance="fill">
+							<mat-label>{{ 'Calificación' }}</mat-label>
+							<input
+								#matInput
+								matInput
+								placeholder="Nota del examen"
+								formControlName="marking" />
+						</mat-form-field>
+					}
+					@if (workControl?.value) {
+						<mat-form-field class="observation-textarea">
+							<mat-label>Observación</mat-label>
+							<textarea
+								matInput
+								[rows]="6"
+								formControlName="observation"></textarea>
+						</mat-form-field>
+					}
+				</form>
+			</div>
 		</div>
-		<div id="options-wrapper">
-			<form [formGroup]="markingsForm">
-				<mat-form-field class="mat-form-field">
-					<mat-label>Tipo de trabajo</mat-label>
-					<mat-select [formControl]="workControl">
-						<mat-option [value]="workEnum.TASK">
-							{{ workEnum.TASK }}
-						</mat-option>
-						<mat-option [value]="workEnum.EXAM">
-							{{ workEnum.EXAM }}
-						</mat-option>
-					</mat-select>
-				</mat-form-field>
-				<mat-form-field
-					class="mat-form-field"
-					*ngIf="workControl?.value">
-					<mat-label>{{
-						workControl && workControl!.value === workEnum.TASK
-							? 'Tarea'
-							: 'Examen'
-					}}</mat-label>
-					<mat-select formControlName="workId">
-						@for (work of works; track work.id) {
-						<mat-option [value]="work.id">
-							<div class="option-wrapper">
-								<p class="work-option-name" [title]="work.name">
-									{{ work.name }}
-								</p>
-								<p>{{ '-' }} {{ work.date | shortDate }}</p>
-							</div>
-						</mat-option>
-						}
-					</mat-select>
-				</mat-form-field>
-				<mat-form-field
-					class="mat-form-field"
-					*ngIf="workControl?.value === workEnum.TASK">
-					<mat-label>{{ 'Calificación' }}</mat-label>
-					<mat-select formControlName="marking">
-						@for (marking of markings; track marking.id) {
-						<mat-option [value]="marking.id">
-							{{ marking.name }} - {{ marking.description }}
-						</mat-option>
-						}
-					</mat-select>
-				</mat-form-field>
-				<mat-form-field
-					appearance="fill"
-					*ngIf="workControl?.value === workEnum.EXAM">
-					<mat-label>{{ 'Calificación' }}</mat-label>
-					<input
-						#matInput
-						matInput
-						placeholder="Nota del examen"
-						formControlName="marking" />
-				</mat-form-field>
-				<mat-form-field
-					class="observation-textarea"
-					*ngIf="workControl?.value">
-					<mat-label>Observación</mat-label>
-					<textarea
-						matInput
-						[rows]="6"
-						formControlName="observation"></textarea>
-				</mat-form-field>
-			</form>
+		<div mat-dialog-actions id="buttons-wrapper">
+			<button mat-button (click)="closeDialog()">Cancelar</button>
+			<button
+				mat-button
+				[disabled]="
+					markingsForm.invalid ||
+					studentsList.selectedOptions.selected.length === 0
+				"
+				(click)="setMarkings()">
+				{{ saveButtonMessage() }}
+			</button>
 		</div>
 	</div>
-	<div mat-dialog-actions id="buttons-wrapper">
-		<button mat-button (click)="closeDialog()">Cancelar</button>
-		<button
-			mat-button
-			[disabled]="
-				markingsForm.invalid ||
-				studentsList.selectedOptions.selected.length === 0
-			"
-			(click)="setMarkings()">
-			{{ saveButtonMessage() }}
-		</button>
-	</div>
-</div>
+}

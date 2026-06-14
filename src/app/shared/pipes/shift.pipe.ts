@@ -7,7 +7,8 @@ const shifts = {
 };
 
 @Pipe({
-	name: 'shift',
+    name: 'shift',
+    standalone: false
 })
 export class ShiftPipe implements PipeTransform {
 	transform(shift: Shift = 'MORNING'): string {

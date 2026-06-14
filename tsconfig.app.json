@@ -2,6 +2,12 @@
 {
 	"extends": "./tsconfig.json",
 	"angularCompilerOptions": {
+		"extendedDiagnostics": {
+			"checks": {
+				"nullishCoalescingNotNullable": "suppress",
+				"optionalChainNotNullable": "suppress"
+			}
+		},
 		"preserveWhitespaces": false
 	},
 	"compilerOptions": {

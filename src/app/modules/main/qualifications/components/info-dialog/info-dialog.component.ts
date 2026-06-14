@@ -7,18 +7,16 @@ import {
 import { FormBuilder, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ButtonState } from '../../enums/button-state.enum';
-import { InfoPayload } from '../../components/info-dialog/interfaces/info-payload.interface';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 import { SharedModule } from '../../../../../shared/shared.module';
-import { UpdatePayload } from '../../../../../core/interfaces/update-payload.interface';
+import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-info-dialog',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './info-dialog.component.html',
-	styleUrls: ['./info-dialog.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-info-dialog',
+    imports: [SharedModule],
+    templateUrl: './info-dialog.component.html',
+    styleUrls: ['./info-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InfoDialogComponent {
 	public infoForm = this.fb.nonNullable.group({
@@ -38,26 +36,30 @@ export class InfoDialogComponent {
 	constructor(
 		private qs: QualificationsService,
 		public dialogRef: MatDialogRef<InfoDialogComponent>,
-		@Inject(MAT_DIALOG_DATA) public payload: InfoPayload,
+		@Inject(MAT_DIALOG_DATA) public payload: StudentToWork,
 		private fb: FormBuilder
 	) {
 		this.setFormValues();
+		this.setSubjectControl();
 	}
 
 	private setFormValues() {
 		this.infoForm.patchValue(
 			{
-				name: this.payload.name,
-				date: this.payload.date,
-				description: this.payload.description?.trimEnd(),
+				name: this.payload.work?.name,
+				date: this.payload.work?.date,
+				description: this.payload.work?.description?.trimEnd(),
 			},
 			{ emitEvent: false }
 		);
+	}
+
+	private setSubjectControl() {
 		this.subjectControl.setValue(this.findSubject());
 	}
 
 	private findSubject() {
-		const subjectPayload = this.payload.subject?.id ?? this.payload.subject;
+		const subjectPayload = this.payload.work?.subjectId;
 
 		return this.qs.subjects().find(subject => subject.id === subjectPayload)
 			?.name;
@@ -77,10 +79,7 @@ export class InfoDialogComponent {
 		this.editButtonMessage.set(this.buttonStateEnum.SAVING);
 
 		this.qs.update(
-			{
-				workId: this.payload.id,
-				...this.infoForm.value,
-			} as UpdatePayload,
+			[this.payload.workId, this.infoForm.value],
 			this.dialogRef
 		);
 	}

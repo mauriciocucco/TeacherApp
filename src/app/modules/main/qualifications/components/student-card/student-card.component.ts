@@ -1,62 +1,95 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
-	Input,
-	Signal,
+	WritableSignal,
 	computed,
+	effect,
+	input,
 	signal,
 } from '@angular/core';
 import { SharedModule } from '../../../../../shared/shared.module';
 import { Student } from '../../../../../core/interfaces/student.interface';
 import { ScreenType } from '../../../../../core/enums/screen-type.enum';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
-import { Work } from '../../../../../core/enums/work.enum';
-import { Task } from '../../../../../core/interfaces/task.interface';
-import { Exam } from '../../../../../core/interfaces/exam.interface';
+import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 import { ViewService } from '../../../../../core/services/view/view.service';
 import { WorkCardComponent } from '../work-card/work-card.component';
+import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-student-card',
-	standalone: true,
-	imports: [SharedModule, WorkCardComponent],
-	templateUrl: './student-card.component.html',
-	styleUrl: './student-card.component.scss',
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-student-card',
+    imports: [SharedModule, WorkCardComponent],
+    templateUrl: './student-card.component.html',
+    styleUrl: './student-card.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentCardComponent {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
-	public WorkEnum = Work;
 	public selectedTab = signal(0);
-	private selectedWorkType = this.qs.selectedWorkType;
-	public tasks: Signal<Task[]> = this.qs.tasks;
-	public exams: Signal<Exam[]> = this.qs.exams;
+	public studentToTasks: WritableSignal<StudentToWork[]> = signal([]);
+	public studentToExams: WritableSignal<StudentToWork[]> = signal([]);
 	public selectedSubjectId = this.qs.selectedSubjectId;
 	public taskMatchSomeFilter = computed(() =>
-		this.tasks().some(task => task.show)
+		this.studentToTasks()?.some(task => task.show)
 	);
 	public onlyOneTaskMatch = computed(
-		() => this.tasks().filter(task => task.show).length === 1
+		() => this.studentToTasks()?.filter(task => task.show).length === 1
 	);
 	public examMatchSomeFilter = computed(() =>
-		this.exams().some(exam => exam.show)
+		this.studentToExams()?.some(exam => exam.show)
 	);
 	public onlyOneExamMatch = computed(
-		() => this.exams().filter(exam => exam.show).length === 1
+		() => this.studentToExams()?.filter(exam => exam.show).length === 1
 	);
-	@Input() student: Student | null = null;
+	public student = input<Student>();
 
-	constructor(private qs: QualificationsService, private vs: ViewService) {}
+	constructor(private qs: QualificationsService, private vs: ViewService) {
+		this.studentChange();
+	}
 
-	public changeToCorrectTab() {
-		if (this.selectedWorkType() === Work.TASK) this.selectedTab.set(0);
-		if (this.selectedWorkType() === Work.EXAM) this.selectedTab.set(1);
+	private studentChange() {
+		effect(
+			() => {
+				if (!this.student()) return;
+
+				this.updateStudentToWork(
+					WorkTypeId.TASK,
+					this.studentToTasks.update
+				);
+				this.updateStudentToWork(
+					WorkTypeId.EXAM,
+					this.studentToExams.update
+				);
+			},
+			{
+				allowSignalWrites: true,
+			}
+		);
+	}
+
+	private updateStudentToWork(
+		workTypeId: number,
+		updater: (value: () => StudentToWork[]) => void
+	) {
+		updater(() => {
+			const filteredStudentToWork = this.student()?.studentToWork?.filter(
+				studentToWork => studentToWork.work.workTypeId === workTypeId
+			);
+
+			if (!filteredStudentToWork?.length) return [];
+
+			return filteredStudentToWork.sort(
+				(a, b) =>
+					new Date(b.work.date).getTime() -
+					new Date(a.work.date).getTime()
+			);
+		});
 	}
 
 	public selectWorkType(taskTab: number) {
 		taskTab
-			? this.qs.selectedWorkType.set(Work.EXAM)
-			: this.qs.selectedWorkType.set(Work.TASK);
+			? this.qs.selectedWorkType.set(WorkTypeId.EXAM)
+			: this.qs.selectedWorkType.set(WorkTypeId.TASK);
 	}
 }

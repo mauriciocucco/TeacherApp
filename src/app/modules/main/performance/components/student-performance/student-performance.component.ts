@@ -2,8 +2,6 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	Input,
-	OnChanges,
-	SimpleChanges,
 	inject,
 	signal,
 } from '@angular/core';
@@ -16,22 +14,21 @@ import { Endpoints } from '../../../../../core/enums/endpoints.enum';
 import { ProcessedStudentPerformance } from '../../interfaces/processed-student-performance.interface';
 
 @Component({
-	selector: 'app-student-performance',
-	templateUrl: './student-performance.component.html',
-	styleUrls: ['./student-performance.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-student-performance',
+    templateUrl: './student-performance.component.html',
+    styleUrls: ['./student-performance.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
-export class StudentPerformanceComponent implements OnChanges {
+export class StudentPerformanceComponent {
 	public studentPerformance$!: Observable<StudentPerformance[]>;
 	public spinnerProgressOn = signal(true);
 	public subjects: SchoolSubject[] = [];
 	public processedStudentPerformance: ProcessedStudentPerformance[] = [];
 	private ss = inject(StudentsService);
 	private as = inject(ApiService);
-	@Input() id = '';
-
-	ngOnChanges(changes: SimpleChanges) {
-		if (changes['id']?.currentValue) this.searchStudentPerformance();
+	@Input() set studentId(id: string) {
+		this.searchStudentPerformance();
 	}
 
 	private searchStudentPerformance() {
@@ -40,7 +37,7 @@ export class StudentPerformanceComponent implements OnChanges {
 			.pipe(
 				tap(subjects => (this.subjects = subjects)),
 				switchMap(() =>
-					this.ss.getStudentPerformance(+this.id).pipe(
+					this.ss.getStudentPerformance(+this.studentId).pipe(
 						tap(rawStudentPerformance =>
 							this.processStudentPerformance(
 								rawStudentPerformance

@@ -7,6 +7,27 @@
 	text-decoration: unset;
 }
 
+@font-face {
+	font-family: 'Roboto';
+	font-weight: 300;
+	font-style: normal;
+	src: url('./assets/fonts/roboto-light.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Roboto';
+	font-weight: 400;
+	font-style: normal;
+	src: url('./assets/fonts/roboto-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Roboto';
+	font-weight: 500;
+	font-style: normal;
+	src: url('./assets/fonts/roboto-bold.woff2') format('woff2');
+}
+
 html {
 	font-size: 62.5%; // 16px * 0.625 = 10px;
 }

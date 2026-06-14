@@ -4,7 +4,6 @@ import {
 	DestroyRef,
 	ElementRef,
 	ViewChild,
-	WritableSignal,
 	computed,
 	inject,
 } from '@angular/core';
@@ -19,15 +18,13 @@ import {
 	MatButtonToggleChange,
 } from '@angular/material/button-toggle';
 import { Router } from '@angular/router';
-import { Student } from 'src/app/core/interfaces/student.interface';
 
 @Component({
-	selector: 'app-alphabet',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './alphabet.component.html',
-	styleUrls: ['./alphabet.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-alphabet',
+    imports: [SharedModule],
+    templateUrl: './alphabet.component.html',
+    styleUrls: ['./alphabet.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AlphabetComponent implements OnInit {
 	private alpha = Array.from(Array(26)).map((e, i) => i + 65);
@@ -68,7 +65,7 @@ export class AlphabetComponent implements OnInit {
 	public showStudentsWithLetter(letter: string) {
 		if (this.vs.screenType() === ScreenType.MOBILE) {
 			this.qs.letterSelected.set(letter);
-			this.qs.cleanShow(this.students as WritableSignal<Student[]>);
+			this.qs.cleanStudentsShowProp();
 			this.qs.setShowByLetter(letter);
 			this.qs.resetFilters.next('Students');
 			return;

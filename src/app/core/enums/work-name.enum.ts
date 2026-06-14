@@ -1,4 +1,4 @@
-export enum Work {
+export enum WorkName {
 	TASK = 'Tarea',
 	EXAM = 'Examen',
 }

@@ -11,12 +11,11 @@ import { ButtonState } from '../../enums/button-state.enum';
 import { QualificationsService } from '../../../../../core/services/qualifications/qualifications.service';
 
 @Component({
-	selector: 'app-delete-dialog',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './delete-dialog.component.html',
-	styleUrls: ['./delete-dialog.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-delete-dialog',
+    imports: [SharedModule],
+    templateUrl: './delete-dialog.component.html',
+    styleUrls: ['./delete-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DeleteDialogComponent {
 	public deleteButtonMessage = signal(ButtonState.DELETE);

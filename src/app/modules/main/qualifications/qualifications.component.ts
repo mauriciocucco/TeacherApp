@@ -1,44 +1,40 @@
 import {
-	ChangeDetectionStrategy,
-	Component,
-	DestroyRef,
-	HostListener,
-	Inject,
-	OnDestroy,
-	OnInit,
-	QueryList,
-	Signal,
-	ViewChild,
-	ViewChildren,
-	inject,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  Inject,
+  OnDestroy,
+  OnInit,
+  Signal,
+  inject,
+  DOCUMENT
 } from '@angular/core';
 import { Observable, fromEvent, map } from 'rxjs';
 import { Student } from '../../../core/interfaces/student.interface';
-import { MatTabGroup } from '@angular/material/tabs';
-import { Work } from '../../../core/enums/work.enum';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { ViewportScroller } from '@angular/common';
 import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
 import { ViewService } from '../../../core/services/view/view.service';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
 import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
-import { StudentCardComponent } from './components/student-card/student-card.component';
 
 @Component({
-	selector: 'app-qualifications',
-	templateUrl: './qualifications.component.html',
-	styleUrls: ['./qualifications.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-qualifications',
+    templateUrl: './qualifications.component.html',
+    styleUrls: ['./qualifications.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class QualificationsComponent implements OnInit, OnDestroy {
 	public screenType = this.vs.screenType;
 	public ScreenTypeEnum = ScreenType;
+	public works = this.qs.works;
 	public students: Signal<Student[]> = this.qs.students;
 	public filteredData$ = this.qs.filteredData$;
-	public WorkEnum = Work;
 	public noStudentShowingForMobile = this.qs.noStudentShowingForMobile;
 	public letterSelected = this.qs.letterSelected;
 	public courseIsSelected = this.qs.selectedCourseId;
@@ -53,9 +49,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		map(() => this.viewport.getScrollPosition()?.[1] > 0), // chequea que el usuario scrolee hacia abajo
 		takeUntilDestroyed(this.destroyRef)
 	);
-	@ViewChild('studentCard') studentCard!: StudentCardComponent;
-	@ViewChildren('tabChildren') tabChildren?: QueryList<MatTabGroup>;
-	@HostListener('window:resize', ['$event'])
+	@HostListener('window:resize')
 	onResize(): void {
 		this.vs.setScreenType();
 	}
@@ -74,6 +68,10 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		this.qs.restartQualificationsService();
 	}
 
+	private resetFilters(reset: ResetFiltersType = 'All') {
+		this.qs.resetFilters.next(reset);
+	}
+
 	public openCreateDialog(): void {
 		const matConfig =
 			this.vs.screenType() === ScreenType.MOBILE
@@ -86,14 +84,9 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(reloadData => {
 				if (reloadData) {
-					this.studentCard.changeToCorrectTab();
 					this.resetFilters();
 				}
 			});
-	}
-
-	private resetFilters(reset: ResetFiltersType = 'All') {
-		this.qs.resetFilters.next(reset);
 	}
 
 	public openMultipleMarkingSetterDialog() {
