@@ -19,12 +19,11 @@ import { UpdateStudentToWork } from '../../../../../core/interfaces/update-stude
 import { WorkName } from '../../../../../core/enums/work-name.enum';
 
 @Component({
-	selector: 'app-multiple-marking-setter',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './multiple-marking-setter.component.html',
-	styleUrls: ['./multiple-marking-setter.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-multiple-marking-setter',
+    imports: [SharedModule],
+    templateUrl: './multiple-marking-setter.component.html',
+    styleUrls: ['./multiple-marking-setter.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MultipleMarkingSetterComponent {
 	public students: Student[] = this.qs.students();

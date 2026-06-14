@@ -37,12 +37,11 @@ import { WorksService } from '../../../../../core/services/works/works.service';
 import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-work-card',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './work-card.component.html',
-	styleUrls: ['./work-card.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-work-card',
+    imports: [SharedModule],
+    templateUrl: './work-card.component.html',
+    styleUrls: ['./work-card.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkCardComponent implements OnInit {
 	public workTypeId = WorkTypeId;

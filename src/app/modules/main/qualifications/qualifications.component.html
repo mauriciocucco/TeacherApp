@@ -1,69 +1,68 @@
-<div id="container" [ngClass]="{'clean-height': students().length}" *ngIf="(filteredData$ | async)">
-	<app-filters></app-filters>
-
-	<app-alphabet 
-		*ngIf="courseIsSelected() && students().length"
-		[ngClass]="{'disappear': screenType() === ScreenTypeEnum.DESKTOP && studentIsSelected()}"
-		>
-	</app-alphabet>
-
-	@if (courseIsSelected()) {
-		@if(students().length) {
-			<div
-				id="students-cards-container"
+@if ((filteredData$ | async)) {
+  <div id="container" [ngClass]="{'clean-height': students().length}">
+    <app-filters></app-filters>
+    @if (courseIsSelected() && students().length) {
+      <app-alphabet
+        [ngClass]="{'disappear': screenType() === ScreenTypeEnum.DESKTOP && studentIsSelected()}"
+        >
+      </app-alphabet>
+    }
+    @if (courseIsSelected()) {
+      @if(students().length) {
+        <div
+          id="students-cards-container"
 				[ngClass]="{
 					'disappear': (screenType() === ScreenTypeEnum.MOBILE && (!letterSelected() && !studentIsSelected()))
 			    }">				
-					
-				@for (student of students(); track student.id) {
-					<app-student-card #studentCard [student]="student" 
+          @for (student of students(); track student.id) {
+            <app-student-card #studentCard [student]="student"
 						[ngClass]="{
 						disappear:
 							(screenType() === ScreenTypeEnum.DESKTOP && !student.show) ||
 							(screenType() === ScreenTypeEnum.MOBILE && !student.showForMobile)
 					}"></app-student-card>
-				}
-					
-			</div>
-		} @else {
-			<div class="spinner-wrapper">
-				<mat-spinner></mat-spinner>
-			</div>
-		}
-
-		<app-menu-button title="Seleccione para ver más opciones" icon="add">
-			<button mat-menu-item (click)="openCreateDialog()">
-				<div class="menu-option-wrapper">
-					<mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / examen" fontIcon="note_add"></mat-icon>
-					<span>Crear nuevo trabajo</span>
-				</div>
-			</button>
-			<button mat-menu-item (click)="openMultipleMarkingSetterDialog()" *ngIf="students().length && students()[0].studentToWork.length">
-				<div class="menu-option-wrapper">
-					<mat-icon aria-hidden="false" aria-label="Asignar múltiples calificaciones" fontIcon="grading"></mat-icon>
-					<span>Asignar múltiples calificaciones</span>
-				</div>
-			</button>
-		</app-menu-button>
-
-	} @else {
-		<div class="warning-container">
-			<app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
-		</div>
-	}
-
-	<!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
-	@if(screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()) {
-		@if (letterSelected()) {
-			<app-warning 
-					[info]="'No se encontraron alumnxs'"
-			></app-warning>
-		} @else if (students().length) {
-			<app-warning 
-					[info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
-			></app-warning>
-		}
-	}
-
-	<app-scroll *ngIf="(showScroll$ | async) && students().length" (scrollToTop)="onScrollToTop()"></app-scroll>
-</div>
+          }
+        </div>
+      } @else {
+        <div class="spinner-wrapper">
+          <mat-spinner></mat-spinner>
+        </div>
+      }
+      <app-menu-button title="Seleccione para ver más opciones" icon="add">
+        <button mat-menu-item (click)="openCreateDialog()">
+          <div class="menu-option-wrapper">
+            <mat-icon aria-hidden="false" aria-label="Agregar nueva tarea / examen" fontIcon="note_add"></mat-icon>
+            <span>Crear nuevo trabajo</span>
+          </div>
+        </button>
+        @if (students().length && students()[0].studentToWork.length) {
+          <button mat-menu-item (click)="openMultipleMarkingSetterDialog()">
+            <div class="menu-option-wrapper">
+              <mat-icon aria-hidden="false" aria-label="Asignar múltiples calificaciones" fontIcon="grading"></mat-icon>
+              <span>Asignar múltiples calificaciones</span>
+            </div>
+          </button>
+        }
+      </app-menu-button>
+    } @else {
+      <div class="warning-container">
+        <app-warning [info]="'Por favor, seleccione un curso'"></app-warning>
+      </div>
+    }
+    <!-- AVISOS EXCLUSIVAMENTE PARA MOBILE -->
+    @if(screenType() === ScreenTypeEnum.MOBILE && noStudentShowingForMobile()) {
+      @if (letterSelected()) {
+        <app-warning
+          [info]="'No se encontraron alumnxs'"
+        ></app-warning>
+      } @else if (students().length) {
+        <app-warning
+          [info]="'Por favor, elija un alumnx desde los filtros o desde el alfabeto'"
+        ></app-warning>
+      }
+    }
+    @if ((showScroll$ | async) && students().length) {
+      <app-scroll (scrollToTop)="onScrollToTop()"></app-scroll>
+    }
+  </div>
+}

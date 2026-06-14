@@ -1,54 +1,56 @@
-<div id="form-container" *ngIf="updateWork$ | async">
-	<div mat-dialog-content id="form-content">
-		<form [formGroup]="infoForm" id="info-form">
-			<mat-form-field class="mat-form-field">
-				<mat-label>Nombre</mat-label>
-				<input
-					matInput
-					[readonly]="!editMode()"
-					formControlName="name" />
-			</mat-form-field>
-			<mat-form-field class="mat-form-field">
-				<mat-label>Materia</mat-label>
-				<input
-					matInput
-					placeholder="Materia"
-					[formControl]="subjectControl" />
-			</mat-form-field>
-			<mat-form-field class="mat-form-field">
-				<mat-label>Fecha</mat-label>
-				<input
-					matInput
-					[matDatepicker]="picker"
-					[readonly]="!editMode()"
-					formControlName="date" />
-				<mat-hint>M/D/YYYY</mat-hint>
-				<mat-datepicker-toggle
-					matIconSuffix
-					[for]="picker"></mat-datepicker-toggle>
-				<mat-datepicker
-					#picker
-					[disabled]="!editMode()"></mat-datepicker>
-			</mat-form-field>
-			<mat-form-field class="mat-form-field description-textarea">
-				<mat-label>Descripción</mat-label>
-				<textarea
-					[rows]="10"
-					[readonly]="!editMode()"
-					matInput
-					formControlName="description"></textarea>
-			</mat-form-field>
-		</form>
+@if (updateWork$ | async) {
+	<div id="form-container">
+		<div mat-dialog-content id="form-content">
+			<form [formGroup]="infoForm" id="info-form">
+				<mat-form-field class="mat-form-field">
+					<mat-label>Nombre</mat-label>
+					<input
+						matInput
+						[readonly]="!editMode()"
+						formControlName="name" />
+				</mat-form-field>
+				<mat-form-field class="mat-form-field">
+					<mat-label>Materia</mat-label>
+					<input
+						matInput
+						placeholder="Materia"
+						[formControl]="subjectControl" />
+				</mat-form-field>
+				<mat-form-field class="mat-form-field">
+					<mat-label>Fecha</mat-label>
+					<input
+						matInput
+						[matDatepicker]="picker"
+						[readonly]="!editMode()"
+						formControlName="date" />
+					<mat-hint>M/D/YYYY</mat-hint>
+					<mat-datepicker-toggle
+						matIconSuffix
+						[for]="picker"></mat-datepicker-toggle>
+					<mat-datepicker
+						#picker
+						[disabled]="!editMode()"></mat-datepicker>
+				</mat-form-field>
+				<mat-form-field class="mat-form-field description-textarea">
+					<mat-label>Descripción</mat-label>
+					<textarea
+						[rows]="10"
+						[readonly]="!editMode()"
+						matInput
+						formControlName="description"></textarea>
+				</mat-form-field>
+			</form>
+		</div>
+		<div mat-dialog-actions id="buttons-wrapper">
+			<button
+				mat-button
+				(click)="closeDialog()"
+				[disabled]="editButtonMessage() === buttonStateEnum.SAVING">
+				Cancelar
+			</button>
+			<button mat-button (click)="update()">
+				{{ editButtonMessage() }}
+			</button>
+		</div>
 	</div>
-	<div mat-dialog-actions id="buttons-wrapper">
-		<button
-			mat-button
-			(click)="closeDialog()"
-			[disabled]="editButtonMessage() === buttonStateEnum.SAVING">
-			Cancelar
-		</button>
-		<button mat-button (click)="update()">
-			{{ editButtonMessage() }}
-		</button>
-	</div>
-</div>
+}

@@ -14,13 +14,12 @@
 					hideToggle>
 					<mat-expansion-panel-header>
 						<h3>Curso</h3>
-						<p
-							*ngIf="
-								!courseControl.value &&
-								screenType() === ScreenTypeEnum.DESKTOP
-							">
-							Por favor, seleccione un curso
-						</p>
+						@if (
+							!courseControl.value &&
+							screenType() === ScreenTypeEnum.DESKTOP
+						) {
+							<p>Por favor, seleccione un curso</p>
+						}
 						<mat-icon>rocket_launch</mat-icon>
 					</mat-expansion-panel-header>
 
@@ -31,11 +30,11 @@
 						<mat-select
 							placeholder="Seleccionar un curso"
 							[formControl]="courseControl">
-							@for(course of courses(); track course.id) {
-							<mat-option [value]="course.id">
-								{{ course.year }}° -
-								{{ course.shift | shift }}
-							</mat-option>
+							@for (course of courses(); track course.id) {
+								<mat-option [value]="course.id">
+									{{ course.year }}° -
+									{{ course.shift | shift }}
+								</mat-option>
 							}
 						</mat-select>
 					</mat-form-field>
@@ -58,13 +57,12 @@
 					hideToggle>
 					<mat-expansion-panel-header>
 						<h3>Alumnx</h3>
-						<p
-							*ngIf="
-								!studentIsSelected() &&
-								screenType() === ScreenTypeEnum.DESKTOP
-							">
-							Por favor, seleccione un alumnx
-						</p>
+						@if (
+							!studentIsSelected() &&
+							screenType() === ScreenTypeEnum.DESKTOP
+						) {
+							<p>Por favor, seleccione un alumnx</p>
+						}
 						<mat-icon>account_circle</mat-icon>
 					</mat-expansion-panel-header>
 
@@ -80,13 +78,17 @@
 						<mat-autocomplete
 							(optionSelected)="studentSelected($event)"
 							#auto="matAutocomplete">
-							@for(student of filteredStudents | async; track
-							student.id) {
-							<mat-option
-								[value]="student.name + ' ' + student.lastname">
-								{{ student.name }}
-								{{ student?.lastname }}
-							</mat-option>
+							@for (
+								student of filteredStudents | async;
+								track student.id
+							) {
+								<mat-option
+									[value]="
+										student.name + ' ' + student.lastname
+									">
+									{{ student.name }}
+									{{ student?.lastname }}
+								</mat-option>
 							}
 						</mat-autocomplete>
 					</mat-form-field>

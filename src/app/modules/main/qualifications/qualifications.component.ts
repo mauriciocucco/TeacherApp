@@ -1,20 +1,21 @@
 import {
-	ChangeDetectionStrategy,
-	Component,
-	DestroyRef,
-	HostListener,
-	Inject,
-	OnDestroy,
-	OnInit,
-	Signal,
-	inject,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  Inject,
+  OnDestroy,
+  OnInit,
+  Signal,
+  inject,
+  DOCUMENT
 } from '@angular/core';
 import { Observable, fromEvent, map } from 'rxjs';
 import { Student } from '../../../core/interfaces/student.interface';
 import { QualificationsService } from '../../../core/services/qualifications/qualifications.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { ViewportScroller } from '@angular/common';
 import { MultipleMarkingSetterComponent } from './components/multiple-marking-setter/multiple-marking-setter.component';
 import { CreateDialogComponent } from './components/create-dialog/create-dialog.component';
 import { ViewService } from '../../../core/services/view/view.service';
@@ -22,10 +23,11 @@ import { ScreenType } from '../../../core/enums/screen-type.enum';
 import { ResetFiltersType } from '../../../core/interfaces/reset-filters.type';
 
 @Component({
-	selector: 'app-qualifications',
-	templateUrl: './qualifications.component.html',
-	styleUrls: ['./qualifications.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-qualifications',
+    templateUrl: './qualifications.component.html',
+    styleUrls: ['./qualifications.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class QualificationsComponent implements OnInit, OnDestroy {
 	public screenType = this.vs.screenType;
@@ -47,7 +49,7 @@ export class QualificationsComponent implements OnInit, OnDestroy {
 		map(() => this.viewport.getScrollPosition()?.[1] > 0), // chequea que el usuario scrolee hacia abajo
 		takeUntilDestroyed(this.destroyRef)
 	);
-	@HostListener('window:resize', ['$event'])
+	@HostListener('window:resize')
 	onResize(): void {
 		this.vs.setScreenType();
 	}

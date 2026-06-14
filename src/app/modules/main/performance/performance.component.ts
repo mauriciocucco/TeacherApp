@@ -30,10 +30,11 @@ import { ViewService } from '../../../core/services/view/view.service';
 import { ScreenType } from '../../../core/enums/screen-type.enum';
 
 @Component({
-	selector: 'app-performance',
-	templateUrl: './performance.component.html',
-	styleUrls: ['./performance.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-performance',
+    templateUrl: './performance.component.html',
+    styleUrls: ['./performance.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PerformanceComponent implements OnInit {
 	public courses: Signal<Course[]> = this.qs.courses;
@@ -50,7 +51,7 @@ export class PerformanceComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);
 	private vs = inject(ViewService);
 	public screenType = this.vs.screenType;
-	@HostListener('window:resize', ['$event'])
+	@HostListener('window:resize')
 	onResize(): void {
 		this.vs.setScreenType();
 	}

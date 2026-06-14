@@ -12,12 +12,11 @@ import { SharedModule } from '../../../../../shared/shared.module';
 import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-info-dialog',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './info-dialog.component.html',
-	styleUrls: ['./info-dialog.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-info-dialog',
+    imports: [SharedModule],
+    templateUrl: './info-dialog.component.html',
+    styleUrls: ['./info-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InfoDialogComponent {
 	public infoForm = this.fb.nonNullable.group({

@@ -14,10 +14,11 @@ import { Endpoints } from '../../../../../core/enums/endpoints.enum';
 import { ProcessedStudentPerformance } from '../../interfaces/processed-student-performance.interface';
 
 @Component({
-	selector: 'app-student-performance',
-	templateUrl: './student-performance.component.html',
-	styleUrls: ['./student-performance.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-student-performance',
+    templateUrl: './student-performance.component.html',
+    styleUrls: ['./student-performance.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class StudentPerformanceComponent {
 	public studentPerformance$!: Observable<StudentPerformance[]>;

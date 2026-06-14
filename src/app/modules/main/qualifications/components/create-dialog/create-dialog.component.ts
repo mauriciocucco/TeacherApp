@@ -9,12 +9,11 @@ import { CreateWork } from '../../../../../core/interfaces/create-work.interface
 import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 
 @Component({
-	selector: 'app-create-dialog',
-	standalone: true,
-	imports: [SharedModule],
-	templateUrl: './create-dialog.component.html',
-	styleUrls: ['./create-dialog.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-create-dialog',
+    imports: [SharedModule],
+    templateUrl: './create-dialog.component.html',
+    styleUrls: ['./create-dialog.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreateDialogComponent {
 	public createForm = this.fb.nonNullable.group({

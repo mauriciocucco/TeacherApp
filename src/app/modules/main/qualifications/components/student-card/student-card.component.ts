@@ -17,12 +17,11 @@ import { WorkCardComponent } from '../work-card/work-card.component';
 import { StudentToWork } from '../../../../../core/interfaces/student-to-work.interface';
 
 @Component({
-	selector: 'app-student-card',
-	standalone: true,
-	imports: [SharedModule, WorkCardComponent],
-	templateUrl: './student-card.component.html',
-	styleUrl: './student-card.component.scss',
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-student-card',
+    imports: [SharedModule, WorkCardComponent],
+    templateUrl: './student-card.component.html',
+    styleUrl: './student-card.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentCardComponent {
 	public screenType = this.vs.screenType;

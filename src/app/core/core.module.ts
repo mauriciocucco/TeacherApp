@@ -1,7 +1,15 @@
 import { NgModule, Optional, SkipSelf } from '@angular/core';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import {
+	provideHttpClient,
+	withInterceptorsFromDi,
+	withXhr,
+} from '@angular/common/http';
 
-@NgModule({ declarations: [], imports: [], providers: [provideHttpClient(withInterceptorsFromDi())] })
+@NgModule({
+	declarations: [],
+	imports: [],
+	providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
+})
 export class CoreModule {
 	constructor(@Optional() @SkipSelf() core: CoreModule) {
 		if (core) {

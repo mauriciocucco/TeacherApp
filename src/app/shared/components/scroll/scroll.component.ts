@@ -6,10 +6,11 @@ import {
 } from '@angular/core';
 
 @Component({
-	selector: 'app-scroll',
-	templateUrl: './scroll.component.html',
-	styleUrls: ['./scroll.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-scroll',
+    templateUrl: './scroll.component.html',
+    styleUrls: ['./scroll.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScrollComponent {
 	@Output() scrollToTop = new EventEmitter<void>();

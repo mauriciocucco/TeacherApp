@@ -1,49 +1,58 @@
-<mat-card
-	class="performance-card"
-	*ngIf="studentPerformance$ | async as studentPerformance; else spinner">
-	<mat-card-header>
-		<div class="header-wrapper">
-			<h2>
-				{{ studentPerformance[0].studentName }}
-				{{ studentPerformance[0].studentLastname }}
-			</h2>
-		</div>
-	</mat-card-header>
-	<mat-card-content class="performance-content">
-		@if (processedStudentPerformance) {
-		<mat-accordion id="performance-accordion">
-			@for (subject of subjects; track subject.id; let i = $index;) {
-			<mat-expansion-panel>
-				<mat-expansion-panel-header>
-					<mat-panel-title>{{ subject.name }}</mat-panel-title>
-				</mat-expansion-panel-header>
-				@if (processedStudentPerformance[i].studentPerformance .length >
-				0) {
-				<mat-list>
-					<mat-list-item
-						*ngFor="
-							let performance of processedStudentPerformance[i]
-								.studentPerformance
-						"
-						class="performance-list-item">
-						<span matListItemTitle>{{
-							performance.markingDescription
-						}}</span>
-						<span matListItemLine>{{
-							'Cantidad: ' + performance.count
-						}}</span>
-					</mat-list-item>
-				</mat-list>
-				} @else {
-				<p>No se encontraron correciones</p>
-				}
-			</mat-expansion-panel>
+@if (studentPerformance$ | async; as studentPerformance) {
+	<mat-card class="performance-card">
+		<mat-card-header>
+			<div class="header-wrapper">
+				<h2>
+					{{ studentPerformance[0].studentName }}
+					{{ studentPerformance[0].studentLastname }}
+				</h2>
+			</div>
+		</mat-card-header>
+		<mat-card-content class="performance-content">
+			@if (processedStudentPerformance) {
+				<mat-accordion id="performance-accordion">
+					@for (
+						subject of subjects;
+						track subject.id;
+						let i = $index
+					) {
+						<mat-expansion-panel>
+							<mat-expansion-panel-header>
+								<mat-panel-title>{{
+									subject.name
+								}}</mat-panel-title>
+							</mat-expansion-panel-header>
+							@if (
+								processedStudentPerformance[i]
+									.studentPerformance.length > 0
+							) {
+								<mat-list>
+									@for (
+										performance of processedStudentPerformance[
+											i
+										].studentPerformance;
+										track performance
+									) {
+										<mat-list-item
+											class="performance-list-item">
+											<span matListItemTitle>{{
+												performance.markingDescription
+											}}</span>
+											<span matListItemLine>{{
+												'Cantidad: ' + performance.count
+											}}</span>
+										</mat-list-item>
+									}
+								</mat-list>
+							} @else {
+								<p>No se encontraron correciones</p>
+							}
+						</mat-expansion-panel>
+					}
+				</mat-accordion>
 			}
-		</mat-accordion>
-		}
-	</mat-card-content>
-</mat-card>
-
-<ng-template #spinner>
+		</mat-card-content>
+	</mat-card>
+} @else {
 	<mat-spinner></mat-spinner>
-</ng-template>
+}

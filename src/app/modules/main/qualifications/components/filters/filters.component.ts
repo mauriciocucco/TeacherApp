@@ -29,10 +29,11 @@ import { Quarter } from '../../../../../core/interfaces/quarter.interface';
 import { WorkTypeId } from '../../../../../core/enums/work-type-id.enum';
 
 @Component({
-	selector: 'app-filters',
-	templateUrl: './filters.component.html',
-	styleUrls: ['./filters.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-filters',
+    templateUrl: './filters.component.html',
+    styleUrls: ['./filters.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FiltersComponent implements OnInit {
 	public studentsNames = this.qs.studentsNames;
@@ -63,7 +64,7 @@ export class FiltersComponent implements OnInit {
 	tasksAutocomplete?: MatAutocomplete;
 	@ViewChild('examsAutocomplete', { static: false })
 	examsAutocomplete?: MatAutocomplete;
-	@HostListener('window:resize', ['$event'])
+	@HostListener('window:resize')
 	onResize(): void {
 		this.vs.setScreenType();
 	}
